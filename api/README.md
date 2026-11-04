@@ -167,3 +167,7 @@ The GCS adapter is expected to read the same variable (the official `@google-clo
 ## Domain events
 
 `InProcessEventBus` (`src/adapters/in-process/event-bus.ts`) implements the `EventBus` port. `publish` awaits subscribers one after another in registration order; a throwing or rejecting subscriber is logged at ERROR (event type, subscriber name, error message/stack, never the payload) and never reaches the publisher. Subscribers register in the composition root (`subscribe(type, name, handler)` returns an unsubscribe function), so publishers never change when one is added.
+
+## Module READMEs
+
+Every directory under `src/modules/*` needs a non-empty `README.md` (responsibility, public interface, owned data, non-goals; template `docs/module-readme-template.md`). `npm run check:module-readmes` fails otherwise and runs in CI. Decisions are recorded in `docs/adr/`.
