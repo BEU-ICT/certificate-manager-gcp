@@ -167,3 +167,32 @@ The GCS adapter is expected to read the same variable (the official `@google-clo
 ## Domain events
 
 `InProcessEventBus` (`src/adapters/in-process/event-bus.ts`) implements the `EventBus` port. `publish` awaits subscribers one after another in registration order; a throwing or rejecting subscriber is logged at ERROR (event type, subscriber name, error message/stack, never the payload) and never reaches the publisher. Subscribers register in the composition root (`subscribe(type, name, handler)` returns an unsubscribe function), so publishers never change when one is added.
+
+## Data migrations
+
+One-off data changes (for example creating the bootstrap administrator) are numbered migrations in `src/migrations/`. `runMigrations()` runs from `src/server.ts` after the adapters are composed and before `listen`; if a migration fails the process logs the error and exits with code 1, so Cloud Run restarts the instance and the migration is retried.
+
+- **Markers.** Which migrations ran is stored by the `MigrationStateStore` port (`src/ports/migration-state-store.ts`) in a single document, `system/migrations`, as `applied.<id> = { at, by }` (`by` is the Cloud Run revision plus a random suffix). The runner reads that document once; with nothing pending a cold start costs exactly one read.
+- **At most once.** The runner claims a migration with `markApplied(id, by)` _before_ running its body. The claim is atomic (a Firestore transaction): of any number of parallel instances exactly one gets `true` and runs the body, the others get `false` and skip it. If the body throws, the runner calls `unmarkApplied` so the next start retries, and stops (later migrations do not run). The window to know about: an instance killed after the claim and before the body finished leaves a marker without a finished migration; remove `applied.<id>` from `system/migrations` and run the migration by hand (see below).
+- **Idempotent bodies.** Write every migration so that running it twice is harmless (check before create, use deterministic ids). The marker write and the body are not one transaction.
+- **Context.** A migration receives `MigrationContext`: `clock`, the repositories, `emailSender` and a logger. Ports only, no vendor SDK.
+- **Adapters.** `FakeMigrationStateStore` (`src/testing/fakes`, served by the `memory` DB adapter) and `FirestoreMigrationStateStore` (`src/adapters/firestore`) share the contract suite `describeMigrationStateStoreContract`. The Firestore store is tested against the emulator (`test/integration/migrations.integration.test.ts`, including two concurrent runners). It is not registered in `compose.ts` yet because the Firestore repository adapter does not exist yet (the `firestore` value of `DB_ADAPTER` still fails at boot); that registration must provide `migrationState` next to the repositories.
+
+### Adding migration 00N
+
+1. Create `src/migrations/00N-short-name.ts` exporting a `Migration` (`id: '00N-short-name'`, `description`, idempotent `run(ctx)`).
+2. Append it to `migrations` in `src/migrations/registry.ts`. Ids must be unique, `NNN-kebab-case` and in ascending order; the runner refuses an invalid list at boot. Never rename, reorder or delete a deployed migration.
+3. Add a unit test with `FakeMigrationStateStore` (see `test/unit/migrations.test.ts`) that runs it twice.
+
+### Running migrations manually
+
+```bash
+cd api
+npm run migrate   # same environment variables as the server (DB_ADAPTER, GCP_PROJECT, FIRESTORE_EMULATOR_HOST, ...)
+```
+
+`src/migrate.ts` composes the ports like the server, runs the pending migrations, logs what it applied and exits (non-zero on failure). In the container image use `node dist/migrate.js`. Running it while instances start is safe: markers make each migration run once. Like `server.ts`, it is an entry point and reads `process.env`.
+
+### `schemaVersion`
+
+Every document a repository creates carries `schemaVersion: 1` (`SCHEMA_VERSION` in `src/shared/schema-version.ts`). Readers ignore fields they do not know: the adapter parses with zod (unknown keys tolerated) and the DTOs returned over HTTP strip them, so a new revision can add fields while the old one still serves traffic. Raise the version only for a change old readers cannot tolerate, together with a migration.

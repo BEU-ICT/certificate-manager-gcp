@@ -5,6 +5,7 @@ import type {
   EventBus,
   EventRepository,
   IdGenerator,
+  MigrationStateStore,
   OrganizationRepository,
   RateLimiter,
   Scheduler,
@@ -26,6 +27,7 @@ export interface RepositoryPorts {
   readonly events: EventRepository;
   readonly templates: TemplateRepository;
   readonly certificates: CertificateRepository;
+  readonly migrationState: MigrationStateStore;
 }
 
 /** Result of the `QUEUE_ADAPTER` selection. */
@@ -48,6 +50,7 @@ export interface Ports {
   events: EventRepository;
   templates: TemplateRepository;
   certificates: CertificateRepository;
+  migrationState: MigrationStateStore;
   storage: StorageGateway;
   taskQueue: TaskQueue;
   scheduler: Scheduler;
