@@ -15,7 +15,7 @@ Run the numbered scripts in order, as a person with Billing Account Administrato
 | 3    | `03-apis.sh`            | enable the 17 APIs of spec §12 and verify them                                                          |
 | 4    | `check-org-policies.sh` | read-only: effective org policies that could block the design (`docs/org-policies.md`)                  |
 
-Further steps (data stores, compute, identity, secrets, deployment) are added by the next E2 stories and linked from here.
+Further steps, in order: `04-firestore.sh` (database, rules, indexes), `05-buckets.sh` (+ `verify-iam.sh`), `06-backups.sh`, `07-iam.sh`, `08-queue.sh`, `09-secrets.sh`, then `deploy-all.sh` (see `docs/runbook.md`). Details: `docs/firestore.md`, `docs/storage.md`, `docs/backup-restore.md`, `iam.md`, `docs/email-queue.md`, `docs/config-matrix.md`, `docs/cloud-run.md`, `docs/hosting.md`.
 
 ```bash
 cp infra/.env.example infra/.env   # fill PROJECT_ID, BILLING_ACCOUNT_ID, emails
@@ -23,7 +23,7 @@ DRY_RUN=1 infra/01-project.sh      # review
 infra/01-project.sh && infra/02-budget.sh && infra/03-apis.sh
 ```
 
-Self-test without cloud access: `infra/test-dry-run.sh`.
+Self-tests without cloud access (run in CI): `infra/test-dry-run.sh`, `infra/test-smoke.sh`.
 
 ## Rules for scripts
 
