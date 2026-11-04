@@ -2,7 +2,7 @@
 
 Repo-side infrastructure for the GCP project: idempotent gcloud/firebase scripts, `firebase.json`, Firestore rules and indexes, Cloud Run service YAML. Deployment is manual (ADR 0011); nothing here runs in CI.
 
-All scripts source `lib.sh`, read settings from `infra/.env` (copy `.env.example`; git-ignored) and support `DRY_RUN=1`, which prints every gcloud command instead of running it. Review a dry run before the real one. Region is `us-east1` (ADR 0014).
+All scripts source `lib.sh`, read settings from `infra/.env` (copy `.env.example`; git-ignored) and support `DRY_RUN=1`, which prints every gcloud command instead of running it. Review a dry run before the real one. Region is `us-east1` (ADR 0015).
 
 ## Order of execution
 
@@ -33,4 +33,4 @@ Self-tests without cloud access (run in CI): `infra/test-dry-run.sh`, `infra/tes
 
 ## Related documents
 
-`docs/budget-alerts.md`, `docs/cost-model.md`, `docs/org-policies.md`, `docs/adr/0014-region-and-residency.md`.
+`docs/budget-alerts.md`, `docs/cost-model.md`, `docs/org-policies.md`, `docs/adr/0015-region-and-residency.md`.

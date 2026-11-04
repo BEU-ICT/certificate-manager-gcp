@@ -1,6 +1,6 @@
 # Firestore setup
 
-- Database: `(default)`, Native mode, `us-east1` (ADR 0014). Only the `(default)` database gets the free quota. The location cannot be changed after creation.
+- Database: `(default)`, Native mode, `us-east1` (ADR 0015). Only the `(default)` database gets the free quota. The location cannot be changed after creation.
 - Rules: `infra/firestore.rules` denies every client read and write; only the API's runtime service account (Admin SDK) reaches data. Tested by `api/test/integration/firestore-rules.integration.test.ts` (unauthenticated, authenticated and admin-claim clients, ten collections), run in CI with the integration job.
 - Indexes: `infra/firestore.indexes.json` holds the seven composite indexes of issue #16 §5 and spec §6, and the TTL policies on `expiresAt` for `idempotency` and `email_counters`. No single-field index exemptions are used, so write cost is the default.
 - Create and deploy: `infra/04-firestore.sh` (`DRY_RUN=1` first). Deploy only rules and indexes later with `firebase deploy --only firestore:rules,firestore:indexes`.
