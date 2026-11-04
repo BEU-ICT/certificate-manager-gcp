@@ -1,11 +1,32 @@
 {
-  "app": { "name": "Certificate Manager" },
-  "certificate": { "title": "Certificate" },
-  "login": { "title": "Sign in" },
-  "admin": { "title": "Admin dashboard" },
+  "app": {
+    "name": "Certificate Manager"
+  },
+  "certificate": {
+    "title": "Certificate"
+  },
+  "login": {
+    "title": "Sign in"
+  },
+  "admin": {
+    "title": "Admin dashboard"
+  },
   "notFound": {
     "title": "Page not found",
     "body": "The page you are looking for does not exist.",
     "home": "Back to home"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "certificateTypes": {
+    "attendance": "Attendance",
+    "appreciation": "Appreciation",
+    "thanks": "Thanks",
+    "distinction": "Distinction",
+    "instructor": "Instructor",
+    "student": "Student",
+    "team": "Team",
+    "other": "Other"
   }
 }

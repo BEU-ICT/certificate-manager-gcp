@@ -1,0 +1,18 @@
+{
+  "VALIDATION_FAILED": "The submitted data is not valid.",
+  "UNAUTHENTICATED": "Sign in to continue.",
+  "FORBIDDEN": "You do not have permission for this action.",
+  "NOT_FOUND": "The requested item was not found.",
+  "CONFLICT": "The action conflicts with existing data.",
+  "GONE": "This certificate has been revoked.",
+  "PAYLOAD_TOO_LARGE": "The submitted data is too large.",
+  "TEXT_DOES_NOT_FIT": "The text does not fit the template field.",
+  "TEMPLATE_MISMATCH": "The template does not match the selected event or type.",
+  "TEMPLATE_NOT_FOUND": "Template not found.",
+  "TEMPLATE_INVALID": "The template is invalid.",
+  "RATE_LIMITED": "Too many requests. Try again shortly.",
+  "INTERNAL": "An unexpected error occurred. Try again later.",
+  "UNAVAILABLE": "The service is temporarily unavailable. Try again later.",
+  "NETWORK": "Network error. Check your connection.",
+  "GENERIC": "Something went wrong. Try again."
+}
