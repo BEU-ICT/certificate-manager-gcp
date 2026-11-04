@@ -22,3 +22,8 @@ export {
   describeMigrationStateStoreContract,
   type MigrationStateStoreContractFactory,
 } from './migration-state-store.js';
+export {
+  describeTokenVerifierContract,
+  type TokenVerifierContractFactory,
+  type TokenVerifierHandle,
+} from './token-verifier.js';

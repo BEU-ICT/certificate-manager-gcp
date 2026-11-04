@@ -8,8 +8,8 @@ import { FakeOrganizationRepository } from '../../testing/fakes/fake-organizatio
 import { FakeScheduler } from '../../testing/fakes/fake-scheduler.js';
 import { FakeStorageGateway } from '../../testing/fakes/fake-storage-gateway.js';
 import { FakeTaskQueue } from '../../testing/fakes/fake-task-queue.js';
-import { FakeTemplateRepository } from '../../testing/fakes/fake-template-repository.js';
 import { FakeTaskRequestVerifier, FakeTokenVerifier } from '../../testing/fakes/fake-verifiers.js';
+import { FakeTemplateRepository } from '../../testing/fakes/fake-template-repository.js';
 
 /**
  * Local-profile adapters: the in-memory fakes double as the `memory` / `in-process` adapters
@@ -38,13 +38,17 @@ export function registerMemoryAdapters(r: Registries): void {
     taskQueue: new FakeTaskQueue(),
     scheduler: new FakeScheduler(),
   }));
-  r.auth.register(
-    'firebase',
-    devOnly('AUTH_PROVIDER', 'firebase', () => ({
+  // The local profile without an Auth emulator keeps the in-memory verifier so that
+  // `npm run dev:lite` works offline; production and emulator runs get the real Firebase adapter.
+  r.auth.register('firebase', async (ctx) => {
+    if (ctx.config.env === 'production' || process.env['FIREBASE_AUTH_EMULATOR_HOST']) {
+      return (await import('../firebase/index.js')).createAuthPorts(ctx);
+    }
+    return {
       tokenVerifier: new FakeTokenVerifier(),
       taskRequestVerifier: new FakeTaskRequestVerifier(),
-    })),
-  );
+    };
+  });
   for (const name of ['gmail', 'brevo']) {
     r.email.register(
       name,
