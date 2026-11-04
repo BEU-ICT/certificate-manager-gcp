@@ -29,6 +29,7 @@ const app = buildApp({
   log: { level: config.logLevel, gcpProject: config.gcpProject },
   ports: composition.ports,
   services: composition.services,
+  openApiEndpoint: config.flags.openApiEndpoint,
   flags: createFeatureFlags(config.flags),
 });
 

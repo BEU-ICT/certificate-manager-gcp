@@ -18,6 +18,6 @@
     "sourceMap": true,
     "noEmit": true
   },
-  "include": ["src", "test", "*.ts"],
+  "include": ["src", "test", "scripts/*.ts", "*.ts"],
   "exclude": ["node_modules", "dist", "test/architecture/fixtures"]
 }

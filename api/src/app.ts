@@ -2,6 +2,7 @@ import Fastify, { LogController, type FastifyInstance, type FastifyServerOptions
 import { installErrorHandling } from './http/error-handler.js';
 import { createLogger, type LogOptions } from './http/logging/logger.js';
 import { requestIdFrom } from './http/logging/trace.js';
+import { installOpenApi, registerOpenApiEndpoint } from './http/openapi/plugin.js';
 import { installRequestContext } from './http/request-context.js';
 import { healthRoutes } from './http/routes/health.js';
 import type { FeatureFlags } from './flags.js';
@@ -13,6 +14,8 @@ export interface AppDeps {
   /** Ports and module services built by the composition root (compose.ts); tests pass fakes. */
   ports?: Ports;
   services?: Services;
+  /** Serve `GET /internal/openapi.json` (config.openApiEndpoint). Defaults to off. */
+  openApiEndpoint?: boolean;
   /** Feature flags (flags.ts); route modules guard endpoints with http/flag-guard.ts. */
   flags?: FeatureFlags;
 }
@@ -39,8 +42,10 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
 
   installRequestContext(app, { gcpProject: deps.log?.gcpProject });
   installErrorHandling(app);
+  installOpenApi(app);
 
   void app.register(healthRoutes);
+  if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 
   return app;
 }

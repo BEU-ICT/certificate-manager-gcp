@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "depcruise": "depcruise --config .dependency-cruiser.cjs src",
+    "openapi:generate": "tsx scripts/generate-openapi.ts",
     "check:document-reference": "node scripts/check-document-reference.mjs",
     "check:module-readmes": "node scripts/check-module-readmes.mjs",
     "check:architecture": "npm run depcruise && npm run check:document-reference",
@@ -23,7 +24,9 @@
     "test:integration": "firebase emulators:exec --only firestore,auth --project demo-certificate-manager \"vitest run --config vitest.integration.config.ts\""
   },
   "dependencies": {
+    "@fastify/swagger": "^9.9.3",
     "fastify": "^5.12.8",
+    "fastify-type-provider-zod": "^7.0.0",
     "pino": "^10.4.0",
     "zod": "^4.6.7"
   },
@@ -34,6 +37,7 @@
     "eslint": "^10.14.0",
     "firebase-admin": "^14.5.0",
     "firebase-tools": "^15.34.2",
+    "openapi-types": "^12.1.3",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",

@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
 import { AppError, type ErrorDetail } from '../shared/errors.js';
 
@@ -69,6 +70,20 @@ export function errorHandler(
       'Request validation failed',
       zodDetails(error),
     );
+  }
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    // Route-level zod schemas (params, query, body); see http/openapi.
+    request.log.warn({ code: 'VALIDATION_FAILED' }, 'request validation failed');
+    const details = error.validation.map((issue) => ({
+      path: formatPath(
+        issue.instancePath
+          .split('/')
+          .filter((part) => part !== '')
+          .map((part) => (/^\d+$/.test(part) ? Number(part) : part)),
+      ),
+      message: issue.message ?? 'Invalid value',
+    }));
+    return send(request, reply, 400, 'VALIDATION_FAILED', 'Request validation failed', details);
   }
   if (isFastifyClientError(error)) {
     request.log.warn({ code: error.code, status: error.statusCode }, 'request rejected');
