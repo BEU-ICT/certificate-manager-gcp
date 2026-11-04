@@ -18,3 +18,4 @@ One Markdown file per decision, numbered `NNNN-title.md`, in the Michael Nygard 
 | [0012](0012-hexagonal-boundary-enforcement.md)        | Hexagonal boundaries and how they are enforced                    | accepted |
 | [0013](0013-spec-corrections.md)                      | Corrections to the spec recorded in issue #16                     | accepted |
 | [0014](0014-token-revocation-check-off-by-default.md) | Token revocation check is off by default                          | accepted |
+| [0016](0016-identity-platform-for-signup-lockdown.md) | Disable sign-up through the Identity Platform configuration       | proposed |
