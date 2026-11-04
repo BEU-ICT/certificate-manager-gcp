@@ -6,7 +6,8 @@ import { requestIdFrom } from './http/logging/trace.js';
 import { installOpenApi, registerOpenApiEndpoint } from './http/openapi/plugin.js';
 import { installRequestContext } from './http/request-context.js';
 import { healthRoutes } from './http/routes/health.js';
-import type { FeatureFlags } from './flags.js';
+import { createFeatureFlags, parseFlags, type FeatureFlags } from './flags.js';
+import { adminMeRoutes } from './http/routes/admin-me.js';
 import type { Ports, Services } from './wiring.js';
 
 export interface AppDeps {
@@ -54,6 +55,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   });
 
   void app.register(healthRoutes);
+  adminMeRoutes(app, deps.flags ?? createFeatureFlags(parseFlags({}, true).flags));
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 
   return app;

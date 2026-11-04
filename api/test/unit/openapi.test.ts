@@ -28,10 +28,10 @@ describe('OpenAPI document', () => {
     expect(await liveSpec()).toEqual(committed);
   });
 
-  it('is OpenAPI 3.1 and documents the health route', async () => {
+  it('is OpenAPI 3.1 and documents the health and admin routes', async () => {
     const doc = await liveSpec();
     expect(doc.openapi).toBe('3.1.0');
-    expect(Object.keys(doc.paths ?? {})).toEqual(['/internal/healthz']);
+    expect(Object.keys(doc.paths ?? {})).toEqual(['/api/v1/admin/me', '/internal/healthz']);
   });
 
   it('documents every error response with the shared ErrorBody schema', async () => {

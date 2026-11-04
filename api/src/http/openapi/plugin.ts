@@ -24,6 +24,17 @@ export function installOpenApi(app: FastifyInstance): void {
         description:
           'Generated from the zod route schemas (api/openapi.json, `npm run openapi:generate`).',
       },
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'Firebase ID token',
+            description:
+              'Admin routes require a Firebase ID token carrying the `role=admin` claim.',
+          },
+        },
+      },
     },
     transform: jsonSchemaTransform,
     transformObject: (document) => pruneUnusedSchemas(jsonSchemaTransformObject(document)),

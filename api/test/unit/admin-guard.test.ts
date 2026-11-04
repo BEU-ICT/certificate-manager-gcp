@@ -2,7 +2,8 @@ import { Writable } from 'node:stream';
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/app.js';
-import { adminRoutes } from '../../src/http/auth/admin-guard.js';
+import Fastify from 'fastify';
+import { adminRoutes, installAdminGuard } from '../../src/http/auth/admin-guard.js';
 import { forEachAdminRoute } from '../../src/testing/admin-routes.js';
 import { createFakes, fakeToken, type Fakes } from '../../src/testing/fakes/index.js';
 
@@ -112,7 +113,7 @@ describe('admin guard', () => {
       expect((await call(bearer(fakeToken('u1')))).statusCode).toBe(403);
       expect((await call(bearer(fakeToken('a1', 'admin')))).statusCode).toBe(200);
     });
-    expect(count).toBe(2);
+    expect(count).toBe(3); // /me + the two probes
   });
 
   it('throttles by IP before verifying tokens', async () => {
@@ -194,7 +195,8 @@ describe('admin route registration', () => {
   });
 
   it('forEachAdminRoute fails on an app without admin routes', async () => {
-    const app = buildApp({ ports: createFakes() });
+    const app = Fastify();
+    installAdminGuard(app);
     apps.push(app);
     await expect(forEachAdminRoute(app, () => undefined)).rejects.toThrow(/no admin routes/);
   });
