@@ -10,6 +10,14 @@
   "engines": {
     "node": ">=22"
   },
+  "scripts": {
+    "dev": "concurrently -k -n emulators,api,web -c yellow,cyan,magenta \"npm run dev:emulators\" \"npm run dev -w @certificate-manager/api\" \"npm run dev -w @certificate-manager/web\"",
+    "dev:lite": "concurrently -k -n api,web -c cyan,magenta \"npm run dev -w @certificate-manager/api\" \"npm run dev -w @certificate-manager/web\"",
+    "dev:emulators": "firebase emulators:start --only firestore,auth --project demo-certificate-manager"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  },
   "overrides": {
     "@firebase/firestore": {
       "@grpc/grpc-js": "^1.14.0"
