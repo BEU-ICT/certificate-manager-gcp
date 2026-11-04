@@ -1,100 +1,87 @@
 {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Certificate Manager API",
-    "version": "0.0.0-stub",
-    "description": "Hand-written minimal stub (E1-S4-T2). Replaced by the generated document from E1-S5-T1 (#41)."
-  },
-  "servers": [{ "url": "/api/v1" }],
-  "paths": {
-    "/health": {
-      "get": {
-        "operationId": "getHealth",
-        "summary": "Liveness probe",
-        "responses": {
-          "200": {
-            "description": "Service is up",
-            "headers": { "X-Request-Id": { "$ref": "#/components/headers/XRequestId" } },
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/Health" } }
-            }
-          },
-          "429": { "$ref": "#/components/responses/RateLimited" },
-          "500": { "$ref": "#/components/responses/Error" },
-          "503": { "$ref": "#/components/responses/Unavailable" }
-        }
+  "components": {
+    "schemas": {
+      "ErrorBody": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "additionalProperties": false,
+            "properties": {
+              "code": { "example": "VALIDATION_FAILED", "type": "string" },
+              "details": {
+                "items": { "$ref": "#/components/schemas/ErrorDetail" },
+                "type": "array"
+              },
+              "message": { "type": "string" },
+              "requestId": {
+                "description": "Request correlation ID; equals the X-Request-Id header.",
+                "type": "string"
+              }
+            },
+            "required": ["code", "message", "requestId"],
+            "type": "object"
+          }
+        },
+        "required": ["error"],
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "message": { "type": "string" },
+          "path": {
+            "description": "Location of the problem in the request, e.g. items[3].email",
+            "type": "string"
+          }
+        },
+        "required": ["path", "message"],
+        "type": "object"
+      },
+      "Health": {
+        "additionalProperties": false,
+        "properties": { "status": { "const": "ok", "type": "string" } },
+        "required": ["status"],
+        "type": "object"
       }
     }
   },
-  "components": {
-    "headers": {
-      "XRequestId": {
-        "description": "Request correlation ID; equals error.requestId in error bodies.",
-        "schema": { "type": "string" }
-      },
-      "RetryAfter": {
-        "description": "Seconds to wait before retrying.",
-        "schema": { "type": "integer", "minimum": 0 }
-      }
-    },
-    "schemas": {
-      "Health": {
-        "type": "object",
-        "required": ["status"],
-        "properties": { "status": { "type": "string", "enum": ["ok"] } }
-      },
-      "ErrorDetail": {
-        "type": "object",
-        "required": ["path", "message"],
-        "properties": { "path": { "type": "string" }, "message": { "type": "string" } }
-      },
-      "ErrorBody": {
-        "type": "object",
-        "required": ["error"],
-        "properties": {
-          "error": {
-            "type": "object",
-            "required": ["code", "message", "requestId"],
-            "properties": {
-              "code": { "type": "string", "example": "VALIDATION_FAILED" },
-              "message": { "type": "string" },
-              "details": {
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/ErrorDetail" }
-              },
-              "requestId": { "type": "string" }
-            }
+  "info": {
+    "description": "Generated from the zod route schemas (api/openapi.json, `npm run openapi:generate`).",
+    "title": "Certificate Manager API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/internal/healthz": {
+      "get": {
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Health" } }
+            },
+            "description": "Service is up"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
           }
-        }
-      }
-    },
-    "responses": {
-      "Error": {
-        "description": "Standard error body",
-        "headers": { "X-Request-Id": { "$ref": "#/components/headers/XRequestId" } },
-        "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
-        }
-      },
-      "RateLimited": {
-        "description": "RATE_LIMITED",
-        "headers": {
-          "X-Request-Id": { "$ref": "#/components/headers/XRequestId" },
-          "Retry-After": { "$ref": "#/components/headers/RetryAfter" }
         },
-        "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
-        }
-      },
-      "Unavailable": {
-        "description": "UNAVAILABLE",
-        "headers": {
-          "X-Request-Id": { "$ref": "#/components/headers/XRequestId" },
-          "Retry-After": { "$ref": "#/components/headers/RetryAfter" }
-        },
-        "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
-        }
+        "summary": "Liveness probe"
       }
     }
   }

@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-  '/health': {
+  '/internal/healthz': {
     parameters: {
       query?: never;
       header?: never;
@@ -25,66 +25,30 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    Health: {
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ErrorDetail: {
-      path: string;
-      message: string;
-    };
     ErrorBody: {
       error: {
         /** @example VALIDATION_FAILED */
         code: string;
-        message: string;
         details?: components['schemas']['ErrorDetail'][];
+        message: string;
+        /** @description Request correlation ID; equals the X-Request-Id header. */
         requestId: string;
       };
     };
-  };
-  responses: {
-    /** @description Standard error body */
-    Error: {
-      headers: {
-        'X-Request-Id': components['headers']['XRequestId'];
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ErrorBody'];
-      };
+    ErrorDetail: {
+      message: string;
+      /** @description Location of the problem in the request, e.g. items[3].email */
+      path: string;
     };
-    /** @description RATE_LIMITED */
-    RateLimited: {
-      headers: {
-        'X-Request-Id': components['headers']['XRequestId'];
-        'Retry-After': components['headers']['RetryAfter'];
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ErrorBody'];
-      };
-    };
-    /** @description UNAVAILABLE */
-    Unavailable: {
-      headers: {
-        'X-Request-Id': components['headers']['XRequestId'];
-        'Retry-After': components['headers']['RetryAfter'];
-        [name: string]: unknown;
-      };
-      content: {
-        'application/json': components['schemas']['ErrorBody'];
-      };
+    Health: {
+      /** @constant */
+      status: 'ok';
     };
   };
+  responses: never;
   parameters: never;
   requestBodies: never;
-  headers: {
-    /** @description Request correlation ID; equals error.requestId in error bodies. */
-    XRequestId: string;
-    /** @description Seconds to wait before retrying. */
-    RetryAfter: number;
-  };
+  headers: never;
   pathItems: never;
 }
 export type $defs = Record<string, never>;
@@ -101,16 +65,39 @@ export interface operations {
       /** @description Service is up */
       200: {
         headers: {
-          'X-Request-Id': components['headers']['XRequestId'];
           [name: string]: unknown;
         };
         content: {
           'application/json': components['schemas']['Health'];
         };
       };
-      429: components['responses']['RateLimited'];
-      500: components['responses']['Error'];
-      503: components['responses']['Unavailable'];
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
     };
   };
 }

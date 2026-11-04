@@ -170,6 +170,54 @@ jobs:
       - name: Scan full history
         run: '"${RUNNER_TEMP}/gitleaks" git --redact --verbose .'
 
+  # Breaking API changes (removed or renamed path/field, narrowed type, new required request
+  # field) fail the job unless the PR carries the `breaking-api-v2` label. Runs on pull requests
+  # only. The label is read live, so labelling the PR and re-running the job is enough.
+  # Locally: see "OpenAPI" in api/README.md.
+  openapi-check:
+    name: openapi-check
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      OASDIFF_VERSION: 1.35.0
+      OASDIFF_SHA256: a8023002fcb2eaa7f5758148a9303cb63d33b939886df312268bc0fc7b939140
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install oasdiff
+        run: |
+          set -euo pipefail
+          archive="oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          curl -sSfL -o "${RUNNER_TEMP}/${archive}" \
+            "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/${archive}"
+          echo "${OASDIFF_SHA256}  ${RUNNER_TEMP}/${archive}" | sha256sum --check -
+          tar -xzf "${RUNNER_TEMP}/${archive}" -C "${RUNNER_TEMP}" oasdiff
+      - name: Read breaking-api-v2 label
+        id: label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          labels="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/labels" --jq '.[].name')"
+          if printf '%s\n' "${labels}" | grep -qx 'breaking-api-v2'; then
+            echo "allow=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "allow=false" >> "${GITHUB_OUTPUT}"
+          fi
+      - name: Diff api/openapi.json against the base branch
+        env:
+          OASDIFF: ${{ runner.temp }}/oasdiff
+          ALLOW_BREAKING: ${{ steps.label.outputs.allow }}
+          BASE_REF: ${{ github.base_ref }}
+        run: api/scripts/openapi-check.sh "origin/${BASE_REF}"
+
   # Aggregating job: this is the check to mark as required (see docs/README.md).
   ci:
     name: ci
@@ -185,6 +233,7 @@ jobs:
         docker-build,
         audit,
         gitleaks,
+        openapi-check,
       ]
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -195,7 +244,8 @@ jobs:
         run: |
           echo "Job results: ${RESULTS}"
           for r in ${RESULTS}; do
-            if [ "${r}" != "success" ]; then
+            # openapi-check only runs on pull requests, so "skipped" is fine for it.
+            if [ "${r}" != "success" ] && [ "${r}" != "skipped" ]; then
               echo "::error::At least one required job did not succeed."
               exit 1
             fi

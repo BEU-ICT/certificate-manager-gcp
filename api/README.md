@@ -167,3 +167,25 @@ The GCS adapter is expected to read the same variable (the official `@google-clo
 ## Domain events
 
 `InProcessEventBus` (`src/adapters/in-process/event-bus.ts`) implements the `EventBus` port. `publish` awaits subscribers one after another in registration order; a throwing or rejecting subscriber is logged at ERROR (event type, subscriber name, error message/stack, never the payload) and never reaches the publisher. Subscribers register in the composition root (`subscribe(type, name, handler)` returns an unsubscribe function), so publishers never change when one is added.
+
+## OpenAPI
+
+The API contract is generated from the zod schemas of the routes (`fastify-type-provider-zod` + `@fastify/swagger`, OpenAPI 3.1) and committed as `api/openapi.json`. Never edit that file by hand.
+
+- Every route declares zod schemas for params, query, body and all documented responses. Use `errorResponses(...)` from `src/http/openapi/responses.ts` to document error statuses with the shared `ErrorBody` schema (429, 500 and 503 are always added); `jsonResponse(description, schema)` for success bodies.
+- Response bodies are produced from the schema (unknown fields are dropped, a mismatch is a generic `500 INTERNAL`). DTO schemas for public responses live in `src/http/dto/public/` and are built field by field, never by spreading an entity. `test/unit/dto-guard.test.ts` fails if a public DTO or the generated document contains `email`, `pdfPath`, `createdBy` or `revokeReason`, or if DTO code spreads an object.
+- After changing a route or DTO: `npm run openapi:generate -w api`, commit `api/openapi.json`, then `npm run api:types -w web` and commit the regenerated `web/src/api/schema.d.ts`. `test/unit/openapi.test.ts` boots the app and fails when the live spec differs from the committed file.
+- `GET /internal/openapi.json` serves the live document. It is registered only when `FEATURE_OPENAPI_ENDPOINT` is on (default: on outside production, off in production).
+
+### Breaking-change check (`openapi-check` CI job)
+
+On pull requests the job compares `api/openapi.json` with the version on the base branch (`git show origin/dev:api/openapi.json`) using [oasdiff](https://github.com/oasdiff/oasdiff) (pinned release, SHA-256 verified). Removed or renamed paths and fields, narrowed types and new required request fields fail the job; additive changes pass. Within `/api/v1` changes must be additive: for an intentional breaking change add the PR label `breaking-api-v2` and re-run the job (the label is read live).
+
+Verify locally (download the pinned `oasdiff_1.35.0_linux_amd64.tar.gz` from the oasdiff releases, or `brew install oasdiff`):
+
+```bash
+git fetch origin dev
+OASDIFF=/path/to/oasdiff api/scripts/openapi-check.sh origin/dev   # exit 1 on breaking changes
+```
+
+While `dev` still contains the hand-written stub (`info.version` `0.0.0-stub`), the script skips the diff (bootstrap case, marked `BOOTSTRAP ONLY` in `api/scripts/openapi-check.sh`; delete that block afterwards).

@@ -26,6 +26,7 @@ const app = buildApp({
   log: { level: config.logLevel, gcpProject: config.gcpProject },
   ports: composition.ports,
   services: composition.services,
+  openApiEndpoint: config.flags.openApiEndpoint,
 });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
