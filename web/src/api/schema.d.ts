@@ -67,9 +67,15 @@ export interface components {
       };
     };
     ErrorDetail: {
+      /** @description IN_USE: number of referencing records per kind. */
+      counts?: {
+        [key: string]: number;
+      };
       message: string;
       /** @description Location of the problem in the request, e.g. items[3].email */
       path: string;
+      /** @description SLUG_TAKEN: a free slug to retry with. */
+      suggestion?: string;
     };
     Health: {
       /** @constant */
