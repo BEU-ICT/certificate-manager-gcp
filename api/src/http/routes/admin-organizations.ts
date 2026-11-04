@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { Cursor } from '../../ports/common.js';
 import type { Services } from '../../wiring.js';
+import { audit } from '../audit.js';
 import { adminRoutes } from '../auth/admin-guard.js';
 import {
   CreateOrganizationBodyDto,
@@ -27,15 +28,6 @@ export function adminOrganizationRoutes(app: FastifyInstance, services: Services
       void reply.header('cache-control', 'no-store');
       done(null, payload);
     });
-    const audit = (
-      request: {
-        log: { info: (o: object, m: string) => void };
-        admin?: { uid: string } | undefined;
-      },
-      action: string,
-      entityId: string,
-    ) => request.log.info({ audit: true, action, entityId, adminUid: request.admin?.uid }, 'audit');
-
     r.post(
       '/organizations',
       {

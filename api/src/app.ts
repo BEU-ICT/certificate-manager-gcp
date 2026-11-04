@@ -7,6 +7,7 @@ import { installOpenApi, registerOpenApiEndpoint } from './http/openapi/plugin.j
 import { installRequestContext } from './http/request-context.js';
 import { healthRoutes } from './http/routes/health.js';
 import { createFeatureFlags, parseFlags, type FeatureFlags } from './flags.js';
+import { adminEventRoutes } from './http/routes/admin-events.js';
 import { adminOrganizationRoutes } from './http/routes/admin-organizations.js';
 import { adminMeRoutes } from './http/routes/admin-me.js';
 import { buildServices } from './services.js';
@@ -59,7 +60,10 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   void app.register(healthRoutes);
   adminMeRoutes(app, deps.flags ?? createFeatureFlags(parseFlags({}, true).flags));
   const services = deps.services ?? (deps.ports ? buildServices(deps.ports) : undefined);
-  if (services) adminOrganizationRoutes(app, services);
+  if (services) {
+    adminOrganizationRoutes(app, services);
+    adminEventRoutes(app, services);
+  }
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 
   return app;
