@@ -1,4 +1,5 @@
 import type {
+  AdminUserDirectory,
   CertificateRepository,
   Clock,
   EmailSender,
@@ -40,6 +41,7 @@ export interface QueuePorts {
 export interface AuthPorts {
   readonly tokenVerifier: TokenVerifier;
   readonly taskRequestVerifier: TaskRequestVerifier;
+  readonly adminUsers: AdminUserDirectory;
 }
 
 /** Every port the application depends on, supplied by the composition root (or the test context). */
@@ -61,6 +63,7 @@ export interface Ports {
   eventBus: EventBus;
   tokenVerifier: TokenVerifier;
   taskRequestVerifier: TaskRequestVerifier;
+  adminUsers: AdminUserDirectory;
 }
 
 /** Module services, constructed in compose.ts from ports. Modules add their services here. */

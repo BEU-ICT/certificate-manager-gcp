@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { AdapterError, compose } from './compose.js';
 import { ConfigError, loadConfig } from './config.js';
 import { createLogger } from './http/logging/logger.js';
-import { runMigrationsWithPorts } from './migrations/index.js';
+import { migrationSettings, runMigrationsWithPorts } from './migrations/index.js';
 
 /**
  * `npm run migrate`: runs pending migrations against the configured database and exits.
@@ -13,7 +13,12 @@ try {
   const config = loadConfig(process.env);
   const { ports } = await compose(config, undefined, process.env);
   const log = createLogger({ level: config.logLevel, gcpProject: config.gcpProject });
-  const report = await runMigrationsWithPorts(ports, log, `cli-${randomUUID()}`);
+  const report = await runMigrationsWithPorts(
+    ports,
+    log,
+    `cli-${randomUUID()}`,
+    migrationSettings(config),
+  );
   log.info({ applied: report.applied, skipped: report.skipped }, 'migrations finished');
   process.exit(0);
 } catch (err) {

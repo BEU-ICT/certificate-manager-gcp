@@ -26,3 +26,27 @@ export interface TaskRequestVerifier {
   /** Throws `UnauthenticatedError` when the credential is missing or does not match. */
   verify(authorizationHeader: string | undefined): Promise<TaskCaller>;
 }
+
+/** A user account of the identity provider. */
+export interface DirectoryUser {
+  uid: string;
+  email: string;
+}
+
+/**
+ * Creates and prepares administrator accounts. Only the backend ever sets the `role` claim.
+ * Used by the bootstrap migration; every operation is idempotent so a retry never duplicates.
+ */
+export interface AdminUserDirectory {
+  /** The account with this e-mail (case-insensitive), or `undefined`. */
+  findByEmail(email: string): Promise<DirectoryUser | undefined>;
+  /** Creates an account without password. Resolves with the existing account when one was created concurrently. */
+  create(input: { email: string; emailVerified: boolean }): Promise<DirectoryUser>;
+  /** Sets the custom claim `role=admin`, keeping other claims. */
+  setAdminRole(uid: string): Promise<void>;
+  /**
+   * A one-time link for choosing a password. It is a credential: callers send it to the owner of
+   * `email` only and never log or store it.
+   */
+  generatePasswordSetupLink(email: string): Promise<string>;
+}

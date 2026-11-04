@@ -5,6 +5,7 @@ import { createLogger } from '../../http/logging/logger.js';
 import type { TaskRequestVerifier } from '../../ports/index.js';
 import { UnauthenticatedError } from '../../shared/errors.js';
 import type { AuthPorts } from '../../wiring.js';
+import { FirebaseAdminUserDirectory } from './admin-user-directory.js';
 import { FirebaseTokenVerifier } from './token-verifier.js';
 
 const APP_NAME = 'certificate-manager-auth';
@@ -21,8 +22,10 @@ export function createAuthPorts({ config }: AdapterContext): AuthPorts {
   const app =
     getApps().find((a) => a.name === APP_NAME) ??
     initializeApp({ projectId: config.gcpProject }, APP_NAME);
+  const auth = getAuth(app);
   return {
-    tokenVerifier: new FirebaseTokenVerifier(getAuth(app), {
+    adminUsers: new FirebaseAdminUserDirectory(auth),
+    tokenVerifier: new FirebaseTokenVerifier(auth, {
       checkRevoked: config.authCheckRevoked,
       logger: createLogger({ level: config.logLevel, gcpProject: config.gcpProject }),
     }),

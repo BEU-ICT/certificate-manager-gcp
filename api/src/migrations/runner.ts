@@ -1,7 +1,13 @@
 import type { MigrationStateStore } from '../ports/index.js';
 import type { Ports } from '../wiring.js';
 import { migrations as registered } from './registry.js';
-import type { Migration, MigrationContext, MigrationLogger } from './types.js';
+import {
+  MigrationDeferred,
+  type Migration,
+  type MigrationContext,
+  type MigrationLogger,
+  type MigrationSettings,
+} from './types.js';
 
 const ID_PATTERN = /^\d{3}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -32,6 +38,8 @@ export interface MigrationReport {
   readonly applied: readonly string[];
   /** Ids that were already marked before this run (including ones another instance claimed). */
   readonly skipped: readonly string[];
+  /** Ids that reported {@link MigrationDeferred}: not marked, retried on the next start. */
+  readonly deferred?: readonly string[];
 }
 
 function validate(list: readonly Migration[]): void {
@@ -71,6 +79,7 @@ export async function runMigrations(options: RunMigrationsOptions): Promise<Migr
   const done = await store.appliedIds();
   const applied: string[] = [];
   const skipped: string[] = [];
+  const deferred: string[] = [];
 
   for (const migration of list) {
     const { id } = migration;
@@ -87,6 +96,12 @@ export async function runMigrations(options: RunMigrationsOptions): Promise<Migr
     try {
       await migration.run(context);
     } catch (cause) {
+      if (cause instanceof MigrationDeferred) {
+        await store.unmarkApplied(id, instanceId);
+        log.warn({ migration: id, reason: cause.message }, 'migration deferred');
+        deferred.push(id);
+        continue;
+      }
       log.error({ migration: id, err: cause }, 'migration failed');
       try {
         await store.unmarkApplied(id, instanceId);
@@ -100,7 +115,7 @@ export async function runMigrations(options: RunMigrationsOptions): Promise<Migr
   }
 
   if (applied.length === 0) log.info({ skipped: skipped.length }, 'no pending migrations');
-  return { applied, skipped };
+  return deferred.length > 0 ? { applied, skipped, deferred } : { applied, skipped };
 }
 
 /** Runs the registered migrations with the composed ports (shared by `server.ts` and `migrate.ts`). */
@@ -108,6 +123,7 @@ export function runMigrationsWithPorts(
   ports: Ports,
   log: MigrationLogger,
   instanceId: string,
+  settings: MigrationSettings,
 ): Promise<MigrationReport> {
   return runMigrations({
     store: ports.migrationState,
@@ -119,6 +135,8 @@ export function runMigrationsWithPorts(
       templates: ports.templates,
       certificates: ports.certificates,
       emailSender: ports.emailSender,
+      adminUsers: ports.adminUsers,
+      settings,
       log,
     },
   });

@@ -24,6 +24,7 @@ const queueStub = (tag: string): QueuePorts => ({ taskQueue: stub(tag), schedule
 const authStub = (tag: string): AuthPorts => ({
   tokenVerifier: stub(tag),
   taskRequestVerifier: stub(tag),
+  adminUsers: stub(tag),
 });
 
 const PROD_ENV = {
