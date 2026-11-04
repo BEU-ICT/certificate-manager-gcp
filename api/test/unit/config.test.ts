@@ -74,6 +74,14 @@ describe('loadConfig', () => {
     }
   });
 
+  it('reads AUTH_CHECK_REVOKED (default false)', () => {
+    expect(loadConfig(prod).authCheckRevoked).toBe(false);
+    expect(loadConfig({ ...prod, AUTH_CHECK_REVOKED: 'true' }).authCheckRevoked).toBe(true);
+    expect(issuesOf({ ...prod, AUTH_CHECK_REVOKED: 'yes' }).map((i) => i.variable)).toContain(
+      'AUTH_CHECK_REVOKED',
+    );
+  });
+
   it('returns a deeply frozen object', () => {
     const c = loadConfig(prod);
     expect(Object.isFrozen(c)).toBe(true);

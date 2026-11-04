@@ -124,14 +124,14 @@ describe('default registries', () => {
     await expect(compose(loadConfig(PROD_ENV))).rejects.toThrow(/not available in this build/);
   });
 
-  it('never serve stand-in verifiers or senders in production', async () => {
+  it('never serve stand-in senders in production', async () => {
     const env = { ...PROD_ENV, DB_ADAPTER: 'firestore' };
     const regs = defaultRegistries();
     regs.db.register('firestore', () => dbStub('firestore'));
     regs.storage.register('gcs', () => stub<StorageGateway>('gcs'));
     regs.queue.register('cloud-tasks', () => queueStub('cloud-tasks'));
     await expect(compose(loadConfig(env), regs)).rejects.toThrow(
-      'AUTH_PROVIDER: adapter "firebase" is not available in this build',
+      'EMAIL_PROVIDER: adapter "gmail" is not available in this build',
     );
   });
 });

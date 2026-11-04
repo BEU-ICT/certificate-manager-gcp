@@ -9,9 +9,8 @@ function decodePayload(jwt: string): Record<string, unknown> {
   >;
 }
 
-// TODO(BEU-ICT/certificate-manager#71): once the Firebase TokenVerifier exists, verify these tokens
-// through it (`verify(idToken)` -> AdminIdentity with role `admin`, UnauthenticatedError for
-// garbage) instead of inspecting the token structure and calling the Admin SDK directly.
+// Verification through the real TokenVerifier lives in firebase-token-verifier.integration.test.ts.
+// These tests pin the structure of the emulator's tokens the helpers rely on.
 describe('Auth emulator tokens', () => {
   it('createTestAdmin issues an ID token with the role=admin claim', async () => {
     const admin = await createTestAdmin();

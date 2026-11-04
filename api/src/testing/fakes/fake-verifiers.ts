@@ -14,7 +14,15 @@ export const TEST_ADMIN: AdminIdentity = {
 export const TEST_ADMIN_TOKEN = 'test-admin-token';
 export const TEST_TASK_CREDENTIAL = 'Bearer test-task-token';
 
-/** Accepts only registered bearer tokens; the test admin token is registered by default. */
+/** Token accepted by {@link FakeTokenVerifier}: `fake:<uid>:<role>`; an empty role means no claim. */
+export function fakeToken(uid: string, role = ''): string {
+  return `fake:${uid}:${role}`;
+}
+
+/**
+ * Accepts registered bearer tokens (the test admin token by default) and `fake:<uid>:<role>`
+ * tokens, whose email is `<uid>@example.test`.
+ */
 export class FakeTokenVerifier implements TokenVerifier {
   private readonly tokens = new Map<string, AdminIdentity>([[TEST_ADMIN_TOKEN, TEST_ADMIN]]);
 
@@ -27,10 +35,17 @@ export class FakeTokenVerifier implements TokenVerifier {
   }
 
   verify(bearer: string): Promise<AdminIdentity> {
-    const identity = this.tokens.get(bearer);
+    const identity = this.tokens.get(bearer) ?? parseFakeToken(bearer);
     if (!identity) return Promise.reject(new UnauthenticatedError('Invalid or expired token'));
     return Promise.resolve({ ...identity });
   }
+}
+
+function parseFakeToken(token: string): AdminIdentity | undefined {
+  const match = /^fake:([^:]+):([^:]*)$/.exec(token);
+  if (!match) return undefined;
+  const [, uid = '', role = ''] = match;
+  return { uid, email: `${uid}@example.test`, role: role === '' ? undefined : role };
 }
 
 /** Accepts exactly the configured `Authorization` header value. */

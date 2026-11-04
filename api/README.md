@@ -164,7 +164,7 @@ Helpers (`test/integration/helpers/`, import from `./helpers/index.js`):
 Current gaps (the code they depend on does not exist yet; each place carries a `TODO`):
 
 - There is no Firestore adapter yet, so `buildIntegrationApp()` uses the in-memory fakes for every port and `test/integration/firestore.integration.test.ts` writes and reads through `firebase-admin` directly. When the adapter lands, wire it into `buildIntegrationApp()` and switch the sample test to the repository.
-- There is no Firebase `TokenVerifier` yet (BEU-ICT/certificate-manager#71). `auth.integration.test.ts` checks the structure and claims of the emulator's ID tokens (`aud`, `iss`, `sub`, `role`) and calls `verifyIdToken`; it moves to the `TokenVerifier` once that exists.
+- `FirebaseTokenVerifier` (`src/adapters/firebase`) verifies emulator tokens in `firebase-token-verifier.integration.test.ts`; `auth.integration.test.ts` pins the structure of the emulator's tokens.
 
 ### Storage emulator (optional)
 

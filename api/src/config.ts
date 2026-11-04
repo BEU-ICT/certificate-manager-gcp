@@ -37,6 +37,8 @@ export interface Config {
     readonly invokerServiceAccount: string | undefined;
   };
   readonly bootstrapAdminEmail: string;
+  /** Reject ID tokens of disabled or revoked users (one Auth API call per admin request). */
+  readonly authCheckRevoked: boolean;
   readonly email: {
     readonly provider: (typeof EMAIL_PROVIDERS)[number];
     readonly fallbackProvider: (typeof EMAIL_PROVIDERS)[number] | undefined;
@@ -101,6 +103,7 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   NODE_ENV: 'development',
   PORT: '8080',
   LOG_LEVEL: 'info',
+  AUTH_CHECK_REVOKED: 'false',
   EMAIL_FROM_NAME: 'Certificate Manager',
   EMAIL_DAILY_CAP: '300',
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
@@ -143,6 +146,7 @@ const schema = z.object({
   TASKS_LOCATION: text(100).optional(),
   TASKS_INVOKER_SA: email.optional(),
   BOOTSTRAP_ADMIN_EMAIL: email,
+  AUTH_CHECK_REVOKED: oneOf(['true', 'false'] as const),
   EMAIL_PROVIDER: oneOf(EMAIL_PROVIDERS),
   EMAIL_FALLBACK_PROVIDER: oneOf(EMAIL_PROVIDERS).optional(),
   EMAIL_API_KEY: z.string().max(1024).optional(),
@@ -270,6 +274,7 @@ export function loadConfig(env: Env): Config {
       invokerServiceAccount: e.TASKS_INVOKER_SA,
     },
     bootstrapAdminEmail: e.BOOTSTRAP_ADMIN_EMAIL.toLowerCase(),
+    authCheckRevoked: e.AUTH_CHECK_REVOKED === 'true',
     email: {
       provider: e.EMAIL_PROVIDER,
       fallbackProvider: e.EMAIL_FALLBACK_PROVIDER,

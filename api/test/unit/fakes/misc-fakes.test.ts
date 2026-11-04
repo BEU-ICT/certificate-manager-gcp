@@ -105,6 +105,13 @@ describe('verifier fakes', () => {
     expect((await v.verify('t2')).uid).toBe('u2');
     v.revoke('t2');
     await expect(v.verify('t2')).rejects.toBeInstanceOf(UnauthenticatedError);
+    expect(await v.verify('fake:u3:admin')).toEqual({
+      uid: 'u3',
+      email: 'u3@example.test',
+      role: 'admin',
+    });
+    expect((await v.verify('fake:u4:')).role).toBeUndefined();
+    await expect(v.verify('fake:u4')).rejects.toBeInstanceOf(UnauthenticatedError);
   });
 
   it('task verifier requires the exact credential', async () => {
