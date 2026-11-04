@@ -6,10 +6,14 @@ import { describe, expect, it } from 'vitest';
 describe('graceful shutdown', () => {
   it('exits 0 within 10 s on SIGTERM with an idle connection open', async () => {
     const port = 18080 + Math.floor(Math.random() * 1000);
-    const child = spawn(process.execPath, ['--import', 'tsx', 'src/server.ts'], {
-      env: { ...process.env, PORT: String(port) },
-      stdio: ['ignore', 'pipe', 'inherit'],
-    });
+    const child = spawn(
+      process.execPath,
+      ['--import', 'tsx', '--import', './test/support/stub-adapters.ts', 'src/server.ts'],
+      {
+        env: { ...process.env, PORT: String(port) },
+        stdio: ['ignore', 'pipe', 'inherit'],
+      },
+    );
     try {
       await new Promise<void>((resolve, reject) => {
         child.once('exit', () => reject(new Error('server exited early')));

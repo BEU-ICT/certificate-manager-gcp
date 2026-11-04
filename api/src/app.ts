@@ -4,10 +4,14 @@ import { createLogger, type LogOptions } from './http/logging/logger.js';
 import { requestIdFrom } from './http/logging/trace.js';
 import { installRequestContext } from './http/request-context.js';
 import { healthRoutes } from './http/routes/health.js';
+import type { Ports, Services } from './wiring.js';
 
 export interface AppDeps {
   /** Logging settings; the composition root passes LOG_LEVEL / GCP_PROJECT. Defaults to silent. */
   log?: LogOptions;
+  /** Ports and module services built by the composition root (compose.ts); tests pass fakes. */
+  ports?: Ports;
+  services?: Services;
 }
 
 const BODY_LIMIT_BYTES = 1024 * 1024;
