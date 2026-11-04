@@ -1,5 +1,34 @@
 {
   "dashboard": {
     "intro": "Sertifikatlar, təşkilatlar və tədbirlər burada idarə olunacaq."
+  },
+  "login": {
+    "title": "Daxil ol",
+    "email": "E-poçt",
+    "password": "Parol",
+    "submit": "Daxil ol",
+    "forgot": "Parolu unutmusunuz?",
+    "show": "Göstər",
+    "hide": "Gizlət",
+    "showPassword": "Parolu göstər",
+    "hidePassword": "Parolu gizlət",
+    "sessionExpired": "Sessiyanızın vaxtı bitdi. Yenidən daxil olun.",
+    "errors": {
+      "emailRequired": "E-poçt ünvanını daxil edin",
+      "emailInvalid": "Düzgün e-poçt ünvanı daxil edin",
+      "passwordRequired": "Parolu daxil edin",
+      "invalidCredentials": "E-poçt və ya parol yanlışdır",
+      "tooManyRequests": "Çox cəhd edildi, sonra yenidən yoxlayın",
+      "network": "Şəbəkə xətası. Bağlantınızı yoxlayın.",
+      "disabled": "Bu hesab deaktiv edilib.",
+      "noAccess": "Hesabınızın administrator icazəsi yoxdur"
+    }
+  },
+  "forgot": {
+    "title": "Parolun sıfırlanması",
+    "intro": "Administrator hesabınızın e-poçt ünvanını daxil edin. Yeni parol seçmək üçün sizə keçid göndərəcəyik.",
+    "submit": "Sıfırlama keçidini göndər",
+    "sent": "Bu ünvan administratora məxsusdursa, e-məktub göndərildi",
+    "back": "Daxil olmağa qayıt"
   }
 }

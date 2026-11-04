@@ -1,14 +1,18 @@
-import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, ReactNode, Ref, TextareaHTMLAttributes } from 'react';
 import { controlClass, cx } from './cx';
 import { FormField } from './FormField';
 
 interface FieldProps {
   label: ReactNode;
-  error?: string;
-  hint?: string;
+  error?: string | undefined;
+  hint?: string | undefined;
 }
 
-export type TextFieldProps = FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>;
+export type TextFieldProps = FieldProps &
+  Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> & {
+    /** React 19 passes `ref` as a prop; react-hook-form's `register` needs it for focus. */
+    ref?: Ref<HTMLInputElement>;
+  };
 
 export function TextField({
   label,

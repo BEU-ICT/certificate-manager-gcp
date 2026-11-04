@@ -27,7 +27,7 @@ Copy `.env.example` to `.env.local` for the public Firebase web config.
   route-level `React.lazy` chunks; the root chunk holds only the router, layout and the 404 page.
 - `src/auth/`: the only module that may import the Firebase SDK (ESLint-enforced); it is reached
   only from admin code, so Firebase ships in its own chunk next to the admin bundle.
-- `src/admin/`: admin area (login, protected routes, screens).
+- `src/admin/`: admin area: `/login` and `/login/forgot-password` (react-hook-form + zod, no registration), post-login redirect validation (`redirect.ts`), API/auth wiring (`session.ts`), protected routes and screens.
 - `src/pages/`: public pages.
 - `src/i18n/`, `src/locales/{az,en}/{common,admin,public,errors}.json`: i18next with a lazy
   per-file backend (only the active language is downloaded). Language: stored choice, `?lang`,
@@ -51,3 +51,4 @@ No CORS is configured anywhere: in production Firebase Hosting rewrites `/api/v1
 - **API mocking**: call `setupMswServer()` from `@/test/server` in the test file and add handlers per test with `server.use(http.get('*/api/v1/...', ...))`. Unhandled requests fail the test.
 - **Accessibility**: `await expectNoA11yViolations(container)` from `@/test/axe` (vitest-axe, WCAG rules; colour contrast is covered by the design tokens because jsdom has no layout). Use it in every page test.
 - **E2E smoke** (`e2e/`, Playwright, Chromium): `playwright.config.ts` starts the API with in-process adapters (`DB_ADAPTER=memory`, no emulators needed) and the Vite dev server. First run: `npx playwright install chromium`. It runs in CI on merges to `dev` and nightly (`.github/workflows/e2e.yml`), not on every PR.
+- **Sign-in e2e** (`e2e/admin-login.spec.ts`): the form and navigation tests run offline. The tests that actually sign in are skipped unless `E2E_AUTH_EMULATOR=true`, `E2E_ADMIN_EMAIL` and `E2E_ADMIN_PASSWORD` are set; they need the Auth emulator (`npm run dev:emulators` at the repo root), the API started with `FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099`, the web app started with `VITE_USE_AUTH_EMULATOR=true`, and an administrator with the `role=admin` claim (the seed script, #61, creates one). Use emulator-only test values, never real credentials.
