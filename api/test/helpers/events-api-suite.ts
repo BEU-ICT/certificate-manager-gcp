@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call -- HTTP response bodies are untyped JSON; the assertions check their shape. */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- HTTP response bodies are untyped JSON; the assertions check their shape. */
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/app.js';
 import { buildServices } from '../../src/services.js';
 import { forEachAdminRoute } from '../../src/testing/admin-routes.js';
-import { createFakes, fakeToken, type Fakes } from '../../src/testing/fakes/index.js';
+import { fakeToken, type Fakes } from '../../src/testing/fakes/index.js';
 import type { Services } from '../../src/wiring.js';
 
 /**
