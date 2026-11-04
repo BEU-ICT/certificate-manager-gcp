@@ -32,3 +32,10 @@ export {
   sampleOrganization,
   type OrganizationRepositoryContractFactory,
 } from './organization-repository.js';
+export {
+  describeEventRepositoryContract,
+  sampleEvent,
+  ORG_A,
+  ORG_B,
+  type EventRepositoryContractFactory,
+} from './event-repository.js';

@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type {
-  Certificate,
-  CertificateEvent,
-  Organization,
-  Template,
-} from '../../../src/shared/domain.js';
+import type { Certificate, Organization, Template } from '../../../src/shared/domain.js';
 import { ConflictError, ValidationError } from '../../../src/shared/errors.js';
 import {
   asCertificateId,
@@ -14,7 +9,6 @@ import {
 } from '../../../src/shared/ids.js';
 import {
   FakeCertificateRepository,
-  FakeEventRepository,
   FakeOrganizationRepository,
   FakeTemplateRepository,
 } from '../../../src/testing/fakes/index.js';
@@ -88,36 +82,6 @@ describe('FakeOrganizationRepository', () => {
     const r = new FakeOrganizationRepository();
     await r.create(org(1));
     expect((await r.list({ limit: 1 })).nextCursor).toBeNull();
-  });
-});
-
-describe('FakeEventRepository', () => {
-  const ev = (n: number, org: string, slug: string): CertificateEvent => ({
-    id: asEventId(`ev${n}`),
-    organizationId: asOrganizationId(org),
-    slug,
-    name: slug,
-    createdAt: day(n),
-  });
-
-  it('scopes slug uniqueness to the organization', async () => {
-    const r = new FakeEventRepository();
-    await r.create(ev(1, 'o1', 'devfest'));
-    await r.create(ev(2, 'o2', 'devfest'));
-    await expect(r.create(ev(3, 'o1', 'devfest'))).rejects.toBeInstanceOf(ConflictError);
-    expect((await r.getBySlug(asOrganizationId('o2'), 'devfest'))?.id).toBe('ev2');
-    expect(await r.count()).toBe(2);
-    expect(await r.count(asOrganizationId('o1'))).toBe(1);
-  });
-
-  it('lists by organization newest first', async () => {
-    const r = new FakeEventRepository();
-    await r.create(ev(1, 'o1', 'a'));
-    await r.create(ev(2, 'o1', 'b'));
-    await r.create(ev(3, 'o2', 'c'));
-    const page = await r.listByOrganization(asOrganizationId('o1'));
-    expect(page.items.map((e) => e.slug)).toEqual(['b', 'a']);
-    expect(await r.getById(asEventId('ev3'))).not.toBeNull();
   });
 });
 

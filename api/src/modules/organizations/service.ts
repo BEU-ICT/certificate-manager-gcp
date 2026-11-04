@@ -8,35 +8,10 @@ import type {
 import type { Organization } from '../../shared/domain.js';
 import { InUseError, NotFoundError, SlugTakenError, ValidationError } from '../../shared/errors.js';
 import { isOrganizationId, type OrganizationId } from '../../shared/ids.js';
+import { ReferenceCheckRegistry } from '../../shared/references.js';
 import { SCHEMA_VERSION } from '../../shared/schema-version.js';
 import { isValidSlug, slugify, withSuffix } from '../../shared/slug.js';
 import { normalizeName } from '../../shared/text.js';
-
-/** A module that holds records pointing at an organization registers one of these (composition root). */
-export interface ReferenceChecker {
-  /** Key in the `IN_USE` counts, e.g. `events`. */
-  readonly name: string;
-  countReferences(organizationId: OrganizationId): Promise<number>;
-}
-
-/** Lets other modules veto deletion without the organizations module reading their data. */
-export class ReferenceCheckRegistry {
-  private readonly checkers: ReferenceChecker[] = [];
-
-  register(checker: ReferenceChecker): void {
-    if (this.checkers.some((c) => c.name === checker.name)) {
-      throw new Error(`Reference checker "${checker.name}" is already registered`);
-    }
-    this.checkers.push(checker);
-  }
-
-  async countAll(organizationId: OrganizationId): Promise<Record<string, number>> {
-    const entries = await Promise.all(
-      this.checkers.map(async (c) => [c.name, await c.countReferences(organizationId)] as const),
-    );
-    return Object.fromEntries(entries);
-  }
-}
 
 export interface CreateOrganizationInput {
   name: string;
