@@ -1,6 +1,7 @@
 import { buildApp } from './app.js';
 import { AdapterError, compose, type Composition } from './compose.js';
 import { ConfigError, loadConfig, type Config } from './config.js';
+import { createFeatureFlags } from './flags.js';
 import { shutdown } from './shutdown.js';
 
 // Composition root: the only module that reads process.env.
@@ -26,6 +27,7 @@ const app = buildApp({
   log: { level: config.logLevel, gcpProject: config.gcpProject },
   ports: composition.ports,
   services: composition.services,
+  flags: createFeatureFlags(config.flags),
 });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
