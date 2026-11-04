@@ -1,7 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import { buildApp } from './app.js';
 import { AdapterError, compose, type Composition } from './compose.js';
 import { ConfigError, loadConfig, type Config } from './config.js';
 import { createFeatureFlags } from './flags.js';
+import { runMigrationsWithPorts } from './migrations/index.js';
 import { shutdown } from './shutdown.js';
 
 // Composition root: the only module that reads process.env.
@@ -40,6 +42,16 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
       },
     );
   });
+}
+
+// Pending data migrations run before the first request; a failure stops startup (exit 1) so that
+// Cloud Run restarts the instance and the migration is retried.
+try {
+  const instanceId = `${process.env['K_REVISION'] ?? 'local'}-${randomUUID()}`;
+  await runMigrationsWithPorts(composition.ports, app.log, instanceId);
+} catch (err) {
+  app.log.error(err, 'migrations failed');
+  process.exit(1);
 }
 
 try {

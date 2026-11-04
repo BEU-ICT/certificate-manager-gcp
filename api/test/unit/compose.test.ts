@@ -18,6 +18,7 @@ const dbStub = (tag: string): RepositoryPorts => ({
   events: stub(tag),
   templates: stub(tag),
   certificates: stub(tag),
+  migrationState: stub(tag),
 });
 const queueStub = (tag: string): QueuePorts => ({ taskQueue: stub(tag), scheduler: stub(tag) });
 const authStub = (tag: string): AuthPorts => ({
