@@ -48,9 +48,11 @@ module.exports = {
     },
     {
       name: 'testing-not-from-production-code',
-      comment: '(f) testing/** (fakes, test helpers) must not be imported by non-test code.',
+      comment:
+        '(f) testing/** (fakes, test helpers) must not be imported by non-test code. ' +
+        'Exception: adapters/memory/**, which exposes the fakes as the local-profile adapters.',
       severity: 'error',
-      from: { path: '^src/', pathNot: '^src/testing/' },
+      from: { path: '^src/', pathNot: '^src/(testing|adapters/memory)/' },
       to: { path: '^src/testing/' },
     },
   ],

@@ -163,7 +163,7 @@ describe('ESLint vendor import restriction', () => {
 describe('ESLint src/testing restriction', () => {
   it.each([
     'src/modules/certificates/service.ts',
-    'src/adapters/memory/clock.ts',
+    'src/adapters/system/clock.ts',
     'src/http/routes/health.ts',
     'src/app.ts',
   ])('rejects importing src/testing from %s', async (virtualPath) => {
@@ -179,6 +179,10 @@ describe('ESLint src/testing restriction', () => {
       expect(await lintAs('allowed-testing-from-test.ts', virtualPath)).toEqual([]);
     },
   );
+
+  it('allows the memory adapters (the fakes) to import src/testing', async () => {
+    expect(await lintAs('testing-import.ts', 'src/adapters/memory/index.ts')).toEqual([]);
+  });
 
   it('allows src/testing to import its own files', async () => {
     expect(await lintAs('testing-import.ts', 'src/testing/fakes.ts')).toEqual([]);
