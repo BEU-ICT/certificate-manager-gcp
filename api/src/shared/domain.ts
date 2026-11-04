@@ -14,12 +14,20 @@ export interface Organization {
   schemaVersion: number;
 }
 
+/** Language of the e-mails sent for an event's certificates. */
+export type EmailLanguage = 'az' | 'en';
+export const EMAIL_LANGUAGES: readonly EmailLanguage[] = ['az', 'en'];
+export const DEFAULT_EMAIL_LANGUAGE: EmailLanguage = 'az';
+
 export interface CertificateEvent {
   id: EventId;
   organizationId: OrganizationId;
   slug: string;
   name: string;
+  emailLanguage: EmailLanguage;
   createdAt: Date;
+  updatedAt: Date;
+  schemaVersion: number;
 }
 
 export interface Template {

@@ -1,4 +1,6 @@
-import type { OrganizationService, ReferenceCheckRegistry } from './modules/organizations/index.js';
+import type { EventService } from './modules/events/index.js';
+import type { OrganizationService } from './modules/organizations/index.js';
+import type { ReferenceCheckRegistry } from './shared/references.js';
 import type {
   AdminUserDirectory,
   CertificateRepository,
@@ -72,4 +74,7 @@ export interface Services {
   readonly organizations: OrganizationService;
   /** Modules that reference organizations register their checkers here (services.ts). */
   readonly organizationReferences: ReferenceCheckRegistry;
+  readonly events: EventService;
+  /** Templates and certificates register their event checkers here (services.ts). */
+  readonly eventReferences: ReferenceCheckRegistry;
 }

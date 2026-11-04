@@ -1,4 +1,10 @@
-import type { Certificate, CertificateEvent, Organization, Template } from '../shared/domain.js';
+import type {
+  Certificate,
+  CertificateEvent,
+  EmailLanguage,
+  Organization,
+  Template,
+} from '../shared/domain.js';
 import type { CertificateId, EventId, OrganizationId, TemplateRef } from '../shared/ids.js';
 import type { Filter, Page, PageRequest } from './common.js';
 
@@ -33,14 +39,26 @@ export interface OrganizationRepository {
 }
 
 export interface EventRepository {
-  /** Fails with `ConflictError` when the slug is taken within the organization. */
+  /**
+   * Creates the event and reserves `(organizationId, slug)` in the same transaction.
+   * Fails with `SlugTakenError` (a `ConflictError`) when the slug is taken within the organization.
+   */
   create(event: CertificateEvent): Promise<void>;
   getById(id: EventId): Promise<CertificateEvent | null>;
   getBySlug(organizationId: OrganizationId, slug: string): Promise<CertificateEvent | null>;
-  listByOrganization(
-    organizationId: OrganizationId,
+  /** Newest first (`createdAt` descending, then `id`), optionally limited to one organization. */
+  list(
+    filter?: { organizationId?: OrganizationId },
     page?: PageRequest,
   ): Promise<Page<CertificateEvent>>;
+  /** Changes only the given fields and `updatedAt`; returns the updated event, or `null` if missing. */
+  update(
+    id: EventId,
+    changes: { name?: string; emailLanguage?: EmailLanguage },
+    updatedAt: Date,
+  ): Promise<CertificateEvent | null>;
+  /** Deletes the event and releases its slug in the same transaction. False if missing. */
+  delete(id: EventId): Promise<boolean>;
   count(organizationId?: OrganizationId): Promise<number>;
 }
 

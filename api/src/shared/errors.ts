@@ -52,8 +52,8 @@ export class ForbiddenError extends AppError {
 
 export class NotFoundError extends AppError {
   readonly statusCode = 404;
-  constructor(message = 'Resource not found') {
-    super('NOT_FOUND', message);
+  constructor(message = 'Resource not found', details?: ErrorDetail[]) {
+    super('NOT_FOUND', message, details);
   }
 }
 
