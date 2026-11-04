@@ -1,6 +1,26 @@
 {
   "components": {
     "schemas": {
+      "AdminMe": {
+        "additionalProperties": false,
+        "properties": {
+          "email": { "type": "string" },
+          "features": {
+            "additionalProperties": false,
+            "description": "Feature flags relevant to the admin UI.",
+            "properties": {
+              "bulkIssuance": { "type": "boolean" },
+              "publicPdfGeneration": { "type": "boolean" }
+            },
+            "required": ["bulkIssuance", "publicPdfGeneration"],
+            "type": "object"
+          },
+          "role": { "const": "admin", "type": "string" },
+          "uid": { "type": "string" }
+        },
+        "required": ["uid", "email", "role", "features"],
+        "type": "object"
+      },
       "ErrorBody": {
         "additionalProperties": false,
         "properties": {
@@ -43,6 +63,14 @@
         "required": ["status"],
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "Firebase ID token",
+        "description": "Admin routes require a Firebase ID token carrying the `role=admin` claim.",
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
@@ -52,6 +80,52 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/me": {
+      "get": {
+        "description": "Requires a Firebase ID token with the `role=admin` claim.",
+        "operationId": "getAdminMe",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminMe" } }
+            },
+            "description": "The authenticated administrator"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Current administrator"
+      }
+    },
     "/internal/healthz": {
       "get": {
         "operationId": "getHealth",
