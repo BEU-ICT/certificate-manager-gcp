@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { buildApp } from './app.js';
 import { AdapterError, compose, type Composition } from './compose.js';
 import { ConfigError, loadConfig, type Config } from './config.js';
+import { createFeatureFlags } from './flags.js';
 import { runMigrationsWithPorts } from './migrations/index.js';
 import { shutdown } from './shutdown.js';
 
@@ -28,6 +29,7 @@ const app = buildApp({
   log: { level: config.logLevel, gcpProject: config.gcpProject },
   ports: composition.ports,
   services: composition.services,
+  flags: createFeatureFlags(config.flags),
 });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {

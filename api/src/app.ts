@@ -4,6 +4,7 @@ import { createLogger, type LogOptions } from './http/logging/logger.js';
 import { requestIdFrom } from './http/logging/trace.js';
 import { installRequestContext } from './http/request-context.js';
 import { healthRoutes } from './http/routes/health.js';
+import type { FeatureFlags } from './flags.js';
 import type { Ports, Services } from './wiring.js';
 
 export interface AppDeps {
@@ -12,6 +13,8 @@ export interface AppDeps {
   /** Ports and module services built by the composition root (compose.ts); tests pass fakes. */
   ports?: Ports;
   services?: Services;
+  /** Feature flags (flags.ts); route modules guard endpoints with http/flag-guard.ts. */
+  flags?: FeatureFlags;
 }
 
 const BODY_LIMIT_BYTES = 1024 * 1024;

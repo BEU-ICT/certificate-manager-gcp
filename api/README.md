@@ -9,7 +9,23 @@ All configuration comes from environment variables, validated once at boot by `l
 - Outside `NODE_ENV=production`, unset variables fall back to local defaults (in-memory adapters, emulator project). In production the project, URLs, e-mail sender and adapter selectors are required, URLs must be `https`, and `memory`/`in-process` adapters are rejected.
 - Only `src/server.ts` reads `process.env`; everything else receives the frozen `Config` object.
 
-Feature flags (`FEATURE_*`, values `true|false|1|0`; unknown `FEATURE_*` variables fail boot): `FEATURE_OPENAPI_ENDPOINT` (default off in production, on elsewhere), `FEATURE_BOUNCE_JOB` (off), `FEATURE_EMAIL_FALLBACK` (on), `FEATURE_BULK_ISSUANCE` (on), `FEATURE_PUBLIC_PDF_GENERATION` (on). They are exposed as the typed `config.flags` object.
+Feature flags are documented in [Feature flags](#feature-flags).
+
+## Feature flags
+
+The registry in `src/flags.ts` is the single source of truth: each flag has an environment variable, default and description. `config.ts` only passes the environment in and exposes the result as the typed, frozen `config.flags` object (e.g. `config.flags.openApiEndpoint`). Values are `true|false|1|0`; invalid values and unknown `FEATURE_*` variables fail boot, so typos are caught. Removing a flag is a change to `flags.ts` plus its usages.
+
+| Variable                        | Key                   | Default                         | Purpose                                              |
+| ------------------------------- | --------------------- | ------------------------------- | ---------------------------------------------------- |
+| `FEATURE_OPENAPI_ENDPOINT`      | `openApiEndpoint`     | off in production, on elsewhere | Serve the OpenAPI document                           |
+| `FEATURE_BOUNCE_JOB`            | `bounceJob`           | off (until #161 is verified)    | Bounce-processing job                                |
+| `FEATURE_EMAIL_FALLBACK`        | `emailFallback`       | on                              | Use `EMAIL_FALLBACK_PROVIDER` when the primary fails |
+| `FEATURE_BULK_ISSUANCE`         | `bulkIssuance`        | on                              | Bulk certificate issuance                            |
+| `FEATURE_PUBLIC_PDF_GENERATION` | `publicPdfGeneration` | on                              | On-demand public PDF generation (kill switch)        |
+
+Usage: `createFeatureFlags(config.flags)` gives a `FeatureFlags` (`isEnabled(name)`), passed to `buildApp({ flags })` and to modules as a dependency. Guard a route with `requireFlag(flags, 'bulkIssuance')` from `src/http/flag-guard.ts` (`onRequest` hook) or call `assertFlagEnabled` in a handler: when the flag is off the route answers `404 NOT_FOUND` (hidden), except kill-switch flags (`killSwitch: true` in the registry, currently `publicPdfGeneration`), which answer `503 UNAVAILABLE`.
+
+Admin UI: `buildAdminFeatures(flags)` builds the `features` object (`bulkIssuance`, `publicPdfGeneration`; internal switches are not exposed) that `GET /api/v1/admin/me` will include so the UI can hide disabled actions. That route does not exist yet (it arrives with the auth/admin routes); it must return this builder's result as `features`.
 
 ## Container image
 
@@ -167,6 +183,10 @@ The GCS adapter is expected to read the same variable (the official `@google-clo
 ## Domain events
 
 `InProcessEventBus` (`src/adapters/in-process/event-bus.ts`) implements the `EventBus` port. `publish` awaits subscribers one after another in registration order; a throwing or rejecting subscriber is logged at ERROR (event type, subscriber name, error message/stack, never the payload) and never reaches the publisher. Subscribers register in the composition root (`subscribe(type, name, handler)` returns an unsubscribe function), so publishers never change when one is added.
+
+## Module READMEs
+
+Every directory under `src/modules/*` needs a non-empty `README.md` (responsibility, public interface, owned data, non-goals; template `docs/module-readme-template.md`). `npm run check:module-readmes` fails otherwise and runs in CI. Decisions are recorded in `docs/adr/`.
 
 ## Data migrations
 
