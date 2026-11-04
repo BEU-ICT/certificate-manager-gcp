@@ -1,0 +1,8 @@
+import type { CertificateId } from '../shared/ids.js';
+
+export interface IdGenerator {
+  /** 22-char base64url from 16 random bytes. */
+  newCertificateId(): CertificateId;
+  /** Unguessable URL-safe token (e.g. for unsubscribe/verification links). */
+  newToken(): string;
+}
