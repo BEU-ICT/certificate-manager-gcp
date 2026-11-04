@@ -121,6 +121,49 @@ Repository suites are added by the epics that define the repositories, using the
 
 `test/unit/contracts/harness.test.ts` proves the harness itself: it runs deliberately broken adapters (`fixtures/broken-adapters.fixture.ts`) through the real suites in a nested Vitest run and asserts that they fail and name the violated clause. The fixture does not match `*.test.ts`, so the normal run never contains a failing test.
 
+## Integration tests
+
+Integration tests run against the Firebase Emulator Suite (Firestore and Auth). They live in `test/integration/` as `*.integration.test.ts`, use their own config (`vitest.integration.config.ts`) and are excluded from `npm test` and `npm run test:unit`.
+
+```bash
+npm run test:integration   # from api/ or: npm run test:integration -w api (repo root)
+```
+
+Requirements: Node (see `.nvmrc`) and a JDK 21+ (`java -version`). `firebase-tools` is a devDependency; the emulator jars are downloaded on first use into `~/.cache/firebase/emulators` (CI caches that directory).
+
+- `firebase.json` (repo root) fixes the ports: Firestore `127.0.0.1:8081`, Auth `127.0.0.1:9099`; the Emulator UI is disabled. The project is `demo-certificate-manager` (the `demo-` prefix makes the CLI refuse any non-emulated service).
+- `firebase emulators:exec` starts the emulators once, runs Vitest inside them (it exports `FIRESTORE_EMULATOR_HOST`, `FIREBASE_AUTH_EMULATOR_HOST`, `GCLOUD_PROJECT`) and stops them afterwards, so the startup cost is paid once per run, not per file.
+- Test files run one after another (`fileParallelism: false`) and share one emulator. Each file isolates its data: call `resetFirestore()` in `beforeEach`, or use unique IDs (Auth users get a random e-mail).
+
+Helpers (`test/integration/helpers/`, import from `./helpers/index.js`):
+
+| Helper                  | Purpose                                                                                                           |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `resetFirestore()`      | `DELETE` on the emulator's clear endpoint; removes every document.                                                |
+| `getTestFirestore()`    | `firebase-admin` Firestore client bound to the emulator.                                                          |
+| `createTestAdmin()`     | Creates an Auth emulator user with the `role=admin` custom claim, signs in and returns `{ uid, email, idToken }`. |
+| `createTestUser()`      | Same without the claim (authenticated, not an administrator).                                                     |
+| `buildIntegrationApp()` | `buildApp()` wired with ports; returns `{ app, ports, close() }`. Accepts overrides for single ports.             |
+
+Current gaps (the code they depend on does not exist yet; each place carries a `TODO`):
+
+- There is no Firestore adapter yet, so `buildIntegrationApp()` uses the in-memory fakes for every port and `test/integration/firestore.integration.test.ts` writes and reads through `firebase-admin` directly. When the adapter lands, wire it into `buildIntegrationApp()` and switch the sample test to the repository.
+- There is no Firebase `TokenVerifier` yet (BEU-ICT/certificate-manager#71). `auth.integration.test.ts` checks the structure and claims of the emulator's ID tokens (`aud`, `iss`, `sub`, `role`) and calls `verifyIdToken`; it moves to the `TokenVerifier` once that exists.
+
+### Storage emulator (optional)
+
+Storage adapter tests use [fake-gcs-server](https://github.com/fsouza/fake-gcs-server) (image pinned by digest, v1.56.1). They are skipped unless `STORAGE_EMULATOR_HOST` is set:
+
+```bash
+docker compose -f test/integration/docker-compose.storage.yml up -d
+STORAGE_EMULATOR_HOST=localhost:4443 npm run test:integration
+docker compose -f test/integration/docker-compose.storage.yml down
+```
+
+The GCS adapter is expected to read the same variable (the official `@google-cloud/storage` client does). CI does not run these tests; the Firestore/Auth job needs no Docker.
+
+**Generation preconditions.** `StorageGateway.putIfAbsent` maps to `ifGenerationMatch=0`. Verified against fake-gcs-server 1.56.1 (`storage.integration.test.ts`): uploads honour `ifGenerationMatch` for the media, multipart and resumable protocols, the second write of a key with `ifGenerationMatch=0` fails with HTTP 412, a stale generation fails with 412, and of 20 concurrent writers exactly one succeeds. So the emulator covers the `putIfAbsent` contract and **no ADR is needed**. Known gap, not relied on by the port: `DELETE ... ?ifGenerationMatch=` is ignored by the emulator (the object is deleted regardless). `StorageGateway.delete` takes no precondition, so nothing is lost; if one is ever added, cover it with a manual check against a real bucket in the E2 verification story. The `copy` path (`rewriteTo`/`copyTo`) was not exercised and belongs to the adapter contract tests.
+
 ## Domain events
 
 `InProcessEventBus` (`src/adapters/in-process/event-bus.ts`) implements the `EventBus` port. `publish` awaits subscribers one after another in registration order; a throwing or rejecting subscriber is logged at ERROR (event type, subscriber name, error message/stack, never the payload) and never reaches the publisher. Subscribers register in the composition root (`subscribe(type, name, handler)` returns an unsubscribe function), so publishers never change when one is added.

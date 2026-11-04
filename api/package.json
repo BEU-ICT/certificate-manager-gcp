@@ -18,7 +18,7 @@
     "check:architecture": "npm run depcruise && npm run check:document-reference",
     "test:architecture": "vitest run test/architecture",
     "test:unit": "vitest run test/unit",
-    "test:integration": "vitest run test/integration --passWithNoTests"
+    "test:integration": "firebase emulators:exec --only firestore,auth --project demo-certificate-manager \"vitest run --config vitest.integration.config.ts\""
   },
   "dependencies": {
     "fastify": "^5.12.8",
@@ -30,6 +30,8 @@
     "@types/node": "^26.6.6",
     "dependency-cruiser": "^18.7.2",
     "eslint": "^10.14.0",
+    "firebase-admin": "^14.5.0",
+    "firebase-tools": "^15.34.2",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
