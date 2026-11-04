@@ -4,8 +4,44 @@ import { createLogger, type LogOptions } from './http/logging/logger.js';
 import { requestIdFrom } from './http/logging/trace.js';
 import { installRequestContext } from './http/request-context.js';
 import { healthRoutes } from './http/routes/health.js';
+import type {
+  CertificateRepository,
+  Clock,
+  EmailSender,
+  EventBus,
+  EventRepository,
+  IdGenerator,
+  OrganizationRepository,
+  RateLimiter,
+  Scheduler,
+  StorageGateway,
+  TaskQueue,
+  TaskRequestVerifier,
+  TemplateRepository,
+  TokenVerifier,
+} from './ports/index.js';
+
+/** Every port the application depends on, supplied by the composition root (or test context). */
+export interface AppPorts {
+  clock: Clock;
+  ids: IdGenerator;
+  organizations: OrganizationRepository;
+  events: EventRepository;
+  templates: TemplateRepository;
+  certificates: CertificateRepository;
+  storage: StorageGateway;
+  taskQueue: TaskQueue;
+  scheduler: Scheduler;
+  emailSender: EmailSender;
+  rateLimiter: RateLimiter;
+  eventBus: EventBus;
+  tokenVerifier: TokenVerifier;
+  taskRequestVerifier: TaskRequestVerifier;
+}
 
 export interface AppDeps {
+  /** Port implementations; consumed by service composition (BEU-ICT/certificate-manager#35). */
+  ports?: AppPorts;
   /** Logging settings; the composition root passes LOG_LEVEL / GCP_PROJECT. Defaults to silent. */
   log?: LogOptions;
 }
