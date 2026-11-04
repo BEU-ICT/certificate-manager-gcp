@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { parseFlags, type Flags } from './flags.js';
+
+export type { Flags } from './flags.js';
 
 /**
  * Typed, fail-fast configuration (twelve-factor). `loadConfig` is a pure function of its input:
@@ -15,19 +18,6 @@ export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
 export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process'] as const;
 export const AUTH_PROVIDERS = ['firebase'] as const;
 export const EMAIL_PROVIDERS = ['gmail', 'brevo'] as const;
-
-export interface Flags {
-  /** Serve the OpenAPI document. Default: off in production, on elsewhere. */
-  readonly openApiEndpoint: boolean;
-  /** Run the bounce-processing job. Default: off. */
-  readonly bounceJob: boolean;
-  /** Fall back to EMAIL_FALLBACK_PROVIDER when the primary fails. Default: on. */
-  readonly emailFallback: boolean;
-  /** Allow bulk issuance. Default: on. */
-  readonly bulkIssuance: boolean;
-  /** Kill switch for on-demand public PDF generation. Default: on. */
-  readonly publicPdfGeneration: boolean;
-}
 
 export interface Config {
   readonly env: (typeof NODE_ENVS)[number];
@@ -117,14 +107,6 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   RATE_LIMIT_ADMIN_PER_MIN: '60',
 };
 
-const FLAG_DEFS = {
-  FEATURE_OPENAPI_ENDPOINT: { key: 'openApiEndpoint', default: (prod: boolean) => !prod },
-  FEATURE_BOUNCE_JOB: { key: 'bounceJob', default: () => false },
-  FEATURE_EMAIL_FALLBACK: { key: 'emailFallback', default: () => true },
-  FEATURE_BULK_ISSUANCE: { key: 'bulkIssuance', default: () => true },
-  FEATURE_PUBLIC_PDF_GENERATION: { key: 'publicPdfGeneration', default: () => true },
-} as const satisfies Record<string, { key: keyof Flags; default: (prod: boolean) => boolean }>;
-
 const MAX_URL_LENGTH = 2048;
 
 const text = (max = 200) => z.string().min(1).max(max);
@@ -176,8 +158,6 @@ const schema = z.object({
   AUTH_PROVIDER: oneOf(AUTH_PROVIDERS),
 });
 
-const BOOLEAN_TEXT = /^(true|false|1|0)$/;
-
 /** Rules involving several variables, evaluated on the raw (normalised) strings. */
 function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
   const issues: ConfigIssue[] = [];
@@ -224,29 +204,6 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
     }
   }
   return issues;
-}
-
-function parseFlags(env: Env, isProd: boolean): { flags: Flags; issues: ConfigIssue[] } {
-  const issues: ConfigIssue[] = [];
-  const known = Object.keys(FLAG_DEFS);
-  for (const name of Object.keys(env)) {
-    if (name.startsWith('FEATURE_') && !known.includes(name)) {
-      issues.push({ variable: name, message: `unknown feature flag (known: ${known.join(', ')})` });
-    }
-  }
-  const out: Record<string, boolean> = {};
-  for (const [name, def] of Object.entries(FLAG_DEFS)) {
-    const raw = env[name];
-    if (raw === undefined) {
-      out[def.key] = def.default(isProd);
-    } else if (BOOLEAN_TEXT.test(raw)) {
-      out[def.key] = raw === 'true' || raw === '1';
-    } else {
-      issues.push({ variable: name, message: 'must be one of: true, false, 1, 0' });
-      out[def.key] = def.default(isProd);
-    }
-  }
-  return { flags: out as unknown as Flags, issues };
 }
 
 function deepFreeze<T>(value: T): T {
