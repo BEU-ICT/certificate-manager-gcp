@@ -8,11 +8,12 @@ All scripts source `lib.sh`, read settings from `infra/.env` (copy `.env.example
 
 Run the numbered scripts in order, as a person with Billing Account Administrator and Owner rights:
 
-| Step | Script          | What it does                                                                                            |
-| ---- | --------------- | ------------------------------------------------------------------------------------------------------- |
-| 1    | `01-project.sh` | create project, link billing, add Firebase (Blaze), grant Owner to `OWNER_EMAILS` (at least two humans) |
-| 2    | `02-budget.sh`  | **before anything else**: $1 and $5 budgets with 50/90/100 % alerts, e-mail to `BUDGET_EMAILS` (>= 2)   |
-| 3    | `03-apis.sh`    | enable the 17 APIs of spec §12 and verify them                                                          |
+| Step | Script                  | What it does                                                                                            |
+| ---- | ----------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1    | `01-project.sh`         | create project, link billing, add Firebase (Blaze), grant Owner to `OWNER_EMAILS` (at least two humans) |
+| 2    | `02-budget.sh`          | **before anything else**: $1 and $5 budgets with 50/90/100 % alerts, e-mail to `BUDGET_EMAILS` (>= 2)   |
+| 3    | `03-apis.sh`            | enable the 17 APIs of spec §12 and verify them                                                          |
+| 4    | `check-org-policies.sh` | read-only: effective org policies that could block the design (`docs/org-policies.md`)                  |
 
 Further steps (data stores, compute, identity, secrets, deployment) are added by the next E2 stories and linked from here.
 
@@ -32,4 +33,4 @@ Self-test without cloud access: `infra/test-dry-run.sh`.
 
 ## Related documents
 
-`docs/budget-alerts.md`, `docs/adr/0014-region-and-residency.md`.
+`docs/budget-alerts.md`, `docs/cost-model.md`, `docs/org-policies.md`, `docs/adr/0014-region-and-residency.md`.
