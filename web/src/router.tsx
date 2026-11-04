@@ -10,6 +10,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const CertificatePage = lazy(() => import('@/pages/CertificatePage'));
 const LoginPage = lazy(() => import('@/admin/LoginPage'));
+const ForgotPasswordPage = lazy(() => import('@/admin/ForgotPasswordPage'));
 const AdminApp = lazy(() => import('@/admin/AdminApp'));
 
 const fallback = (
@@ -48,6 +49,15 @@ export const router = createBrowserRouter([
               <Suspense fallback={fallback}>
                 <NoIndex />
                 <LoginPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'login/forgot-password',
+            element: (
+              <Suspense fallback={fallback}>
+                <NoIndex />
+                <ForgotPasswordPage />
               </Suspense>
             ),
           },

@@ -5,9 +5,6 @@
   "certificate": {
     "title": "Sertifikat"
   },
-  "login": {
-    "title": "Daxil ol"
-  },
   "notFound": {
     "title": "Səhifə tapılmadı",
     "body": "Axtardığınız səhifə mövcud deyil.",

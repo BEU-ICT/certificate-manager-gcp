@@ -1,5 +1,34 @@
 {
   "dashboard": {
     "intro": "Certificates, organizations and events will be managed here."
+  },
+  "login": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "forgot": "Forgot password?",
+    "show": "Show",
+    "hide": "Hide",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "sessionExpired": "Your session expired. Sign in again.",
+    "errors": {
+      "emailRequired": "Enter your email",
+      "emailInvalid": "Enter a valid email address",
+      "passwordRequired": "Enter your password",
+      "invalidCredentials": "Email or password is incorrect",
+      "tooManyRequests": "Too many attempts, try again later",
+      "network": "Network error. Check your connection.",
+      "disabled": "This account has been disabled.",
+      "noAccess": "Your account has no administrator access"
+    }
+  },
+  "forgot": {
+    "title": "Reset password",
+    "intro": "Enter the email address of your administrator account. We will send you a link to choose a new password.",
+    "submit": "Send reset link",
+    "sent": "If this address belongs to an administrator, an email was sent",
+    "back": "Back to sign in"
   }
 }

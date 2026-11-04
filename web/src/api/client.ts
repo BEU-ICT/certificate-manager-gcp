@@ -203,3 +203,10 @@ export type Health = components['schemas']['Health'];
 export function getHealth(client: ApiClient, signal?: AbortSignal): Promise<Health> {
   return client.get<Health>('/health', { signal });
 }
+
+export type AdminMe = components['schemas']['AdminMe'];
+
+/** The signed-in administrator; 401 without a valid token, 403 when the account is not an admin. */
+export function getAdminMe(client: ApiClient, signal?: AbortSignal): Promise<AdminMe> {
+  return client.get<AdminMe>('/admin/me', { signal });
+}
