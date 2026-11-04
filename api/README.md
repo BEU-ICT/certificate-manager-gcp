@@ -85,6 +85,42 @@ import { CertificateService } from '../modules/certificates/index.js'; // forbid
 
 `test/architecture/architecture.test.ts` proves that every rule is live. The fixtures in `test/architecture/fixtures/` break each rule on purpose (including `import { Firestore } from '@google-cloud/firestore'` in a module and a cross-module deep import) and are excluded from lint, typecheck and `depcruise`. The test runs the real dependency-cruiser CLI on the miniature trees in `fixtures/depcruise/<case>/src` and lints `fixtures/eslint/*.ts` as if they lived at a given path inside `src/`, expecting failure with the right rule name. Allowed layouts are asserted to pass, so a rule cannot go silent unnoticed. When you add a rule, add a fixture for it.
 
+## Port contract tests
+
+Every port in `src/ports` has one executable suite in `src/testing/contracts/` that **every** adapter must pass, fakes and real ones alike (Firestore emulator now, PostgreSQL later). The suites are the specification of the TSDoc on the port. A failure message names the broken clause, for example `StorageGateway contract violated: "putIfAbsent: Exactly one of concurrent callers gets created: true" (callers with created: true: [0, 3])`.
+
+| Suite                                                   | Port                    | Factory returns, besides `adapter` and `cleanup`                           |
+| ------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------- |
+| `describeStorageGatewayContract(name, factory)`         | `StorageGateway`        |                                                                            |
+| `describeTaskQueueContract(name, factory)`              | `TaskQueue`             | optional `pending()` listing queued tasks, enables the `scheduleAt` checks |
+| `describeEventBusContract(name, factory)`               | `EventBus`              |                                                                            |
+| `describeRateLimiterContract(name, factory)`            | `RateLimiter`           | `clock` the adapter reads and `advance(ms)` to move it                     |
+| `describeClockContract` / `describeIdGeneratorContract` | `Clock` / `IdGenerator` |                                                                            |
+
+`factory` is called once per test and must return a **fresh, empty** adapter plus a `cleanup` callback (it may be async). Real adapters reset or namespace their store in the factory and undo it in `cleanup`.
+
+### Adding an adapter
+
+1. Copy the `*.contract.test.ts` file of the port from `test/unit/contracts/`. In-memory adapters stay in `test/unit/contracts/` (run by `npm run test:unit`); adapters that need an emulator or database go to `test/integration/` (run by `npm run test:integration`).
+2. Replace the adapter construction and call the suite:
+
+   ```ts
+   // test/integration/firestore-storage.contract.test.ts
+   import { describeStorageGatewayContract } from '../../src/testing/contracts/index.js';
+   import { createFirestoreStorage } from '../../src/adapters/firestore/storage.js';
+
+   describeStorageGatewayContract('FirestoreStorageGateway (emulator)', async () => {
+     const storage = await createFirestoreStorage({ namespace: crypto.randomUUID() });
+     return { adapter: storage, cleanup: () => storage.deleteNamespace() };
+   });
+   ```
+
+3. Fix the adapter until the suite is green. If a clause looks wrong for your backend, change the port's TSDoc and the suite together in the same PR, never the suite alone.
+
+Repository suites are added by the epics that define the repositories, using the same `ContractFactory` shape (`src/testing/contracts/types.ts`).
+
+`test/unit/contracts/harness.test.ts` proves the harness itself: it runs deliberately broken adapters (`fixtures/broken-adapters.fixture.ts`) through the real suites in a nested Vitest run and asserts that they fail and name the violated clause. The fixture does not match `*.test.ts`, so the normal run never contains a failing test.
+
 ## Domain events
 
 `InProcessEventBus` (`src/adapters/in-process/event-bus.ts`) implements the `EventBus` port. `publish` awaits subscribers one after another in registration order; a throwing or rejecting subscriber is logged at ERROR (event type, subscriber name, error message/stack, never the payload) and never reaches the publisher. Subscribers register in the composition root (`subscribe(type, name, handler)` returns an unsubscribe function), so publishers never change when one is added.
