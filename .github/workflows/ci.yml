@@ -219,6 +219,21 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: api/scripts/openapi-check.sh "origin/${BASE_REF}"
 
+  infra-scripts:
+    name: infra-scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: shellcheck
+        run: shellcheck -x -S warning infra/*.sh
+      - name: Dry-run self-test of the infra scripts
+        run: infra/test-dry-run.sh
+      - name: Smoke test against fake deployments
+        run: infra/test-smoke.sh
+
   # Aggregating job: this is the check to mark as required (see docs/README.md).
   ci:
     name: ci
@@ -235,6 +250,7 @@ jobs:
         audit,
         gitleaks,
         openapi-check,
+        infra-scripts,
       ]
     runs-on: ubuntu-latest
     timeout-minutes: 5

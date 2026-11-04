@@ -43,3 +43,35 @@ query() {
   fi
   "$@"
 }
+
+# preflight_deploy [--skip-checks]: guards for production changes (ADR 0011).
+#  - clean working tree, on `dev` or at a release tag
+#  - PROJECT_ID equals EXPECTED_PROJECT_ID (set in infra/.env) when that is set
+#  - tests green locally (unless --skip-checks)
+#  - explicit confirmation of the project name; `ASSUME_YES=1` skips the prompt (never for production)
+preflight_deploy() {
+  local skip=0
+  [[ "${1:-}" == "--skip-checks" ]] && skip=1
+  require_env PROJECT_ID
+  if [[ -n "${EXPECTED_PROJECT_ID:-}" && "${PROJECT_ID}" != "${EXPECTED_PROJECT_ID}" ]]; then
+    die "PROJECT_ID ${PROJECT_ID} != EXPECTED_PROJECT_ID ${EXPECTED_PROJECT_ID}"
+  fi
+  if [[ "${DRY_RUN}" == "1" ]]; then
+    log "dry run: skipping git, test and confirmation checks"
+    return 0
+  fi
+  local root branch
+  root="$(cd "${INFRA_DIR}/.." && pwd)"
+  [[ -z "$(git -C "${root}" status --porcelain)" ]] || die "working tree is not clean"
+  branch="$(git -C "${root}" rev-parse --abbrev-ref HEAD)"
+  if [[ "${branch}" != "dev" ]] && ! git -C "${root}" describe --exact-match --tags HEAD >/dev/null 2>&1; then
+    die "deploy from branch dev or from a release tag (on ${branch})"
+  fi
+  if [[ "${skip}" == "0" ]]; then
+    (cd "${root}" && npm run test:unit -w api && npm run build -w api) || die "tests/build failed (use --skip-checks only in emergencies)"
+  fi
+  if [[ "${ASSUME_YES:-0}" != "1" ]]; then
+    read -r -p "Change PRODUCTION project '${PROJECT_ID}'? Type the project id to continue: " answer
+    [[ "${answer}" == "${PROJECT_ID}" ]] || die "confirmation failed"
+  fi
+}

@@ -2,12 +2,13 @@
 # Deploy the API to Cloud Run from source (ADR 0011). Limits per spec §3:
 #   min 0 / max 3 instances, concurrency 80, 512 MiB, 1 vCPU, timeout 60 s, CPU only during
 #   requests, startup CPU boost, public invoker (Hosting rewrites reach it; /internal/** enforces OIDC).
-# Usage: DRY_RUN=1 infra/deploy-api.sh   |   infra/deploy-api.sh
+# Usage: DRY_RUN=1 infra/deploy-api.sh   |   infra/deploy-api.sh [--skip-checks]
 # SERVICE_URL is the OIDC audience: the first deploy runs without it; the script then reads the
 # service URL, prints it, and (re)applies it as the SERVICE_URL variable.
 # shellcheck source=infra/lib.sh
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 require_env PROJECT_ID PUBLIC_BASE_URL BOOTSTRAP_ADMIN_EMAIL EMAIL_FROM_ADDRESS
+preflight_deploy "$@"
 
 SERVICE=certificates-api
 RUNTIME="certificates-api-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
