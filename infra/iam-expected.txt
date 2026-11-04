@@ -1,0 +1,15 @@
+# Expected IAM bindings. Format: <scope> <resource> <role> <member>. ${P} = project id.
+# Scope: project | bucket | queue | secret | run | sa. Maintained together with infra/iam.md.
+# Only bindings for the three application service accounts (and allUsers on the PDF bucket) are compared.
+project ${P} roles/datastore.user serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+project ${P} roles/firebaseauth.admin serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+bucket ${P}-templates roles/storage.objectAdmin serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+bucket ${P}-pdfs roles/storage.objectAdmin serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+bucket ${P}-pdfs roles/storage.legacyObjectReader allUsers
+queue email-queue roles/cloudtasks.enqueuer serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+secret EMAIL_API_KEY roles/secretmanager.secretAccessor serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+sa tasks-invoker@${P}.iam.gserviceaccount.com roles/iam.serviceAccountUser serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+sa certificates-api-runtime@${P}.iam.gserviceaccount.com roles/iam.serviceAccountTokenCreator serviceAccount:certificates-api-runtime@${P}.iam.gserviceaccount.com
+run certificates-api roles/run.invoker serviceAccount:tasks-invoker@${P}.iam.gserviceaccount.com
+run certificates-api roles/run.invoker serviceAccount:scheduler-invoker@${P}.iam.gserviceaccount.com
+run certificates-api roles/run.invoker allUsers
