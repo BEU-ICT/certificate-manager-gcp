@@ -45,6 +45,14 @@ export default tseslint.config(
           ],
         },
       ],
+      // `no-restricted-imports` ignores dynamic `import()`, so cover it separately.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ImportExpression[source.value=/^(@?firebase)(\\/|$)/]',
+          message: 'Import the Firebase SDK only inside src/auth/.',
+        },
+      ],
     },
   },
   {
@@ -54,6 +62,6 @@ export default tseslint.config(
   },
   {
     files: ['src/auth/**/*.{ts,tsx}'],
-    rules: { 'no-restricted-imports': 'off' },
+    rules: { 'no-restricted-imports': 'off', 'no-restricted-syntax': 'off' },
   },
 );
