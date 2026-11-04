@@ -78,10 +78,32 @@ jobs:
       - run: npm run test:unit --workspaces --if-present
       - run: npm run test:architecture --workspaces --if-present
 
-  # TODO(BEU-ICT/certificate-manager#39): add a `test:integration` job that runs
-  # `npx firebase emulators:exec --project demo-ci "npm run test:integration -w api"`
-  # (Java is preinstalled on ubuntu-latest) once firebase.json and the emulator
-  # setup exist. `api` has a `test:integration` script but no tests and no emulators yet.
+  # Firebase emulators (Firestore, Auth) are started once by `firebase emulators:exec`; the
+  # Vitest run inside it reuses them. Storage emulator tests are env-gated and skipped here.
+  test-integration:
+    name: test:integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      # Emulator jars live in ~/.cache/firebase; the key follows the firebase-tools version.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: firebase-emulators-${{ runner.os }}-
+      - run: npm ci
+      - run: npm run test:integration -w api
 
   build:
     name: build
@@ -151,7 +173,18 @@ jobs:
   ci:
     name: ci
     if: ${{ always() }}
-    needs: [lint, typecheck, depcruise, test-unit, build, docker-build, audit, gitleaks]
+    needs:
+      [
+        lint,
+        typecheck,
+        depcruise,
+        test-unit,
+        test-integration,
+        build,
+        docker-build,
+        audit,
+        gitleaks,
+      ]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

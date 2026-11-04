@@ -1,0 +1,11 @@
+# Cloud Storage emulator for the optional Storage adapter tests (see api/README.md).
+#   docker compose -f test/integration/docker-compose.storage.yml up -d
+#   STORAGE_EMULATOR_HOST=localhost:4443 npm run test:integration
+services:
+  fake-gcs-server:
+    # v1.56.1
+    image: fsouza/fake-gcs-server@sha256:797ce226d62f947c009dc40246b30cfb456b8473d8241407f9d6f2c04e4d69ef
+    command:
+      ['-scheme', 'http', '-port', '4443', '-backend', 'memory', '-public-host', 'localhost:4443']
+    ports:
+      - '127.0.0.1:4443:4443'
