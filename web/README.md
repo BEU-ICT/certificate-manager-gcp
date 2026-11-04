@@ -27,7 +27,7 @@ Copy `.env.example` to `.env.local` for the public Firebase web config.
   route-level `React.lazy` chunks; the root chunk holds only the router, layout and the 404 page.
 - `src/auth/`: the only module that may import the Firebase SDK (ESLint-enforced); it is reached
   only from admin code, so Firebase ships in its own chunk next to the admin bundle.
-- `src/admin/`: admin area: `/login` and `/login/forgot-password` (react-hook-form + zod, no registration), post-login redirect validation (`redirect.ts`), API/auth wiring (`session.ts`), protected routes and screens.
+- `src/admin/`: admin area: `/login` and `/login/forgot-password` (react-hook-form + zod, no registration), post-login redirect validation (`redirect.ts`), API/auth wiring (`session.ts`), the `RequireAdmin` guard and the lazily loaded admin screens (`AdminRoutes.tsx`, fetched only after `GET /api/v1/admin/me` succeeded).
 - `src/pages/`: public pages.
 - `src/i18n/`, `src/locales/{az,en}/{common,admin,public,errors}.json`: i18next with a lazy
   per-file backend (only the active language is downloaded). Language: stored choice, `?lang`,
@@ -43,11 +43,11 @@ No CORS is configured anywhere: in production Firebase Hosting rewrites `/api/v1
 
 ## API client
 
-`src/api/`: typed `fetch` wrapper for `/api/v1` (`createApiClient`), `ApiError`, TanStack Query defaults and `ApiProvider`. The auth module (#73) calls `configureApi({ getToken, onUnauthorized })`; the Firebase SDK is never imported here. Tokens are only held by the auth module and sent in the `Authorization` header of `/admin/**` calls.
+`src/api/`: typed `fetch` wrapper for `/api/v1` (`createApiClient`), `ApiError`, TanStack Query defaults and `ApiProvider`. `src/admin/session.ts` calls `configureApi({ getToken, onUnauthorized })` with the auth module's `getIdToken`; a second 401 ends the session (`RequireAdmin`: sign out, drop the query cache, `/login` with an expiry notice); the Firebase SDK is never imported here. Tokens are only held by the auth module and sent in the `Authorization` header of `/admin/**` calls.
 
 ## Testing
 
-- **Unit/component** (`src/**/*.test.{ts,tsx}`, Vitest + jsdom). Render with `renderWithProviders(ui, { route })` from `@/test/render` (router, TanStack Query without retries, i18n; tests assert on English strings). The auth stub joins it when the session provider lands (#73).
+- **Unit/component** (`src/**/*.test.{ts,tsx}`, Vitest + jsdom). Render with `renderWithProviders(ui, { route })` from `@/test/render` (router, TanStack Query without retries, i18n; tests assert on English strings). Tests of auth-dependent components mock `@/auth` with `fakeAuth` from `@/test/fakeAuth` (see `src/admin/RequireAdmin.test.tsx`).
 - **API mocking**: call `setupMswServer()` from `@/test/server` in the test file and add handlers per test with `server.use(http.get('*/api/v1/...', ...))`. Unhandled requests fail the test.
 - **Accessibility**: `await expectNoA11yViolations(container)` from `@/test/axe` (vitest-axe, WCAG rules; colour contrast is covered by the design tokens because jsdom has no layout). Use it in every page test.
 - **E2E smoke** (`e2e/`, Playwright, Chromium): `playwright.config.ts` starts the API with in-process adapters (`DB_ADAPTER=memory`, no emulators needed) and the Vite dev server. First run: `npx playwright install chromium`. It runs in CI on merges to `dev` and nightly (`.github/workflows/e2e.yml`), not on every PR.
