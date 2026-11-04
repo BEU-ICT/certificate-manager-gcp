@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export function NotFoundPage() {
   const { t } = useTranslation('common');
@@ -10,6 +11,7 @@ export function NotFoundPage() {
       <Link to="/" className="mt-4 inline-block text-blue-700 underline">
         {t('notFound.home')}
       </Link>
+      <LanguageSwitcher className="mt-4 block" />
     </main>
   );
 }

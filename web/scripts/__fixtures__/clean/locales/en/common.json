@@ -1,0 +1,6 @@
+{
+  "hello": "Hello",
+  "items_one": "{{count}} item",
+  "items_other": "{{count}} items",
+  "dyn": { "a": "A" }
+}

@@ -1,11 +1,32 @@
 {
-  "app": { "name": "Sertifikat Meneceri" },
-  "certificate": { "title": "Sertifikat" },
-  "login": { "title": "Daxil ol" },
-  "admin": { "title": "İdarəetmə paneli" },
+  "app": {
+    "name": "Sertifikat Meneceri"
+  },
+  "certificate": {
+    "title": "Sertifikat"
+  },
+  "login": {
+    "title": "Daxil ol"
+  },
+  "admin": {
+    "title": "İdarəetmə paneli"
+  },
   "notFound": {
     "title": "Səhifə tapılmadı",
     "body": "Axtardığınız səhifə mövcud deyil.",
     "home": "Ana səhifəyə qayıt"
+  },
+  "language": {
+    "label": "Dil"
+  },
+  "certificateTypes": {
+    "attendance": "İştirak",
+    "appreciation": "Qiymətləndirmə",
+    "thanks": "Təşəkkür",
+    "distinction": "Fərqlənmə",
+    "instructor": "Təlimçi",
+    "student": "Tələbə",
+    "team": "Komanda",
+    "other": "Digər"
   }
 }

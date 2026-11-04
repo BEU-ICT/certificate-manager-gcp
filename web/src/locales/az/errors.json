@@ -1,0 +1,18 @@
+{
+  "VALIDATION_FAILED": "Daxil edilən məlumatlar düzgün deyil.",
+  "UNAUTHENTICATED": "Davam etmək üçün daxil olun.",
+  "FORBIDDEN": "Bu əməliyyat üçün icazəniz yoxdur.",
+  "NOT_FOUND": "Axtarılan məlumat tapılmadı.",
+  "CONFLICT": "Əməliyyat mövcud məlumatla ziddiyyət təşkil edir.",
+  "GONE": "Bu sertifikat ləğv edilib.",
+  "PAYLOAD_TOO_LARGE": "Göndərilən məlumat çox böyükdür.",
+  "TEXT_DOES_NOT_FIT": "Mətn şablondakı sahəyə sığmır.",
+  "TEMPLATE_MISMATCH": "Şablon seçilmiş tədbirə və ya növə uyğun gəlmir.",
+  "TEMPLATE_NOT_FOUND": "Şablon tapılmadı.",
+  "TEMPLATE_INVALID": "Şablon etibarsızdır.",
+  "RATE_LIMITED": "Çox sayda sorğu göndərildi. Bir az sonra yenidən cəhd edin.",
+  "INTERNAL": "Gözlənilməz xəta baş verdi. Sonra yenidən cəhd edin.",
+  "UNAVAILABLE": "Xidmət müvəqqəti əlçatmazdır. Sonra yenidən cəhd edin.",
+  "NETWORK": "Şəbəkə xətası. Bağlantınızı yoxlayın.",
+  "GENERIC": "Xəta baş verdi. Yenidən cəhd edin."
+}

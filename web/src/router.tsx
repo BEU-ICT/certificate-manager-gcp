@@ -55,7 +55,14 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
-      { path: '*', element: <NotFoundPage /> },
+      {
+        path: '*',
+        element: (
+          <Suspense fallback={fallback}>
+            <NotFoundPage />
+          </Suspense>
+        ),
+      },
     ],
   },
 ]);

@@ -15,6 +15,7 @@ React + Vite + TypeScript SPA, deployed to Firebase Hosting. Tailwind CSS 4, Rea
 | `npm run test:unit`       | Vitest (jsdom) + MSW                                                    |
 | `npm run api:types`       | Regenerate `src/api/schema.d.ts` from `../api/openapi.json`             |
 | `npm run api:types:check` | Regenerate and fail if `git diff` is not empty (CI, wired by #41)       |
+| `npm run i18n:check`      | Fails on keys missing in a language, used-but-missing or unused keys    |
 
 Copy `.env.example` to `.env.local` for the public Firebase web config.
 
@@ -26,6 +27,10 @@ Copy `.env.example` to `.env.local` for the public Firebase web config.
   only from admin code, so Firebase ships in its own chunk next to the admin bundle.
 - `src/admin/`: admin area (login, protected routes, screens).
 - `src/pages/`: public pages.
+- `src/i18n/`, `src/locales/{az,en}/{common,admin,public,errors}.json`: i18next with a lazy
+  per-file backend (only the active language is downloaded). Language: stored choice, `?lang`,
+  `navigator.language`, `az`. Dynamic keys go in the allow-list in `scripts/i18n-check.mjs`.
+- `src/lib/certificateTypes.ts` duplicates the API's certificate type registry (#16 section 5).
 - `@/` aliases `src/`.
 
 No CORS is configured anywhere: in production Firebase Hosting rewrites `/api/v1` to Cloud Run

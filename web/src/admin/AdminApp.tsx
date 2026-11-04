@@ -7,14 +7,15 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
  * replace the placeholder below.
  */
 export default function AdminApp() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['admin', 'common']);
   return (
     <Routes>
       <Route
         index
         element={
           <main className="mx-auto max-w-xl p-6">
-            <h1 className="text-2xl font-semibold">{t('admin.title')}</h1>
+            <h1 className="text-2xl font-semibold">{t('common:admin.title')}</h1>
+            <p className="mt-2 text-slate-700">{t('dashboard.intro')}</p>
           </main>
         }
       />
