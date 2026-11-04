@@ -1,0 +1,13 @@
+{
+  "name": "certificate-manager-gcp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Certificate management system on Google Cloud",
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "engines": {
+    "node": ">=22"
+  }
+}
