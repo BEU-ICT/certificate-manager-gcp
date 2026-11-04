@@ -1,3 +1,4 @@
+import type { OrganizationService, ReferenceCheckRegistry } from './modules/organizations/index.js';
 import type {
   AdminUserDirectory,
   CertificateRepository,
@@ -66,5 +67,9 @@ export interface Ports {
   adminUsers: AdminUserDirectory;
 }
 
-/** Module services, constructed in compose.ts from ports. Modules add their services here. */
-export type Services = Record<string, never>;
+/** Module services, constructed by `buildServices` (services.ts) from ports. Modules add theirs here. */
+export interface Services {
+  readonly organizations: OrganizationService;
+  /** Modules that reference organizations register their checkers here (services.ts). */
+  readonly organizationReferences: ReferenceCheckRegistry;
+}

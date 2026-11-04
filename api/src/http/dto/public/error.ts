@@ -5,6 +5,11 @@ export const ErrorDetailDto = z
   .object({
     path: z.string().describe('Location of the problem in the request, e.g. items[3].email'),
     message: z.string(),
+    suggestion: z.string().optional().describe('SLUG_TAKEN: a free slug to retry with.'),
+    counts: z
+      .record(z.string(), z.number())
+      .optional()
+      .describe('IN_USE: number of referencing records per kind.'),
   })
   .meta({ id: 'ErrorDetail' });
 

@@ -27,3 +27,8 @@ export {
   type TokenVerifierContractFactory,
   type TokenVerifierHandle,
 } from './token-verifier.js';
+export {
+  describeOrganizationRepositoryContract,
+  sampleOrganization,
+  type OrganizationRepositoryContractFactory,
+} from './organization-repository.js';

@@ -8,6 +8,8 @@ import { asCertificateId, type CertificateId } from '../../shared/ids.js';
 export class FakeIdGenerator implements IdGenerator {
   private certificateCounter = 0;
   private tokenCounter = 0;
+  private entityCounter = 0;
+  private readonly entityQueue: string[] = [];
   private readonly certificateQueue: string[] = [];
   private readonly tokenQueue: string[] = [];
 
@@ -24,6 +26,17 @@ export class FakeIdGenerator implements IdGenerator {
     if (queued !== undefined) return asCertificateId(queued);
     this.certificateCounter += 1;
     return asCertificateId(`cert-${String(this.certificateCounter).padStart(17, '0')}`);
+  }
+
+  queueEntityIds(...ids: string[]): void {
+    this.entityQueue.push(...ids);
+  }
+
+  newEntityId(): string {
+    const queued = this.entityQueue.shift();
+    if (queued !== undefined) return queued;
+    this.entityCounter += 1;
+    return `ent-${String(this.entityCounter).padStart(18, '0')}`;
   }
 
   newToken(): string {

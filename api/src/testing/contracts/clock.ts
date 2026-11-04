@@ -48,6 +48,18 @@ export function describeIdGeneratorContract(
     it(title, () => withAdapter(factory, body));
 
   describe(`IdGenerator contract: ${name}`, () => {
+    test('entity IDs are 22-char base64url and unique', (ids) => {
+      const seen = new Set<string>();
+      for (let i = 0; i < 50; i++) {
+        const id = ids.newEntityId();
+        clause('IdGenerator', 'newEntityId: 22-char base64url from 16 random bytes', id)
+          .that(/^[A-Za-z0-9_-]{22}$/.test(id))
+          .toBe(true);
+        seen.add(id);
+      }
+      clause('IdGenerator', 'newEntityId: IDs are unique', '50 calls').that(seen.size).toBe(50);
+    });
+
     test('certificate IDs are 22-char base64url', (ids) => {
       for (let i = 0; i < 50; i++) {
         const id = ids.newCertificateId();

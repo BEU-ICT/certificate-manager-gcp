@@ -28,6 +28,8 @@ const org = (n: number, slug = `org-${n}`): Organization => ({
   slug,
   name: `Org ${n}`,
   createdAt: day(n),
+  updatedAt: day(n),
+  schemaVersion: 1,
 });
 const cert = (n: number, over: Partial<Certificate> = {}): Certificate => ({
   id: asCertificateId(String(n).padStart(22, 'a')),
@@ -60,12 +62,12 @@ describe('FakeOrganizationRepository', () => {
     expect((await r.getById(org(1).id))?.name).toBe('Org 1');
   });
 
-  it('paginates newest first with opaque cursors, default 25 and max 50', async () => {
+  it('paginates by name with opaque cursors, default 25 and max 50', async () => {
     const r = new FakeOrganizationRepository();
     for (let i = 1; i <= 60; i++) await r.create(org(i));
     const first = await r.list();
     expect(first.items).toHaveLength(25);
-    expect(first.items[0]?.slug).toBe('org-60');
+    expect(first.items[0]?.slug).toBe('org-1');
     const seen = [...first.items];
     let cursor = first.nextCursor;
     while (cursor) {
@@ -73,7 +75,9 @@ describe('FakeOrganizationRepository', () => {
       seen.push(...next.items);
       cursor = next.nextCursor;
     }
-    expect(seen.map((o) => o.slug)).toEqual(Array.from({ length: 60 }, (_, i) => `org-${60 - i}`));
+    expect(seen.map((o) => o.name)).toEqual(
+      Array.from({ length: 60 }, (_, i) => `Org ${i + 1}`).sort(),
+    );
     expect((await r.list({ limit: 50 })).items).toHaveLength(50);
     await expect(r.list({ limit: 51 })).rejects.toBeInstanceOf(ValidationError);
     await expect(r.list({ limit: 0 })).rejects.toBeInstanceOf(ValidationError);
