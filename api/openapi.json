@@ -48,9 +48,19 @@
       "ErrorDetail": {
         "additionalProperties": false,
         "properties": {
+          "counts": {
+            "additionalProperties": { "type": "number" },
+            "description": "IN_USE: number of referencing records per kind.",
+            "propertyNames": { "type": "string" },
+            "type": "object"
+          },
           "message": { "type": "string" },
           "path": {
             "description": "Location of the problem in the request, e.g. items[3].email",
+            "type": "string"
+          },
+          "suggestion": {
+            "description": "SLUG_TAKEN: a free slug to retry with.",
             "type": "string"
           }
         },

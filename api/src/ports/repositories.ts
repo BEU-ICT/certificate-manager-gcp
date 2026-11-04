@@ -14,11 +14,21 @@ import type { Filter, Page, PageRequest } from './common.js';
  */
 
 export interface OrganizationRepository {
-  /** Fails with `ConflictError` when the slug is taken. */
+  /**
+   * Creates the organization and reserves its slug in the same transaction.
+   * Fails with `SlugTakenError` (a `ConflictError`) when the slug is reserved; nothing is written.
+   */
   create(organization: Organization): Promise<void>;
   getById(id: OrganizationId): Promise<Organization | null>;
   getBySlug(slug: string): Promise<Organization | null>;
+  /** The existing organizations among `ids` (at most 100, one batched read); order unspecified. */
+  getMany(ids: readonly OrganizationId[]): Promise<Organization[]>;
+  /** Ordered by `name` ascending (byte order), then `id`; not newest first. */
   list(page?: PageRequest): Promise<Page<Organization>>;
+  /** Changes `name` and `updatedAt` only. Returns the updated organization, or `null` if missing. */
+  updateName(id: OrganizationId, name: string, updatedAt: Date): Promise<Organization | null>;
+  /** Deletes the organization and releases its slug in the same transaction. False if missing. */
+  delete(id: OrganizationId): Promise<boolean>;
   count(): Promise<number>;
 }
 

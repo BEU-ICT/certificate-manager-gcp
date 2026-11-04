@@ -19,6 +19,7 @@ import { InProcessRateLimiter } from './adapters/in-process/rate-limiter.js';
 import { RandomIdGenerator } from './adapters/system/id-generator.js';
 import { registerMemoryAdapters } from './adapters/memory/index.js';
 import { SystemClock } from './adapters/system/clock.js';
+import { buildServices } from './services.js';
 import { createLogger } from './http/logging/logger.js';
 import type { EmailSender, StorageGateway } from './ports/index.js';
 import type { AuthPorts, Ports, QueuePorts, RepositoryPorts, Services } from './wiring.js';
@@ -34,7 +35,13 @@ import type { AuthPorts, Ports, QueuePorts, RepositoryPorts, Services } from './
  * factory, e.g. `(r) => r.db.register('firestore', async (ctx) => (await import('./adapters/firestore/index.js')).create(ctx))`.
  * Exported mutable only so that process-level test preloads can add stubs.
  */
-export const builtinRegistrations: AdapterRegistration[] = [registerMemoryAdapters];
+export const builtinRegistrations: AdapterRegistration[] = [
+  registerMemoryAdapters,
+  (r) =>
+    r.db.register('firestore', async (ctx) =>
+      (await import('./adapters/firestore/index.js')).createRepositories(ctx),
+    ),
+];
 
 /** Registries with the names defined by the configuration plus the built-in registrations. */
 export function defaultRegistries(): Registries {
@@ -91,14 +98,6 @@ export interface Composition {
 }
 
 /**
- * Builds module services from ports. Each module adds its service here; the signature gains
- * `(ports: Ports, config: Config)` with the first module service.
- */
-export function buildServices(): Services {
-  return {};
-}
-
-/**
  * Builds every port selected by `config` and constructs the module services.
  * Throws {@link AdapterError} for unknown or unavailable adapters.
  */
@@ -136,8 +135,8 @@ export async function compose(
     rateLimiter: new InProcessRateLimiter(clock),
     eventBus,
   };
-  return { config, ports, services: buildServices() };
+  return { config, ports, services: buildServices(ports) };
 }
 
-export { AdapterError, AdapterRegistry };
+export { AdapterError, AdapterRegistry, buildServices };
 export type { AdapterContext, AdapterFactory, AdapterRegistration, Registries };

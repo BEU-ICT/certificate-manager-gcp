@@ -2,6 +2,10 @@
 export interface ErrorDetail {
   path: string;
   message: string;
+  /** Retry hint for `SLUG_TAKEN`: a free slug the client may submit instead. */
+  suggestion?: string;
+  /** Reference counts for `IN_USE`, e.g. `{ events: 2, certificates: 10 }`. */
+  counts?: Record<string, number>;
 }
 
 /**
@@ -55,8 +59,26 @@ export class NotFoundError extends AppError {
 
 export class ConflictError extends AppError {
   readonly statusCode = 409;
-  constructor(message = 'Request conflicts with the current state') {
-    super('CONFLICT', message);
+  constructor(message = 'Request conflicts with the current state', details?: ErrorDetail[]) {
+    super('CONFLICT', message, details);
+  }
+}
+
+/** A unique slug is already reserved. `suggestion` is a free alternative when the caller knows one. */
+export class SlugTakenError extends ConflictError {
+  constructor(entity: string, suggestion?: string) {
+    super(`${entity} slug is already taken`, [
+      { path: 'slug', message: 'SLUG_TAKEN', ...(suggestion !== undefined && { suggestion }) },
+    ]);
+  }
+}
+
+/** The record is still referenced by other records and cannot be deleted. */
+export class InUseError extends ConflictError {
+  constructor(entity: string, counts: Record<string, number>) {
+    super(`${entity} is still referenced and cannot be deleted`, [
+      { path: 'references', message: 'IN_USE', counts },
+    ]);
   }
 }
 

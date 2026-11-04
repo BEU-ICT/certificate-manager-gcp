@@ -10,6 +10,8 @@ export interface Organization {
   slug: string;
   name: string;
   createdAt: Date;
+  updatedAt: Date;
+  schemaVersion: number;
 }
 
 export interface CertificateEvent {

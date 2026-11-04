@@ -7,6 +7,10 @@ export class RandomIdGenerator implements IdGenerator {
     return asCertificateId(randomBytes(16).toString('base64url'));
   }
 
+  newEntityId(): string {
+    return randomBytes(16).toString('base64url');
+  }
+
   newToken(): string {
     return randomBytes(32).toString('base64url');
   }

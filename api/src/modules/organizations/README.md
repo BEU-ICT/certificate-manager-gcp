@@ -1,6 +1,6 @@
 # organizations
 
-Organisations that issue certificates (slug, name). Status: scaffold, the implementation follows in the organisations epic; the interface below is the intended contract.
+Organisations that issue certificates (slug, name). Status: domain, repository and service implemented; the admin API follows (#77).
 
 ## Responsibility
 
@@ -8,14 +8,15 @@ Create, read, update and delete organisations and guarantee slug uniqueness. An 
 
 ## Public interface
 
-- Service methods: create, get, list (cursor pagination), update, delete, count.
-- Events published: none.
-- Events consumed: none.
+- `OrganizationService` (`index.ts`): `create({ name, slug? })`, `get`, `list` (cursor pagination, ordered by name), `rename` (name only), `delete`, `exists`, `getSnapshotName`, `getNames` (batched).
+- `ReferenceCheckRegistry` / `ReferenceChecker { name, countReferences(organizationId) }`: modules that reference organizations (events, templates, certificates) register a checker in `src/services.ts`; `delete` fails with `InUseError` (409, `counts` per checker) while any count is above zero. The module never reads other modules' collections.
+- Errors: `SlugTakenError` (409, `details[0].suggestion` holds the next free slug, the server never appends a suffix silently), `InUseError`, `NotFoundError` (also for malformed ids), `ValidationError` (names 1 to 120 characters, no control characters; slug rules below).
+- Events published: none. Events consumed: none.
 - Ports used: `OrganizationRepository`, `Clock`, `IdGenerator`.
 
 ## Owned data
 
-Collection `organizations`; slug reservations in `uniques` (`organization-slug:<slug>`). The slug is immutable (`^[a-z0-9]+(-[a-z0-9]+)*$`, 2 to 40 characters).
+Collection `organizations` (`name`, `slug`, `createdAt`, `updatedAt`, `schemaVersion`); slug reservations in `uniques` (`organization-slug:<slug>`). The slug is immutable (`^[a-z0-9]+(-[a-z0-9]+)*$`, 2 to 40 characters).
 
 ## Non-goals
 
