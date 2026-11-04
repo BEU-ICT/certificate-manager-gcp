@@ -4,7 +4,9 @@ import { shutdown } from './shutdown.js';
 // Composition root: the only module that reads process.env.
 const port = Number(process.env['PORT'] ?? 8080);
 
-const app = buildApp({ logger: true });
+const app = buildApp({
+  log: { level: process.env['LOG_LEVEL'], gcpProject: process.env['GCP_PROJECT'] },
+});
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.once(signal, () => {
