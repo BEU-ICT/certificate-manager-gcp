@@ -12,3 +12,5 @@ firebase-debug.log*
 .DS_Store
 .idea/
 .vscode/
+playwright-report/
+test-results/

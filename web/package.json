@@ -18,11 +18,13 @@
     "api:types:check": "npm run api:types && git diff --exit-code -- src/api/schema.d.ts",
     "test": "vitest run",
     "test:unit": "vitest run",
-    "i18n:check": "node scripts/i18n-check.mjs"
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.105.3",
     "@fontsource-variable/inter": "^5.3.0",
+    "@tanstack/react-query": "^5.105.3",
     "firebase": "^13.2.0",
     "i18next": "^26.7.1",
     "react": "^19.3.1",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/vite": "^4.3.4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
@@ -41,6 +44,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
+    "@vitest/coverage-v8": "^5.1.0",
     "axe-core": "^4.14.0",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
