@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@types/node": "^26.6.6",
     "dependency-cruiser": "^18.7.2",
     "eslint": "^10.14.0",

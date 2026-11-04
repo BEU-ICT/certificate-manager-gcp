@@ -34,11 +34,12 @@ run() {
   fi
 }
 
-# query CMD...: read-only command; under DRY_RUN returns success with empty output.
+# query CMD...: read-only command; under DRY_RUN it is only printed and reports failure
+# ("resource not found"), so scripts show the commands that would create things.
 query() {
   if [[ "${DRY_RUN}" == "1" ]]; then
     printf '[dry-run query] %s\n' "$*" >&2
-    return 0
+    return 1
   fi
   "$@"
 }
