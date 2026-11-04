@@ -12,7 +12,7 @@ try {
   process.exit(1);
 }
 
-const app = buildApp({ logger: true });
+const app = buildApp({ log: { level: config.logLevel, gcpProject: config.gcpProject } });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.once(signal, () => {
