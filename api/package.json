@@ -13,6 +13,10 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "depcruise": "depcruise --config .dependency-cruiser.cjs src",
+    "check:document-reference": "node scripts/check-document-reference.mjs",
+    "check:architecture": "npm run depcruise && npm run check:document-reference",
+    "test:architecture": "vitest run test/architecture",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration --passWithNoTests"
   },
@@ -24,6 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.6",
+    "dependency-cruiser": "^18.7.2",
     "eslint": "^10.14.0",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
