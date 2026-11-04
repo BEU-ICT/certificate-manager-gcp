@@ -18,3 +18,7 @@ export {
   type RateLimiterHandle,
 } from './rate-limiter.js';
 export { describeClockContract, describeIdGeneratorContract } from './clock.js';
+export {
+  describeMigrationStateStoreContract,
+  type MigrationStateStoreContractFactory,
+} from './migration-state-store.js';

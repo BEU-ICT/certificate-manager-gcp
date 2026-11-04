@@ -5,6 +5,7 @@ import { requestIdFrom } from './http/logging/trace.js';
 import { installOpenApi, registerOpenApiEndpoint } from './http/openapi/plugin.js';
 import { installRequestContext } from './http/request-context.js';
 import { healthRoutes } from './http/routes/health.js';
+import type { FeatureFlags } from './flags.js';
 import type { Ports, Services } from './wiring.js';
 
 export interface AppDeps {
@@ -15,6 +16,8 @@ export interface AppDeps {
   services?: Services;
   /** Serve `GET /internal/openapi.json` (config.openApiEndpoint). Defaults to off. */
   openApiEndpoint?: boolean;
+  /** Feature flags (flags.ts); route modules guard endpoints with http/flag-guard.ts. */
+  flags?: FeatureFlags;
 }
 
 const BODY_LIMIT_BYTES = 1024 * 1024;

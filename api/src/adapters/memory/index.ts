@@ -1,7 +1,9 @@
+import { SystemClock } from '../system/clock.js';
 import { AdapterError, type AdapterFactory, type Registries } from '../registry.js';
 import { FakeCertificateRepository } from '../../testing/fakes/fake-certificate-repository.js';
 import { FakeEmailSender } from '../../testing/fakes/fake-email-sender.js';
 import { FakeEventRepository } from '../../testing/fakes/fake-event-repository.js';
+import { FakeMigrationStateStore } from '../../testing/fakes/fake-migration-state-store.js';
 import { FakeOrganizationRepository } from '../../testing/fakes/fake-organization-repository.js';
 import { FakeScheduler } from '../../testing/fakes/fake-scheduler.js';
 import { FakeStorageGateway } from '../../testing/fakes/fake-storage-gateway.js';
@@ -29,6 +31,7 @@ export function registerMemoryAdapters(r: Registries): void {
     events: new FakeEventRepository(),
     templates: new FakeTemplateRepository(),
     certificates: new FakeCertificateRepository(),
+    migrationState: new FakeMigrationStateStore(new SystemClock()),
   }));
   r.storage.register('memory', () => new FakeStorageGateway());
   r.queue.register('in-process', () => ({

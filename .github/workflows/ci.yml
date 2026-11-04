@@ -78,6 +78,7 @@ jobs:
       - run: npm ci
       - run: npm run test:unit --workspaces --if-present
       - run: npm run test:architecture --workspaces --if-present
+      - run: npm run check:module-readmes --workspaces --if-present
 
   # Firebase emulators (Firestore, Auth) are started once by `firebase emulators:exec`; the
   # Vitest run inside it reuses them. Storage emulator tests are env-gated and skipped here.

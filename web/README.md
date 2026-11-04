@@ -13,6 +13,8 @@ React + Vite + TypeScript SPA, deployed to Firebase Hosting. Tailwind CSS 4, Rea
 | `npm run lint`            | ESLint (typed rules, Firebase import restriction)                       |
 | `npm run typecheck`       | `tsc --noEmit`                                                          |
 | `npm run test:unit`       | Vitest (jsdom) + Testing Library + axe + MSW                            |
+| `npm run test:coverage`   | Unit tests with a v8 coverage report (`coverage/`)                      |
+| `npm run test:e2e`        | Playwright smoke suite (`e2e/`); starts the API and Vite itself         |
 | `npm run api:types`       | Regenerate `src/api/schema.d.ts` from `../api/openapi.json`             |
 | `npm run api:types:check` | Regenerate and fail if `git diff` is not empty (CI, wired by #41)       |
 | `npm run i18n:check`      | Fails on keys missing in a language, used-but-missing or unused keys    |
@@ -42,3 +44,10 @@ No CORS is configured anywhere: in production Firebase Hosting rewrites `/api/v1
 ## API client
 
 `src/api/`: typed `fetch` wrapper for `/api/v1` (`createApiClient`), `ApiError`, TanStack Query defaults and `ApiProvider`. The auth module (#73) calls `configureApi({ getToken, onUnauthorized })`; the Firebase SDK is never imported here. Tokens are only held by the auth module and sent in the `Authorization` header of `/admin/**` calls.
+
+## Testing
+
+- **Unit/component** (`src/**/*.test.{ts,tsx}`, Vitest + jsdom). Render with `renderWithProviders(ui, { route })` from `@/test/render` (router, TanStack Query without retries, i18n; tests assert on English strings). The auth stub joins it when the session provider lands (#73).
+- **API mocking**: call `setupMswServer()` from `@/test/server` in the test file and add handlers per test with `server.use(http.get('*/api/v1/...', ...))`. Unhandled requests fail the test.
+- **Accessibility**: `await expectNoA11yViolations(container)` from `@/test/axe` (vitest-axe, WCAG rules; colour contrast is covered by the design tokens because jsdom has no layout). Use it in every page test.
+- **E2E smoke** (`e2e/`, Playwright, Chromium): `playwright.config.ts` starts the API with in-process adapters (`DB_ADAPTER=memory`, no emulators needed) and the Vite dev server. First run: `npx playwright install chromium`. It runs in CI on merges to `dev` and nightly (`.github/workflows/e2e.yml`), not on every PR.

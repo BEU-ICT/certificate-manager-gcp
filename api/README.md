@@ -9,7 +9,23 @@ All configuration comes from environment variables, validated once at boot by `l
 - Outside `NODE_ENV=production`, unset variables fall back to local defaults (in-memory adapters, emulator project). In production the project, URLs, e-mail sender and adapter selectors are required, URLs must be `https`, and `memory`/`in-process` adapters are rejected.
 - Only `src/server.ts` reads `process.env`; everything else receives the frozen `Config` object.
 
-Feature flags (`FEATURE_*`, values `true|false|1|0`; unknown `FEATURE_*` variables fail boot): `FEATURE_OPENAPI_ENDPOINT` (default off in production, on elsewhere), `FEATURE_BOUNCE_JOB` (off), `FEATURE_EMAIL_FALLBACK` (on), `FEATURE_BULK_ISSUANCE` (on), `FEATURE_PUBLIC_PDF_GENERATION` (on). They are exposed as the typed `config.flags` object.
+Feature flags are documented in [Feature flags](#feature-flags).
+
+## Feature flags
+
+The registry in `src/flags.ts` is the single source of truth: each flag has an environment variable, default and description. `config.ts` only passes the environment in and exposes the result as the typed, frozen `config.flags` object (e.g. `config.flags.openApiEndpoint`). Values are `true|false|1|0`; invalid values and unknown `FEATURE_*` variables fail boot, so typos are caught. Removing a flag is a change to `flags.ts` plus its usages.
+
+| Variable                        | Key                   | Default                         | Purpose                                              |
+| ------------------------------- | --------------------- | ------------------------------- | ---------------------------------------------------- |
+| `FEATURE_OPENAPI_ENDPOINT`      | `openApiEndpoint`     | off in production, on elsewhere | Serve the OpenAPI document                           |
+| `FEATURE_BOUNCE_JOB`            | `bounceJob`           | off (until #161 is verified)    | Bounce-processing job                                |
+| `FEATURE_EMAIL_FALLBACK`        | `emailFallback`       | on                              | Use `EMAIL_FALLBACK_PROVIDER` when the primary fails |
+| `FEATURE_BULK_ISSUANCE`         | `bulkIssuance`        | on                              | Bulk certificate issuance                            |
+| `FEATURE_PUBLIC_PDF_GENERATION` | `publicPdfGeneration` | on                              | On-demand public PDF generation (kill switch)        |
+
+Usage: `createFeatureFlags(config.flags)` gives a `FeatureFlags` (`isEnabled(name)`), passed to `buildApp({ flags })` and to modules as a dependency. Guard a route with `requireFlag(flags, 'bulkIssuance')` from `src/http/flag-guard.ts` (`onRequest` hook) or call `assertFlagEnabled` in a handler: when the flag is off the route answers `404 NOT_FOUND` (hidden), except kill-switch flags (`killSwitch: true` in the registry, currently `publicPdfGeneration`), which answer `503 UNAVAILABLE`.
+
+Admin UI: `buildAdminFeatures(flags)` builds the `features` object (`bulkIssuance`, `publicPdfGeneration`; internal switches are not exposed) that `GET /api/v1/admin/me` will include so the UI can hide disabled actions. That route does not exist yet (it arrives with the auth/admin routes); it must return this builder's result as `features`.
 
 ## Container image
 
@@ -189,3 +205,36 @@ OASDIFF=/path/to/oasdiff api/scripts/openapi-check.sh origin/dev   # exit 1 on b
 ```
 
 While `dev` still contains the hand-written stub (`info.version` `0.0.0-stub`), the script skips the diff (bootstrap case, marked `BOOTSTRAP ONLY` in `api/scripts/openapi-check.sh`; delete that block afterwards).
+
+## Module READMEs
+
+Every directory under `src/modules/*` needs a non-empty `README.md` (responsibility, public interface, owned data, non-goals; template `docs/module-readme-template.md`). `npm run check:module-readmes` fails otherwise and runs in CI. Decisions are recorded in `docs/adr/`.
+
+## Data migrations
+
+One-off data changes (for example creating the bootstrap administrator) are numbered migrations in `src/migrations/`. `runMigrations()` runs from `src/server.ts` after the adapters are composed and before `listen`; if a migration fails the process logs the error and exits with code 1, so Cloud Run restarts the instance and the migration is retried.
+
+- **Markers.** Which migrations ran is stored by the `MigrationStateStore` port (`src/ports/migration-state-store.ts`) in a single document, `system/migrations`, as `applied.<id> = { at, by }` (`by` is the Cloud Run revision plus a random suffix). The runner reads that document once; with nothing pending a cold start costs exactly one read.
+- **At most once.** The runner claims a migration with `markApplied(id, by)` _before_ running its body. The claim is atomic (a Firestore transaction): of any number of parallel instances exactly one gets `true` and runs the body, the others get `false` and skip it. If the body throws, the runner calls `unmarkApplied` so the next start retries, and stops (later migrations do not run). The window to know about: an instance killed after the claim and before the body finished leaves a marker without a finished migration; remove `applied.<id>` from `system/migrations` and run the migration by hand (see below).
+- **Idempotent bodies.** Write every migration so that running it twice is harmless (check before create, use deterministic ids). The marker write and the body are not one transaction.
+- **Context.** A migration receives `MigrationContext`: `clock`, the repositories, `emailSender` and a logger. Ports only, no vendor SDK.
+- **Adapters.** `FakeMigrationStateStore` (`src/testing/fakes`, served by the `memory` DB adapter) and `FirestoreMigrationStateStore` (`src/adapters/firestore`) share the contract suite `describeMigrationStateStoreContract`. The Firestore store is tested against the emulator (`test/integration/migrations.integration.test.ts`, including two concurrent runners). It is not registered in `compose.ts` yet because the Firestore repository adapter does not exist yet (the `firestore` value of `DB_ADAPTER` still fails at boot); that registration must provide `migrationState` next to the repositories.
+
+### Adding migration 00N
+
+1. Create `src/migrations/00N-short-name.ts` exporting a `Migration` (`id: '00N-short-name'`, `description`, idempotent `run(ctx)`).
+2. Append it to `migrations` in `src/migrations/registry.ts`. Ids must be unique, `NNN-kebab-case` and in ascending order; the runner refuses an invalid list at boot. Never rename, reorder or delete a deployed migration.
+3. Add a unit test with `FakeMigrationStateStore` (see `test/unit/migrations.test.ts`) that runs it twice.
+
+### Running migrations manually
+
+```bash
+cd api
+npm run migrate   # same environment variables as the server (DB_ADAPTER, GCP_PROJECT, FIRESTORE_EMULATOR_HOST, ...)
+```
+
+`src/migrate.ts` composes the ports like the server, runs the pending migrations, logs what it applied and exits (non-zero on failure). In the container image use `node dist/migrate.js`. Running it while instances start is safe: markers make each migration run once. Like `server.ts`, it is an entry point and reads `process.env`.
+
+### `schemaVersion`
+
+Every document a repository creates carries `schemaVersion: 1` (`SCHEMA_VERSION` in `src/shared/schema-version.ts`). Readers ignore fields they do not know: the adapter parses with zod (unknown keys tolerated) and the DTOs returned over HTTP strip them, so a new revision can add fields while the old one still serves traffic. Raise the version only for a change old readers cannot tolerate, together with a migration.
