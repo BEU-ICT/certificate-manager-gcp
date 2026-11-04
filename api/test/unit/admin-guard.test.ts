@@ -111,9 +111,10 @@ describe('admin guard', () => {
       expect((await call({})).statusCode).toBe(401);
       expect((await call({ authorization: 'Bearer' })).statusCode).toBe(401);
       expect((await call(bearer(fakeToken('u1')))).statusCode).toBe(403);
-      expect((await call(bearer(fakeToken('a1', 'admin')))).statusCode).toBe(200);
+      // Past the guard: the handler decides (200, 400 for a missing body, 404 for the placeholder id...).
+      expect([401, 403]).not.toContain((await call(bearer(fakeToken('a1', 'admin')))).statusCode);
     });
-    expect(count).toBe(3); // /me + the two probes
+    expect(count).toBeGreaterThanOrEqual(3); // /me, the two probes and every resource route
   });
 
   it('throttles by IP before verifying tokens', async () => {
