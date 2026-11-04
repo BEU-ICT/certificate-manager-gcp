@@ -238,3 +238,7 @@ npm run migrate   # same environment variables as the server (DB_ADAPTER, GCP_PR
 ### `schemaVersion`
 
 Every document a repository creates carries `schemaVersion: 1` (`SCHEMA_VERSION` in `src/shared/schema-version.ts`). Readers ignore fields they do not know: the adapter parses with zod (unknown keys tolerated) and the DTOs returned over HTTP strip them, so a new revision can add fields while the old one still serves traffic. Raise the version only for a change old readers cannot tolerate, together with a migration.
+
+## Admin routes and authentication
+
+Every route under `/api/v1/admin` is registered through `adminRoutes(app, (scope) => …)` (`src/http/auth/admin-guard.ts`); paths inside are relative to the prefix. The helper installs an `onRequest` hook that throttles by IP, verifies the `Authorization: Bearer` token through the `TokenVerifier` port (401 + `WWW-Authenticate: Bearer`, identical body for every failure) and requires `role=admin` (403). Handlers read `request.admin` (`{ uid, email }`). A route under the prefix that bypasses the helper aborts startup. Tests use `forEachAdminRoute(app, fn)` (`src/testing/admin-routes.ts`) to run an authorisation matrix over the whole route table.
