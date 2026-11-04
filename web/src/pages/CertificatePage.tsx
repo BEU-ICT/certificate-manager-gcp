@@ -6,9 +6,9 @@ export default function CertificatePage() {
   const { t } = useTranslation(['public', 'common']);
   const { id } = useParams();
   return (
-    <main className="mx-auto max-w-xl p-6">
+    <div className="max-w-xl">
       <h1 className="text-2xl font-semibold">{t('common:certificate.title')}</h1>
       <p className="mt-2 break-all text-slate-700">{id}</p>
-    </main>
+    </div>
   );
 }

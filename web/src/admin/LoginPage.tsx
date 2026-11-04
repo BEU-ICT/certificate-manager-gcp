@@ -10,8 +10,8 @@ export default function LoginPage() {
     if (import.meta.env.VITE_FIREBASE_API_KEY) getFirebaseAuth();
   }, []);
   return (
-    <main className="mx-auto max-w-xl p-6">
+    <div className="max-w-xl">
       <h1 className="text-2xl font-semibold">{t('login.title')}</h1>
-    </main>
+    </div>
   );
 }

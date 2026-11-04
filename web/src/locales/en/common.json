@@ -8,9 +8,6 @@
   "login": {
     "title": "Sign in"
   },
-  "admin": {
-    "title": "Admin dashboard"
-  },
   "notFound": {
     "title": "Page not found",
     "body": "The page you are looking for does not exist.",
@@ -28,5 +25,67 @@
     "student": "Student",
     "team": "Team",
     "other": "Other"
+  },
+  "ui": {
+    "loading": "Loading…",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "required": "required",
+    "select": {
+      "placeholder": "Select"
+    },
+    "combobox": {
+      "noResults": "No results found"
+    },
+    "dropzone": {
+      "prompt": "Drag a file here or click to choose",
+      "selected": "Selected files",
+      "tooLarge": "{{name}} is too large",
+      "wrongType": "{{name}} has an unsupported type"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "table": {
+      "scrollRegion": "Table"
+    },
+    "toast": {
+      "region": "Notifications",
+      "dismiss": "Dismiss notification"
+    },
+    "error": {
+      "title": "Something went wrong",
+      "requestId": "Request ID: {{id}}",
+      "retry": "Try again"
+    },
+    "empty": {
+      "title": "No data"
+    }
+  },
+  "layout": {
+    "skipToContent": "Skip to content",
+    "logo": "Logo",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "footer": {
+      "contact": "Contact: info@example.org"
+    },
+    "admin": {
+      "navLabel": "Main navigation",
+      "signOut": "Sign out",
+      "signedInAs": "Signed in as {{email}}",
+      "comingSoon": "This section is coming soon."
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "organizations": "Organizations",
+      "events": "Events",
+      "templates": "Templates",
+      "certificates": "Certificates",
+      "import": "Import"
+    }
   }
 }
