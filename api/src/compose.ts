@@ -6,6 +6,12 @@ import {
   STORAGE_ADAPTERS,
   type Config,
 } from './config.js';
+import { InProcessEventBus } from './adapters/in-process/event-bus.js';
+import { InProcessRateLimiter } from './adapters/in-process/rate-limiter.js';
+import { RandomIdGenerator } from './adapters/system/id-generator.js';
+import { registerMemoryAdapters } from './adapters/memory/index.js';
+import { SystemClock } from './adapters/system/clock.js';
+import { createLogger } from './http/logging/logger.js';
 import type { EmailSender, StorageGateway } from './ports/index.js';
 import type { AuthPorts, Ports, QueuePorts, RepositoryPorts, Services } from './wiring.js';
 
@@ -85,7 +91,7 @@ export type AdapterRegistration = (registries: Registries) => void;
  * factory, e.g. `(r) => r.db.register('firestore', async (ctx) => (await import('./adapters/firestore/index.js')).create(ctx))`.
  * Exported mutable only so that process-level test preloads can add stubs.
  */
-export const builtinRegistrations: AdapterRegistration[] = [];
+export const builtinRegistrations: AdapterRegistration[] = [registerMemoryAdapters];
 
 /** Registries with the names defined by the configuration plus the built-in registrations. */
 export function defaultRegistries(): Registries {
@@ -170,13 +176,22 @@ export async function compose(
       ? Promise.resolve(undefined)
       : registries.email.resolve(sel.emailFallback, ctx),
   ]);
+  const clock = new SystemClock();
+  // Subscribers are registered here, in the composition root, never in publisher modules.
+  const eventBus = new InProcessEventBus(
+    createLogger({ level: config.logLevel, gcpProject: config.gcpProject }),
+  );
   const ports: Ports = {
-    repositories,
+    clock,
+    ids: new RandomIdGenerator(),
+    ...repositories,
     storage,
-    queue,
-    auth,
-    email,
+    ...queue,
+    ...auth,
+    emailSender: email,
     ...(emailFallback ? { emailFallback } : {}),
+    rateLimiter: new InProcessRateLimiter(clock),
+    eventBus,
   };
   return { config, ports, services: buildServices() };
 }

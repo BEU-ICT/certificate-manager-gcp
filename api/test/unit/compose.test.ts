@@ -13,6 +13,17 @@ import type { EmailSender, StorageGateway } from '../../src/ports/index.js';
 import type { AuthPorts, QueuePorts, RepositoryPorts } from '../../src/wiring.js';
 
 const stub = <T>(tag: string): T => ({ tag }) as unknown as T;
+const dbStub = (tag: string): RepositoryPorts => ({
+  organizations: stub(tag),
+  events: stub(tag),
+  templates: stub(tag),
+  certificates: stub(tag),
+});
+const queueStub = (tag: string): QueuePorts => ({ taskQueue: stub(tag), scheduler: stub(tag) });
+const authStub = (tag: string): AuthPorts => ({
+  tokenVerifier: stub(tag),
+  taskRequestVerifier: stub(tag),
+});
 
 const PROD_ENV = {
   NODE_ENV: 'production',
@@ -36,14 +47,14 @@ const PROD_ENV = {
 
 function stubRegistries(): Registries {
   const r = defaultRegistries();
-  r.db.register('firestore', () => stub<RepositoryPorts>('firestore'));
-  r.db.register('memory', () => stub<RepositoryPorts>('memory-db'));
+  r.db.register('firestore', () => dbStub('firestore'));
+  r.db.register('memory', () => dbStub('memory-db'));
   r.storage.register('gcs', () => stub<StorageGateway>('gcs'));
   r.storage.register('fs', () => stub<StorageGateway>('fs'));
   r.storage.register('memory', () => stub<StorageGateway>('memory-storage'));
-  r.queue.register('cloud-tasks', () => stub<QueuePorts>('cloud-tasks'));
-  r.queue.register('in-process', () => stub<QueuePorts>('in-process'));
-  r.auth.register('firebase', () => stub<AuthPorts>('firebase'));
+  r.queue.register('cloud-tasks', () => queueStub('cloud-tasks'));
+  r.queue.register('in-process', () => queueStub('in-process'));
+  r.auth.register('firebase', () => authStub('firebase'));
   r.email.register('gmail', () => stub<EmailSender>('gmail'));
   r.email.register('brevo', () => stub<EmailSender>('brevo'));
   return r;
@@ -98,8 +109,29 @@ describe('AdapterRegistry', () => {
 });
 
 describe('default registries', () => {
+  it('compose the local profile from the in-memory adapters', async () => {
+    const { ports } = await compose(loadConfig({ NODE_ENV: 'development' }));
+    expect(ports.organizations).toBeDefined();
+    expect(ports.tokenVerifier).toBeDefined();
+    const app = buildApp({ ports });
+    const res = await app.inject({ method: 'GET', url: '/internal/healthz' });
+    expect(res.statusCode).toBe(200);
+    await app.close();
+  });
+
   it('fail with a clear message for names that have no implementation yet', async () => {
-    await expect(compose(loadConfig({}))).rejects.toThrow(/not available in this build/);
+    await expect(compose(loadConfig(PROD_ENV))).rejects.toThrow(/not available in this build/);
+  });
+
+  it('never serve stand-in verifiers or senders in production', async () => {
+    const env = { ...PROD_ENV, DB_ADAPTER: 'firestore' };
+    const regs = defaultRegistries();
+    regs.db.register('firestore', () => dbStub('firestore'));
+    regs.storage.register('gcs', () => stub<StorageGateway>('gcs'));
+    regs.queue.register('cloud-tasks', () => queueStub('cloud-tasks'));
+    await expect(compose(loadConfig(env), regs)).rejects.toThrow(
+      'AUTH_PROVIDER: adapter "firebase" is not available in this build',
+    );
   });
 });
 
@@ -164,11 +196,11 @@ describe('compose', () => {
       stubRegistries(),
     );
     expect(config.env).toBe('production');
-    expect(ports.repositories).toEqual({ tag: 'firestore' });
+    expect(ports.organizations).toEqual({ tag: 'firestore' });
     expect(ports.storage).toEqual({ tag: 'gcs' });
-    expect(ports.queue).toEqual({ tag: 'cloud-tasks' });
-    expect(ports.auth).toEqual({ tag: 'firebase' });
-    expect(ports.email).toEqual({ tag: 'gmail' });
+    expect(ports.taskQueue).toEqual({ tag: 'cloud-tasks' });
+    expect(ports.tokenVerifier).toEqual({ tag: 'firebase' });
+    expect(ports.emailSender).toEqual({ tag: 'gmail' });
     expect(ports.emailFallback).toEqual({ tag: 'brevo' });
   });
 
@@ -177,7 +209,7 @@ describe('compose', () => {
     let touched = false;
     regs.db.register('memory', () => {
       touched = true;
-      return stub<RepositoryPorts>('x');
+      return dbStub('x');
     });
     await compose(loadConfig(PROD_ENV), regs);
     expect(touched).toBe(false);
@@ -187,7 +219,7 @@ describe('compose', () => {
     const { ports } = await compose(loadConfig({ NODE_ENV: 'development' }), stubRegistries(), {
       FIRESTORE_EMULATOR_HOST: 'localhost:8081',
     });
-    expect(ports.repositories).toEqual({ tag: 'firestore' });
+    expect(ports.organizations).toEqual({ tag: 'firestore' });
     expect(ports.storage).toEqual({ tag: 'memory-storage' });
   });
 
