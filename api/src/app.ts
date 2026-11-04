@@ -1,4 +1,5 @@
 import Fastify, { LogController, type FastifyInstance, type FastifyServerOptions } from 'fastify';
+import { installAdminGuard } from './http/auth/admin-guard.js';
 import { installErrorHandling } from './http/error-handler.js';
 import { createLogger, type LogOptions } from './http/logging/logger.js';
 import { requestIdFrom } from './http/logging/trace.js';
@@ -18,6 +19,8 @@ export interface AppDeps {
   openApiEndpoint?: boolean;
   /** Feature flags (flags.ts); route modules guard endpoints with http/flag-guard.ts. */
   flags?: FeatureFlags;
+  /** Pre-authentication requests per minute and IP on admin routes (config.rateLimit.adminPerMin). */
+  adminRateLimitPerMin?: number;
 }
 
 const BODY_LIMIT_BYTES = 1024 * 1024;
@@ -43,6 +46,12 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   installRequestContext(app, { gcpProject: deps.log?.gcpProject });
   installErrorHandling(app);
   installOpenApi(app);
+  installAdminGuard(app, {
+    tokenVerifier: deps.ports?.tokenVerifier,
+    rateLimiter: deps.ports?.rateLimiter,
+    preAuthRequestsPerMin: deps.adminRateLimitPerMin,
+    now: deps.ports ? () => deps.ports!.clock.now().getTime() : undefined,
+  });
 
   void app.register(healthRoutes);
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);

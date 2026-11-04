@@ -31,6 +31,7 @@ const app = buildApp({
   services: composition.services,
   openApiEndpoint: config.flags.openApiEndpoint,
   flags: createFeatureFlags(config.flags),
+  adminRateLimitPerMin: config.rateLimit.adminPerMin,
 });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
