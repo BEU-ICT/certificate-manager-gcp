@@ -123,21 +123,18 @@ export function describeOrganizationsApi(
     it('delete: blocked with counts while referenced, allowed afterwards, then 404', async () => {
       const { services } = await setup();
       const created = await create({ name: 'Acme' });
-      let events = 2;
-      services.organizationReferences.register({
-        name: 'events',
-        countReferences: () => Promise.resolve(events),
-      });
+      let certificates = 2;
+      // The `events` checker is registered by buildServices; templates/certificates register theirs later.
       services.organizationReferences.register({
         name: 'certificates',
-        countReferences: () => Promise.resolve(0),
+        countReferences: () => Promise.resolve(certificates),
       });
       const blocked = await call('DELETE', `/organizations/${created.id}`);
       expect(blocked.statusCode).toBe(409);
       expect(blocked.json().error.details).toEqual([
-        { path: 'references', message: 'IN_USE', counts: { events: 2, certificates: 0 } },
+        { path: 'references', message: 'IN_USE', counts: { events: 0, certificates: 2 } },
       ]);
-      events = 0;
+      certificates = 0;
       const deleted = await call('DELETE', `/organizations/${created.id}`);
       expect(deleted.statusCode).toBe(204);
       expect(deleted.body).toBe('');
