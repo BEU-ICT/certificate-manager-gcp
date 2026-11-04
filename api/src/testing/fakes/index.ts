@@ -11,5 +11,6 @@ export * from './fake-scheduler.js';
 export * from './fake-storage-gateway.js';
 export * from './fake-task-queue.js';
 export * from './fake-template-repository.js';
+export * from './fake-admin-user-directory.js';
 export * from './fake-verifiers.js';
 export * from './create-fakes.js';

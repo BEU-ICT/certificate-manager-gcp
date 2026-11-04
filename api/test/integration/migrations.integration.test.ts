@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FirestoreMigrationStateStore } from '../../src/adapters/firestore/migration-state-store.js';
 import { runMigrations, type Migration } from '../../src/migrations/index.js';
 import { describeMigrationStateStoreContract } from '../../src/testing/contracts/index.js';
+import { createMigrationContext } from '../../src/testing/migration-context.js';
 import { createFakes, FakeClock } from '../../src/testing/fakes/index.js';
 import { getTestFirestore, resetFirestore } from './helpers/index.js';
 
@@ -41,15 +42,9 @@ describe('FirestoreMigrationStateStore', () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
     const list: Migration[] = [{ id: '001-first', description: 'test', run }];
-    const context = {
-      clock: fakes.clock,
-      organizations: fakes.organizations,
-      events: fakes.events,
-      templates: fakes.templates,
-      certificates: fakes.certificates,
-      emailSender: fakes.emailSender,
-      log: { info: vi.fn(), error: vi.fn() },
-    };
+    const context = createMigrationContext(fakes, {
+      log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+    });
     const start = (instanceId: string) =>
       runMigrations({
         store: new FirestoreMigrationStateStore(db, fakes.clock),

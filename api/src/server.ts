@@ -3,7 +3,7 @@ import { buildApp } from './app.js';
 import { AdapterError, compose, type Composition } from './compose.js';
 import { ConfigError, loadConfig, type Config } from './config.js';
 import { createFeatureFlags } from './flags.js';
-import { runMigrationsWithPorts } from './migrations/index.js';
+import { migrationSettings, runMigrationsWithPorts } from './migrations/index.js';
 import { shutdown } from './shutdown.js';
 
 // Composition root: the only module that reads process.env.
@@ -50,7 +50,7 @@ for (const signal of ['SIGTERM', 'SIGINT'] as const) {
 // Cloud Run restarts the instance and the migration is retried.
 try {
   const instanceId = `${process.env['K_REVISION'] ?? 'local'}-${randomUUID()}`;
-  await runMigrationsWithPorts(composition.ports, app.log, instanceId);
+  await runMigrationsWithPorts(composition.ports, app.log, instanceId, migrationSettings(config));
 } catch (err) {
   app.log.error(err, 'migrations failed');
   process.exit(1);

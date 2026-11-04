@@ -40,6 +40,19 @@ SMOKE_CERT_ID=<known certificate id> infra/smoke-test.sh https://<project>.web.a
 
 Checks: Cloud Run `/internal/healthz` is 200; the SPA index is served by Hosting; public details return 200 without an `email` key; an unknown id returns 404 in the JSON error shape; `/api/v1/admin/me` without a token returns 401; `/internal/**` is not served through Hosting. Exit code is non-zero if any check fails (`infra/test-smoke.sh` proves this offline against a fake broken deployment). `deploy-all.sh` creates the tag `vYYYY.MM.DD-N` (`infra/tag-release.sh`) only after the smoke test passes; push it with `git push origin <tag>`.
 
+## First administrator (bootstrap)
+
+The migration `001-bootstrap-admin` creates the first administrator on the first start of the API and e-mails a password-setup link; no password is ever configured. Checklist for the first deployment:
+
+1. Set `BOOTSTRAP_ADMIN_EMAIL` to the administrator's address (validated at startup).
+2. Make sure the e-mail provider works (`EMAIL_PROVIDER`, `EMAIL_FROM_ADDRESS`, and `EMAIL_API_KEY` for Brevo). If Gmail is not configured yet, use `EMAIL_PROVIDER=brevo` temporarily, or run `npm run migrate -w @certificate-manager/api` locally with Application Default Credentials against the project.
+3. Make sure the runtime service account has `roles/firebaseauth.admin` (it creates the account and sets the `role=admin` claim).
+4. Deploy. The API sends one e-mail and marks the migration only after sending succeeded; if sending fails, the process exits non-zero and the next start retries (the user is never created twice, parallel instances send once).
+5. Open the e-mail, choose a password, sign in at `/login`. The link is valid for about one hour; if it expired, use "Forgot password?" on the login page.
+6. Optionally remove `BOOTSTRAP_ADMIN_EMAIL` afterwards. Without it the migration is skipped with a warning and stays pending.
+
+The link is a credential and is never logged or stored by the application.
+
 ## Rollback
 
 | Part              | Command                                                                                                                                      |

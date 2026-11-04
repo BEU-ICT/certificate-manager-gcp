@@ -1,20 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MigrationError, runMigrations, type Migration } from '../../src/migrations/index.js';
+import { createMigrationContext } from '../../src/testing/migration-context.js';
 import { createFakes } from '../../src/testing/fakes/index.js';
 
-const silent = { info: vi.fn(), error: vi.fn() };
+const silent = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
 function setup() {
   const fakes = createFakes();
-  const context = {
-    clock: fakes.clock,
-    organizations: fakes.organizations,
-    events: fakes.events,
-    templates: fakes.templates,
-    certificates: fakes.certificates,
-    emailSender: fakes.emailSender,
-    log: silent,
-  };
+  const context = createMigrationContext(fakes, { log: silent });
   const store = fakes.migrationState;
   return { fakes, context, store };
 }
@@ -162,11 +155,9 @@ describe('runMigrations', () => {
     expect(store.reads).toBe(0);
   });
 
-  it('has no registered migration yet, so the default list is a no-op', async () => {
+  it('registers the bootstrap-admin migration first', async () => {
     const { context, store } = setup();
-    expect(await runMigrations({ store, context, instanceId: 'i1' })).toEqual({
-      applied: [],
-      skipped: [],
-    });
+    const report = await runMigrations({ store, context, instanceId: 'i1' });
+    expect(report.applied).toEqual(['001-bootstrap-admin']);
   });
 });

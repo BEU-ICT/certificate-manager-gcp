@@ -1,3 +1,4 @@
+import { FakeAdminUserDirectory } from './fake-admin-user-directory.js';
 import { FakeCertificateRepository } from './fake-certificate-repository.js';
 import { FakeClock } from './fake-clock.js';
 import { FakeEmailSender } from './fake-email-sender.js';
@@ -32,6 +33,7 @@ export function createFakes() {
     eventBus: new FakeEventBus(),
     tokenVerifier: new FakeTokenVerifier(),
     taskRequestVerifier: new FakeTaskRequestVerifier(),
+    adminUsers: new FakeAdminUserDirectory(),
   };
 }
 

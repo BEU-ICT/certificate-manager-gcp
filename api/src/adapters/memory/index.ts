@@ -8,6 +8,7 @@ import { FakeOrganizationRepository } from '../../testing/fakes/fake-organizatio
 import { FakeScheduler } from '../../testing/fakes/fake-scheduler.js';
 import { FakeStorageGateway } from '../../testing/fakes/fake-storage-gateway.js';
 import { FakeTaskQueue } from '../../testing/fakes/fake-task-queue.js';
+import { FakeAdminUserDirectory } from '../../testing/fakes/fake-admin-user-directory.js';
 import { FakeTaskRequestVerifier, FakeTokenVerifier } from '../../testing/fakes/fake-verifiers.js';
 import { FakeTemplateRepository } from '../../testing/fakes/fake-template-repository.js';
 
@@ -47,6 +48,7 @@ export function registerMemoryAdapters(r: Registries): void {
     return {
       tokenVerifier: new FakeTokenVerifier(),
       taskRequestVerifier: new FakeTaskRequestVerifier(),
+      adminUsers: new FakeAdminUserDirectory(),
     };
   });
   for (const name of ['gmail', 'brevo']) {
