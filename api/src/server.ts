@@ -1,4 +1,5 @@
 import { buildApp } from './app.js';
+import { AdapterError, compose, type Composition } from './compose.js';
 import { ConfigError, loadConfig, type Config } from './config.js';
 import { shutdown } from './shutdown.js';
 
@@ -12,7 +13,20 @@ try {
   process.exit(1);
 }
 
-const app = buildApp({ log: { level: config.logLevel, gcpProject: config.gcpProject } });
+let composition: Composition;
+try {
+  composition = await compose(config, undefined, process.env);
+} catch (err) {
+  // Unknown or unavailable adapter: print the reason without a stack trace and stop.
+  process.stderr.write(`${err instanceof AdapterError ? err.message : String(err)}\n`);
+  process.exit(1);
+}
+
+const app = buildApp({
+  log: { level: config.logLevel, gcpProject: config.gcpProject },
+  ports: composition.ports,
+  services: composition.services,
+});
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.once(signal, () => {
