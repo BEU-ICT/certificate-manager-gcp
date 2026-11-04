@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getFirebaseAuth } from '@/auth';
+import { preloadAuth } from '@/auth';
 
-/** Placeholder, the sign-in form is implemented in #73 on top of the `auth` module. */
+/** Placeholder, the sign-in form is implemented in #72 on top of the `auth` module. */
 export default function LoginPage() {
   const { t } = useTranslation('common');
   useEffect(() => {
-    // Warm up the SDK only when a Firebase config is present (not in a bare checkout).
-    if (import.meta.env.VITE_FIREBASE_API_KEY) getFirebaseAuth();
+    // Fetch the SDK chunk while the user types; a missing configuration is ignored here.
+    preloadAuth();
   }, []);
   return (
     <div className="max-w-xl">
