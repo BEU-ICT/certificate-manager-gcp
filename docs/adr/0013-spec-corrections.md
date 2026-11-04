@@ -9,8 +9,8 @@ While planning the implementation, points of the spec turned out to be wrong or 
 ## Decision
 
 - **Migration marker path.** The spec path `system/migrations/bootstrap-admin` is not a valid Firestore document path. One document `system/migrations` holds a map `applied.<migrationId> = { at, by }`; the bootstrap administrator uses key `001-bootstrap-admin`.
-- **PDF race resolution.** Concurrent first requests for the same certificate must not produce two different objects. The PDF object name is deterministic per certificate and the write must not overwrite an existing object, so the loser of the race serves the stored PDF. The exact mechanics are specified in the `pdf` task and module README.
-- **IAM role additions.** The service accounts receive the extra roles the implemented flows need beyond the spec (for example creating Cloud Tasks tasks and acting as the task invoker), each at least privilege. The authoritative list is kept in `infra/` and issue #16.
+- **PDF race resolution.** The spec's handling of concurrent first requests for the same certificate is replaced by the resolution specified in the `pdf` module task; this record only notes that a correction exists. See the module README once the module is implemented.
+- **IAM role additions.** The implemented flows need service-account roles beyond those listed in the spec. The authoritative list is kept in `infra/` and the infrastructure tasks.
 - **MySQL legacy source.** The legacy data source is MySQL, not PostgreSQL; the migration (epic #183) reads MySQL and also converts the legacy templates. Legacy certificate IDs are 32-character lowercase hex (MD5) and are accepted unchanged next to the 22-character base64url IDs.
 
 ## Consequences
