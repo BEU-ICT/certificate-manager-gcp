@@ -8,9 +8,6 @@
   "login": {
     "title": "Daxil ol"
   },
-  "admin": {
-    "title": "İdarəetmə paneli"
-  },
   "notFound": {
     "title": "Səhifə tapılmadı",
     "body": "Axtardığınız səhifə mövcud deyil.",
@@ -28,5 +25,67 @@
     "student": "Tələbə",
     "team": "Komanda",
     "other": "Digər"
+  },
+  "ui": {
+    "loading": "Yüklənir…",
+    "close": "Bağla",
+    "cancel": "Ləğv et",
+    "confirm": "Təsdiqlə",
+    "required": "məcburi",
+    "select": {
+      "placeholder": "Seçin"
+    },
+    "combobox": {
+      "noResults": "Nəticə tapılmadı"
+    },
+    "dropzone": {
+      "prompt": "Faylı bura sürüşdürün və ya seçmək üçün klikləyin",
+      "selected": "Seçilmiş fayllar",
+      "tooLarge": "{{name}} faylı çox böyükdür",
+      "wrongType": "{{name}} faylının növü dəstəklənmir"
+    },
+    "pagination": {
+      "label": "Səhifələmə",
+      "previous": "Əvvəlki",
+      "next": "Növbəti"
+    },
+    "table": {
+      "scrollRegion": "Cədvəl"
+    },
+    "toast": {
+      "region": "Bildirişlər",
+      "dismiss": "Bildirişi bağla"
+    },
+    "error": {
+      "title": "Xəta baş verdi",
+      "requestId": "Sorğu identifikatoru: {{id}}",
+      "retry": "Yenidən cəhd et"
+    },
+    "empty": {
+      "title": "Məlumat yoxdur"
+    }
+  },
+  "layout": {
+    "skipToContent": "Məzmuna keç",
+    "logo": "Loqo",
+    "openMenu": "Menyunu aç",
+    "closeMenu": "Menyunu bağla",
+    "footer": {
+      "contact": "Əlaqə: info@example.org"
+    },
+    "admin": {
+      "navLabel": "Əsas naviqasiya",
+      "signOut": "Çıxış",
+      "signedInAs": "Daxil olub: {{email}}",
+      "comingSoon": "Bu bölmə tezliklə əlavə olunacaq."
+    },
+    "nav": {
+      "dashboard": "İdarə paneli",
+      "organizations": "Təşkilatlar",
+      "events": "Tədbirlər",
+      "templates": "Şablonlar",
+      "certificates": "Sertifikatlar",
+      "import": "İdxal"
+    }
   }
 }

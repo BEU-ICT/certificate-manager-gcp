@@ -12,7 +12,11 @@ const DEFAULT_NS = 'common';
 const PLURAL = /_(zero|one|two|few|many|other)$/;
 
 /** Dynamic keys: `ns:prefix*` marks every key of `ns` starting with `prefix` as used. */
-export const ALLOW_DYNAMIC = ['errors:*', 'common:certificateTypes.*'];
+export const ALLOW_DYNAMIC = [
+  'errors:*',
+  'common:certificateTypes.*',
+  'common:layout.nav.*', // admin nav items are rendered from a list
+];
 
 function walk(dir, filter) {
   return readdirSync(dir).flatMap((name) => {
