@@ -1,0 +1,11 @@
+{
+  "app": { "name": "Sertifikat Meneceri" },
+  "certificate": { "title": "Sertifikat" },
+  "login": { "title": "Daxil ol" },
+  "admin": { "title": "İdarəetmə paneli" },
+  "notFound": {
+    "title": "Səhifə tapılmadı",
+    "body": "Axtardığınız səhifə mövcud deyil.",
+    "home": "Ana səhifəyə qayıt"
+  }
+}
