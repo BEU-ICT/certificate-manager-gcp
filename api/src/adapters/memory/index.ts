@@ -1,4 +1,4 @@
-import { AdapterError, type AdapterFactory, type Registries } from '../../compose.js';
+import { AdapterError, type AdapterFactory, type Registries } from '../registry.js';
 import { FakeCertificateRepository } from '../../testing/fakes/fake-certificate-repository.js';
 import { FakeEmailSender } from '../../testing/fakes/fake-email-sender.js';
 import { FakeEventRepository } from '../../testing/fakes/fake-event-repository.js';
