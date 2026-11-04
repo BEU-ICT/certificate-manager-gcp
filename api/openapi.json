@@ -1,0 +1,101 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Certificate Manager API",
+    "version": "0.0.0-stub",
+    "description": "Hand-written minimal stub (E1-S4-T2). Replaced by the generated document from E1-S5-T1 (#41)."
+  },
+  "servers": [{ "url": "/api/v1" }],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Liveness probe",
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "headers": { "X-Request-Id": { "$ref": "#/components/headers/XRequestId" } },
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Health" } }
+            }
+          },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "500": { "$ref": "#/components/responses/Error" },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    }
+  },
+  "components": {
+    "headers": {
+      "XRequestId": {
+        "description": "Request correlation ID; equals error.requestId in error bodies.",
+        "schema": { "type": "string" }
+      },
+      "RetryAfter": {
+        "description": "Seconds to wait before retrying.",
+        "schema": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "required": ["status"],
+        "properties": { "status": { "type": "string", "enum": ["ok"] } }
+      },
+      "ErrorDetail": {
+        "type": "object",
+        "required": ["path", "message"],
+        "properties": { "path": { "type": "string" }, "message": { "type": "string" } }
+      },
+      "ErrorBody": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message", "requestId"],
+            "properties": {
+              "code": { "type": "string", "example": "VALIDATION_FAILED" },
+              "message": { "type": "string" },
+              "details": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/ErrorDetail" }
+              },
+              "requestId": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Standard error body",
+        "headers": { "X-Request-Id": { "$ref": "#/components/headers/XRequestId" } },
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+        }
+      },
+      "RateLimited": {
+        "description": "RATE_LIMITED",
+        "headers": {
+          "X-Request-Id": { "$ref": "#/components/headers/XRequestId" },
+          "Retry-After": { "$ref": "#/components/headers/RetryAfter" }
+        },
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+        }
+      },
+      "Unavailable": {
+        "description": "UNAVAILABLE",
+        "headers": {
+          "X-Request-Id": { "$ref": "#/components/headers/XRequestId" },
+          "Retry-After": { "$ref": "#/components/headers/RetryAfter" }
+        },
+        "content": {
+          "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+        }
+      }
+    }
+  }
+}
