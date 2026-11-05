@@ -1,8 +1,20 @@
 import { DefaultEventService } from './modules/events/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
-import { DefaultTemplateService } from './modules/templates/index.js';
+import {
+  CachedTemplateAssets,
+  DEFAULT_TEMPLATE_CACHE_MB,
+  DefaultTemplateService,
+  type AssetsLogger,
+} from './modules/templates/index.js';
 import { ReferenceCheckRegistry } from './shared/references.js';
 import type { Ports, Services } from './wiring.js';
+
+export interface ServiceOptions {
+  /** `TEMPLATE_CACHE_MB`: byte budget of the template asset cache. */
+  templateCacheMb?: number;
+  /** Receives the template load metrics. */
+  logger?: AssetsLogger;
+}
 
 /**
  * Builds the module services from ports. Each module adds its service here; cross-module
@@ -10,7 +22,7 @@ import type { Ports, Services } from './wiring.js';
  * never inside the modules themselves. Templates and certificates register their checkers on
  * `eventReferences` (and `organizationReferences`) when their services exist.
  */
-export function buildServices(ports: Ports): Services {
+export function buildServices(ports: Ports, options: ServiceOptions = {}): Services {
   const organizationReferences = new ReferenceCheckRegistry();
   const eventReferences = new ReferenceCheckRegistry();
   const organizations = new DefaultOrganizationService(
@@ -39,5 +51,16 @@ export function buildServices(ports: Ports): Services {
     name: 'templates',
     countReferences: (eventId) => templates.countByEvent(eventId),
   });
-  return { organizations, organizationReferences, events, eventReferences, templates };
+  const templateAssets = new CachedTemplateAssets(ports.templates, ports.storage, ports.clock, {
+    maxBytes: Math.floor((options.templateCacheMb ?? DEFAULT_TEMPLATE_CACHE_MB) * 1024 * 1024),
+    ...(options.logger ? { logger: options.logger } : {}),
+  });
+  return {
+    organizations,
+    organizationReferences,
+    events,
+    eventReferences,
+    templates,
+    templateAssets,
+  };
 }

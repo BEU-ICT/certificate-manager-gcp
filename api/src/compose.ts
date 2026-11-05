@@ -120,9 +120,8 @@ export async function compose(
   ]);
   const clock = new SystemClock();
   // Subscribers are registered here, in the composition root, never in publisher modules.
-  const eventBus = new InProcessEventBus(
-    createLogger({ level: config.logLevel, gcpProject: config.gcpProject }),
-  );
+  const logger = createLogger({ level: config.logLevel, gcpProject: config.gcpProject });
+  const eventBus = new InProcessEventBus(logger);
   const ports: Ports = {
     clock,
     ids: new RandomIdGenerator(),
@@ -135,7 +134,11 @@ export async function compose(
     rateLimiter: new InProcessRateLimiter(clock),
     eventBus,
   };
-  return { config, ports, services: buildServices(ports) };
+  return {
+    config,
+    ports,
+    services: buildServices(ports, { templateCacheMb: config.templateCacheMb, logger }),
+  };
 }
 
 export { AdapterError, AdapterRegistry, buildServices };

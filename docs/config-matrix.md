@@ -23,6 +23,7 @@ Every variable validated at boot (issue #16 §6, `api/.env.example`). Non-secret
 | `EMAIL_DAILY_CAP`                                                 | env        | `300` (below the provider daily limit)                                                |
 | `RATE_LIMIT_PUBLIC_PER_MIN`                                       | env        | `10` (default)                                                                        |
 | `RATE_LIMIT_ADMIN_PER_MIN`                                        | env        | `60` (allowed 30-100)                                                                 |
+| `TEMPLATE_CACHE_MB`                                               | env        | `40` (default; template asset cache budget, 1-256)                                    |
 | `DB_ADAPTER`, `STORAGE_ADAPTER`, `QUEUE_ADAPTER`, `AUTH_PROVIDER` | env        | `firestore`, `gcs`, `cloud-tasks`, `firebase`                                         |
 | `FEATURE_*`                                                       | env        | flags per `api/src/flags.ts`; unknown flags fail boot                                 |
 
