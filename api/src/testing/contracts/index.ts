@@ -39,3 +39,10 @@ export {
   ORG_B,
   type EventRepositoryContractFactory,
 } from './event-repository.js';
+export {
+  describeTemplateRepositoryContract,
+  sampleTemplate,
+  TPL_EVENT,
+  TPL_ORG,
+  type TemplateRepositoryContractFactory,
+} from './template-repository.js';

@@ -62,17 +62,35 @@ export interface EventRepository {
   count(organizationId?: OrganizationId): Promise<number>;
 }
 
+export interface TemplateFilter {
+  organizationId?: OrganizationId;
+  eventId?: EventId;
+  type?: string;
+}
+
 export interface TemplateRepository {
-  /** Fails with `ConflictError` when the template reference exists. Templates are immutable. */
+  /**
+   * Creates the template document with `create()` semantics. Fails with `ConflictError` when the
+   * reference exists; nothing is written. Templates are immutable: there is no update.
+   */
   create(template: Template): Promise<void>;
-  getByRef(ref: TemplateRef): Promise<Template | null>;
+  getByReference(reference: TemplateRef): Promise<Template | null>;
   /** Highest version for the (organization, event, type) triple, or `null`. */
   getLatest(
     organizationId: OrganizationId,
     eventId: EventId,
     type: string,
   ): Promise<Template | null>;
-  listByEvent(eventId: EventId, page?: PageRequest): Promise<Page<Template>>;
+  /** Newest first (`createdAt` descending, then reference), optionally filtered. */
+  list(filter?: TemplateFilter, page?: PageRequest): Promise<Page<Template>>;
+  /** Highest version for the triple, or `null` when there is none (the next one is then 0). */
+  maxVersion(
+    organizationId: OrganizationId,
+    eventId: EventId,
+    type: string,
+  ): Promise<number | null>;
+  /** Number of templates matching the filter (native count, never reads documents). */
+  count(filter?: TemplateFilter): Promise<number>;
 }
 
 export interface CertificateRepository {

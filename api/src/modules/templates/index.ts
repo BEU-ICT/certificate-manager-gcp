@@ -26,3 +26,22 @@ export {
   type FormatName,
 } from './formats.js';
 export { isSafePackagePath, packagePathProblem } from './paths.js';
+export { MAX_REFERENCE_LENGTH, buildTemplateReference } from './reference.js';
+export {
+  TEMPLATES_BUCKET,
+  templateAssetKey,
+  templateBackgroundKey,
+  templateConfigKey,
+  templateFontKey,
+  templateKey,
+  templateStoragePath,
+} from './storage-keys.js';
+export {
+  DefaultTemplateService,
+  MAX_REFERENCE_RETRIES,
+  type NextReference,
+  type PublishTemplateInput,
+  type TemplateFile,
+  type TemplateService,
+  type TemplateTarget,
+} from './service.js';

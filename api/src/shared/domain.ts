@@ -31,13 +31,24 @@ export interface CertificateEvent {
   schemaVersion: number;
 }
 
+/** One immutable template version (spec §6/§7); the document id is the reference. */
 export interface Template {
-  ref: TemplateRef;
+  /** Document id, `<orgSlug>-<eventSlug>-<type>-v<n>`; never parsed. */
+  reference: TemplateRef;
   organizationId: OrganizationId;
   eventId: EventId;
-  type: string;
+  organizationSlug: string;
+  eventSlug: string;
+  type: CertificateType;
   version: number;
+  /** Prefix of the package in the templates bucket: `templates/<reference>/`. */
+  storagePath: string;
+  /** The parsed template config map (equals the stored `config.json`). */
+  config: Record<string, unknown>;
   createdAt: Date;
+  /** Admin user ID that uploaded the version. */
+  createdBy: string;
+  schemaVersion: number;
 }
 
 /** Delivery state of the certificate e-mail (owned by the notifications module). */

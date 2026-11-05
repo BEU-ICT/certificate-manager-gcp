@@ -174,21 +174,18 @@ export function describeEventsApi(name: string, makePorts: () => Promise<Fakes> 
       const { services } = await setup();
       const organizationId = await createOrg('Acme');
       const created = await createEvent({ organizationId, name: 'DevFest' });
-      let templates = 1;
-      services.eventReferences.register({
-        name: 'templates',
-        countReferences: () => Promise.resolve(templates),
-      });
+      let certificates = 1;
+      // The `templates` checker is registered by buildServices; certificates register theirs later.
       services.eventReferences.register({
         name: 'certificates',
-        countReferences: () => Promise.resolve(0),
+        countReferences: () => Promise.resolve(certificates),
       });
       const blocked = await call('DELETE', `/events/${created.id}`);
       expect(blocked.statusCode).toBe(409);
       expect(blocked.json().error.details).toEqual([
-        { path: 'references', message: 'IN_USE', counts: { templates: 1, certificates: 0 } },
+        { path: 'references', message: 'IN_USE', counts: { templates: 0, certificates: 1 } },
       ]);
-      templates = 0;
+      certificates = 0;
       expect((await call('DELETE', `/events/${created.id}`)).statusCode).toBe(204);
       expect((await call('GET', `/events/${created.id}`)).statusCode).toBe(404);
       expect((await call('DELETE', `/events/${created.id}`)).statusCode).toBe(404);
