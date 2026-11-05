@@ -45,3 +45,11 @@ export {
   type TemplateService,
   type TemplateTarget,
 } from './service.js';
+export { CONFIG_FILE, validateTemplatePackage } from './package-validator.js';
+export {
+  MAX_IMAGE_DPI,
+  MIN_IMAGE_DPI,
+  PACKAGE_LIMITS,
+  type Issue,
+  type ValidationReport,
+} from './package-issues.js';

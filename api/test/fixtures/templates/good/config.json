@@ -1,0 +1,46 @@
+{
+  "engine": "svg-pdf",
+  "page": {
+    "size": "A4",
+    "orientation": "landscape"
+  },
+  "background": "background.svg",
+  "images": [
+    {
+      "file": "assets/logo.png",
+      "x": 320,
+      "y": 60,
+      "width": 200
+    }
+  ],
+  "fonts": {
+    "main": "fonts/main.ttf"
+  },
+  "fields": {
+    "ownerName": {
+      "x": 100,
+      "y": 250,
+      "width": 640,
+      "font": "main",
+      "size": 36,
+      "color": "#1d3557",
+      "align": "center",
+      "maxLines": 1
+    },
+    "subject": {
+      "x": 100,
+      "y": 330,
+      "width": 640,
+      "font": "main",
+      "size": 20,
+      "color": "#333333",
+      "align": "center",
+      "maxLines": 2
+    }
+  },
+  "qr": {
+    "x": 700,
+    "y": 450,
+    "size": 100
+  }
+}
