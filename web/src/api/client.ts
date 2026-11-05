@@ -52,7 +52,15 @@ function parseDetails(value: unknown): ApiErrorDetail[] | undefined {
   const out: ApiErrorDetail[] = [];
   for (const item of value as unknown[]) {
     if (isRecord(item) && typeof item['path'] === 'string' && typeof item['message'] === 'string') {
-      out.push({ path: item['path'], message: item['message'] });
+      const detail: ApiErrorDetail = { path: item['path'], message: item['message'] };
+      if (typeof item['suggestion'] === 'string') detail.suggestion = item['suggestion'];
+      const counts = item['counts'];
+      if (isRecord(counts)) {
+        detail.counts = Object.fromEntries(
+          Object.entries(counts).filter(([, v]) => typeof v === 'number'),
+        ) as Record<string, number>;
+      }
+      out.push(detail);
     }
   }
   return out;

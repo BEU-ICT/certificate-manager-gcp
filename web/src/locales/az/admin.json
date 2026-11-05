@@ -30,5 +30,67 @@
     "submit": "Sıfırlama keçidini göndər",
     "sent": "Bu ünvan administratora məxsusdursa, e-məktub göndərildi",
     "back": "Daxil olmağa qayıt"
+  },
+  "organizations": {
+    "title": "Təşkilatlar",
+    "loading": "Təşkilatlar yüklənir…",
+    "cancel": "Ləğv et",
+    "close": "Bağla",
+    "pageSize": "Səhifədə sətir sayı",
+    "columns": {
+      "name": "Ad",
+      "slug": "Slaq",
+      "createdAt": "Yaradılıb",
+      "actions": "Əməliyyatlar"
+    },
+    "empty": {
+      "title": "Hələ təşkilat yoxdur",
+      "description": "Sertifikat verməyə başlamaq üçün ilk təşkilatı yaradın."
+    },
+    "create": {
+      "open": "Yeni təşkilat",
+      "title": "Yeni təşkilat",
+      "submit": "Yarat"
+    },
+    "rename": {
+      "label": "Adını dəyiş",
+      "action": "{{name}} təşkilatının adını dəyiş",
+      "title": "Təşkilatın adını dəyiş",
+      "submit": "Yadda saxla"
+    },
+    "delete": {
+      "label": "Sil",
+      "action": "{{name}} təşkilatını sil",
+      "title": "Təşkilatı sil",
+      "confirm": "Sil",
+      "message": "\"{{name}}\" silinsin? Bu əməliyyatı geri qaytarmaq olmaz.",
+      "blocked": "\"{{name}}\" hələ istifadə olunduğu üçün silinə bilməz:",
+      "events_one": "{{count}} tədbir",
+      "events_other": "{{count}} tədbir",
+      "templates_one": "{{count}} şablon",
+      "templates_other": "{{count}} şablon",
+      "certificates_one": "{{count}} sertifikat",
+      "certificates_other": "{{count}} sertifikat",
+      "hint": "Əvvəlcə bunları silin, sonra yenidən cəhd edin."
+    },
+    "fields": {
+      "name": "Ad",
+      "slug": "Slaq",
+      "slugHint": "Keçidlərdə istifadə olunur və təşkilat yaradıldıqdan sonra dəyişdirilə bilməz.",
+      "slugReadOnly": "Slaq heç vaxt dəyişdirilə bilməz."
+    },
+    "errors": {
+      "nameRequired": "Adı daxil edin",
+      "nameTooLong": "Ad ən çox {{max}} simvol ola bilər",
+      "slugRequired": "Slaqı daxil edin",
+      "slugInvalid": "2–{{max}} simvol: kiçik latın hərfləri, rəqəmlər və tək defislər istifadə edin",
+      "slugTaken": "Bu slaq artıq götürülüb",
+      "useSuggestion": "\"{{slug}}\" istifadə edilsin?"
+    },
+    "toast": {
+      "created": "\"{{name}}\" təşkilatı yaradıldı",
+      "renamed": "Təşkilatın adı \"{{name}}\" olaraq dəyişdirildi",
+      "deleted": "\"{{name}}\" təşkilatı silindi"
+    }
   }
 }

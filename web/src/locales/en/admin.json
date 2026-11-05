@@ -30,5 +30,67 @@
     "submit": "Send reset link",
     "sent": "If this address belongs to an administrator, an email was sent",
     "back": "Back to sign in"
+  },
+  "organizations": {
+    "title": "Organizations",
+    "loading": "Loading organizations…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "pageSize": "Rows per page",
+    "columns": {
+      "name": "Name",
+      "slug": "Slug",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No organizations yet",
+      "description": "Create the first organization to start issuing certificates."
+    },
+    "create": {
+      "open": "New organization",
+      "title": "New organization",
+      "submit": "Create"
+    },
+    "rename": {
+      "label": "Rename",
+      "action": "Rename {{name}}",
+      "title": "Rename organization",
+      "submit": "Save"
+    },
+    "delete": {
+      "label": "Delete",
+      "action": "Delete {{name}}",
+      "title": "Delete organization",
+      "confirm": "Delete",
+      "message": "Delete \"{{name}}\"? This cannot be undone.",
+      "blocked": "\"{{name}}\" cannot be deleted because it is still in use:",
+      "events_one": "{{count}} event",
+      "events_other": "{{count}} events",
+      "templates_one": "{{count}} template",
+      "templates_other": "{{count}} templates",
+      "certificates_one": "{{count}} certificate",
+      "certificates_other": "{{count}} certificates",
+      "hint": "Remove these items first, then try again."
+    },
+    "fields": {
+      "name": "Name",
+      "slug": "Slug",
+      "slugHint": "Used in links and cannot be changed after the organization is created.",
+      "slugReadOnly": "The slug can never be changed."
+    },
+    "errors": {
+      "nameRequired": "Enter a name",
+      "nameTooLong": "The name can be at most {{max}} characters",
+      "slugRequired": "Enter a slug",
+      "slugInvalid": "Use 2 to {{max}} lowercase letters, digits and single hyphens",
+      "slugTaken": "This slug is already taken",
+      "useSuggestion": "Use \"{{slug}}\"?"
+    },
+    "toast": {
+      "created": "Organization \"{{name}}\" created",
+      "renamed": "Organization renamed to \"{{name}}\"",
+      "deleted": "Organization \"{{name}}\" deleted"
+    }
   }
 }
