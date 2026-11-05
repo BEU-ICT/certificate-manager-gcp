@@ -13,9 +13,9 @@ import { useAdminSession } from './session-context';
 const ComponentsShowcase = import.meta.env.DEV ? lazy(() => import('./ComponentsShowcase')) : null;
 
 const OrganizationsPage = lazy(() => import('./organizations/OrganizationsPage'));
+const EventsPage = lazy(() => import('./events/EventsPage'));
 
 const sections = [
-  { path: 'events', titleKey: 'layout.nav.events' },
   { path: 'templates', titleKey: 'layout.nav.templates' },
   { path: 'certificates', titleKey: 'layout.nav.certificates' },
   { path: 'import', titleKey: 'layout.nav.import' },
@@ -58,6 +58,14 @@ export default function AdminRoutes() {
             element={
               <Suspense fallback={<Spinner />}>
                 <OrganizationsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="events"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <EventsPage />
               </Suspense>
             }
           />

@@ -92,5 +92,85 @@
       "renamed": "Organization renamed to \"{{name}}\"",
       "deleted": "Organization \"{{name}}\" deleted"
     }
+  },
+  "events": {
+    "title": "Events",
+    "loading": "Loading events…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "pageSize": "Rows per page",
+    "columns": {
+      "name": "Name",
+      "organization": "Organization",
+      "slug": "Slug",
+      "emailLanguage": "E-mail language",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "filter": {
+      "label": "Filter by organization",
+      "all": "All organizations"
+    },
+    "organizations": {
+      "loadMore": "Load more organizations",
+      "failed": "Organizations could not be loaded.",
+      "retry": "Try again"
+    },
+    "empty": {
+      "title": "No events yet",
+      "description": "Create an event before issuing certificates.",
+      "filteredTitle": "This organization has no events",
+      "filteredDescription": "Create an event for this organization or change the filter."
+    },
+    "create": {
+      "open": "New event",
+      "title": "New event",
+      "submit": "Create"
+    },
+    "edit": {
+      "label": "Edit",
+      "action": "Edit {{name}}",
+      "title": "Edit event",
+      "submit": "Save"
+    },
+    "delete": {
+      "label": "Delete",
+      "action": "Delete {{name}}",
+      "title": "Delete event",
+      "confirm": "Delete",
+      "message": "Delete \"{{name}}\"? This cannot be undone.",
+      "blocked": "\"{{name}}\" cannot be deleted because it is still in use:",
+      "templates_one": "{{count}} template",
+      "templates_other": "{{count}} templates",
+      "certificates_one": "{{count}} certificate",
+      "certificates_other": "{{count}} certificates",
+      "hint": "Remove these items first, then try again."
+    },
+    "fields": {
+      "organization": "Organization",
+      "organizationPlaceholder": "Select an organization",
+      "organizationReadOnly": "The organization of an event cannot be changed.",
+      "name": "Name",
+      "slug": "Slug",
+      "slugHint": "Used in links and cannot be changed. For yearly events include the year, e.g. devfest-2026.",
+      "slugReadOnly": "The slug can never be changed.",
+      "emailLanguage": "E-mail language",
+      "emailLanguageHint": "Language of the certificate e-mails."
+    },
+    "errors": {
+      "organizationRequired": "Select an organization",
+      "organizationGone": "This organization no longer exists",
+      "nameRequired": "Enter a name",
+      "nameTooLong": "The name can be at most {{max}} characters",
+      "slugRequired": "Enter a slug",
+      "slugInvalid": "Use 2 to {{max}} lowercase letters, digits and single hyphens",
+      "slugTaken": "This slug is already taken in this organization",
+      "useSuggestion": "Use \"{{slug}}\"?"
+    },
+    "toast": {
+      "created": "Event \"{{name}}\" created",
+      "updated": "Event \"{{name}}\" updated",
+      "deleted": "Event \"{{name}}\" deleted"
+    }
   }
 }
