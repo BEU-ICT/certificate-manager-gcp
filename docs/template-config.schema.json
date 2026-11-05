@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Certificate template config",
+  "description": "config.json of a certificate template package. Units are PDF points, origin top-left, y grows downwards. Beyond this schema the server checks: ownerName is present; every `font` is a key of `fonts`; every referenced file exists in the package; field boxes (height = maxLines x size x lineHeight) and the QR code lie inside the page; `format` fits the field (list-comma only for skills, date-* only for issuedAt); boxes overlap by at most 2 pt unless a field sets allowOverlap.",
+  "type": "object",
+  "properties": {
+    "engine": { "type": "string", "const": "svg-pdf" },
+    "page": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "size": { "type": "string", "const": "A4" },
+            "orientation": { "type": "string", "enum": ["landscape", "portrait"] }
+          },
+          "required": ["size", "orientation"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "locale": {
+      "description": "Date formatting locale, default az.",
+      "type": "string",
+      "enum": ["az", "en"]
+    },
+    "background": {
+      "type": "string",
+      "maxLength": 100,
+      "pattern": "^([A-Za-z0-9._-]+\\/)*[A-Za-z0-9._-]+\\.svg$"
+    },
+    "images": {
+      "maxItems": 10,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "maxLength": 100,
+            "pattern": "^assets\\/[A-Za-z0-9._-]+\\.(png|jpe?g)$"
+          },
+          "x": { "type": "number", "minimum": 0, "maximum": 10000 },
+          "y": { "type": "number", "minimum": 0, "maximum": 10000 },
+          "width": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10000,
+            "description": "Printed width in points; the height follows the aspect ratio."
+          }
+        },
+        "required": ["file", "x", "y", "width"],
+        "additionalProperties": false
+      }
+    },
+    "fonts": {
+      "type": "object",
+      "propertyNames": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$" },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 100,
+        "pattern": "^fonts\\/[A-Za-z0-9._-]+\\.ttf$"
+      },
+      "maxProperties": 8
+    },
+    "fields": {
+      "type": "object",
+      "properties": {
+        "ownerName": { "$ref": "#/$defs/TemplateField" },
+        "subject": { "$ref": "#/$defs/TemplateField" },
+        "skills": { "$ref": "#/$defs/TemplateField" },
+        "issuedAt": { "$ref": "#/$defs/TemplateField" },
+        "type": { "$ref": "#/$defs/TemplateField" }
+      },
+      "required": ["ownerName"],
+      "additionalProperties": false
+    },
+    "qr": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number", "minimum": 0, "maximum": 10000 },
+        "y": { "type": "number", "minimum": 0, "maximum": 10000 },
+        "size": { "type": "number", "minimum": 40, "maximum": 10000 }
+      },
+      "required": ["x", "y", "size"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["engine", "page", "background", "fonts", "fields", "qr"],
+  "additionalProperties": false,
+  "$defs": {
+    "TemplateField": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Left edge of the box in points."
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000,
+          "description": "Top edge of the box in points (y grows downwards)."
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "description": "Box width in points; text wraps inside it."
+        },
+        "font": { "type": "string", "description": "Key of an entry in `fonts`." },
+        "size": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 200,
+          "description": "Font size in points."
+        },
+        "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "align": { "type": "string", "enum": ["left", "center", "right"] },
+        "maxLines": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "format": {
+          "description": "Formatter name. Defaults per field: `text` for ownerName, subject and type; `list-comma` for skills; `date-long` for issuedAt. `list-comma` only fits `skills`, `date-*` only `issuedAt`.",
+          "type": "string",
+          "enum": [
+            "text",
+            "uppercase",
+            "lowercase",
+            "titlecase",
+            "date-dmy",
+            "date-iso",
+            "date-long",
+            "list-comma"
+          ]
+        },
+        "minSize": {
+          "description": "Smallest font size the text may shrink to. Default max(6, floor(size * 0.6)) capped at size; must be between 6 and size.",
+          "type": "number",
+          "minimum": 6
+        },
+        "lineHeight": {
+          "description": "Line height factor, default 1.2.",
+          "type": "number",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "allowOverlap": {
+          "description": "Allows this box to overlap another box by more than 2 pt (reported as a warning).",
+          "type": "boolean"
+        }
+      },
+      "required": ["x", "y", "width", "font", "size", "color", "align", "maxLines"],
+      "additionalProperties": false
+    }
+  }
+}
