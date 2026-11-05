@@ -1,6 +1,6 @@
 // Writes docs/template-config.schema.json from the zod schema (`npm run template-schema:generate`).
 // With `--check` it fails instead of writing when the committed file is stale
-// (`npm run template-schema:check`; test/unit/template-config-schema.test.ts does the same in CI).
+// (`npm run template-schema:check`; test/unit/template-config.test.ts does the same in CI).
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
