@@ -1,3 +1,5 @@
+import { NotFoundError } from './errors.js';
+
 /** Branded string IDs. Relations between entities are always plain string IDs. */
 declare const brand: unique symbol;
 type Brand<T extends string> = string & { readonly [brand]: T };
@@ -42,3 +44,12 @@ export const asTemplateRef = (v: unknown): TemplateRef =>
 export const asOrganizationId = (v: unknown): OrganizationId =>
   assertValid(v, isOrganizationId, 'OrganizationId');
 export const asEventId = (v: unknown): EventId => assertValid(v, isEventId, 'EventId');
+
+/**
+ * Parses a public certificate ID from untrusted input. A malformed value throws the same
+ * `NotFoundError` as an unknown ID, so the response is not an oracle for the ID format.
+ */
+export function parseCertificateId(value: unknown): CertificateId {
+  if (!isCertificateId(value)) throw new NotFoundError('Certificate not found');
+  return value;
+}

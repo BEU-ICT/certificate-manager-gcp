@@ -10,7 +10,16 @@ import { ConflictError } from '../../shared/errors.js';
 import type { CertificateId } from '../../shared/ids.js';
 import { MemoryTable } from './memory-table.js';
 
-const FIELDS = ['id', 'organizationId', 'eventId', 'templateRef', 'type', 'status', 'issuedAt'];
+const FIELDS = [
+  'id',
+  'organizationId',
+  'eventId',
+  'templateId',
+  'type',
+  'status',
+  'issuedAt',
+  'emailStatus',
+];
 
 type Comparable = string | number | boolean;
 const comparable = (v: unknown): Comparable =>
@@ -67,8 +76,10 @@ export class FakeCertificateRepository implements CertificateRepository {
   revoke(id: CertificateId, at: Date): Promise<boolean> {
     const row = this.table.find((c) => c.id === id);
     if (!row) return Promise.resolve(false);
-    void at; // the shared Certificate shape has no revokedAt field yet
-    row.item.status = 'revoked';
+    if (row.item.status !== 'revoked') {
+      row.item.status = 'revoked';
+      row.item.revokedAt = at;
+    }
     return Promise.resolve(true);
   }
 }

@@ -1,0 +1,14 @@
+/** Public interface of the certificates module; other modules import only this file. */
+export { emailInitialStatus, isRevoked } from './domain.js';
+export {
+  certificateContentShape,
+  certificateTypeSchema,
+  emailSchema,
+  issuedAtSchema,
+  normalizeText,
+  optionalEmailSchema,
+  ownerNameSchema,
+  skillsSchema,
+  subjectSchema,
+} from './schemas.js';
+export { parseCertificateId } from '../../shared/ids.js';
