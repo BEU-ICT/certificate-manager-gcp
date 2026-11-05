@@ -5,6 +5,6 @@ export interface IdGenerator {
   newCertificateId(): CertificateId;
   /** 22-char base64url from 16 random bytes: id of organizations, events and other entities. */
   newEntityId(): string;
-  /** Unguessable URL-safe token (e.g. for unsubscribe/verification links). */
+  /** Unguessable URL-safe token: 22-char base64url from 16 random bytes (e.g. PDF object names, unsubscribe links). */
   newToken(): string;
 }

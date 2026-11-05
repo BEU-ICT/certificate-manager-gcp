@@ -13,6 +13,13 @@ Issue certificates (single and bulk), serve the public verification lookup, list
 - Events consumed: none.
 - Ports used: `CertificateRepository`, `TemplateRepository` (through the `templates` service), `EventBus`, `RateLimiter`, `Clock`, `IdGenerator`.
 
+## Entity and shared rules
+
+- `Certificate` lives in `src/shared/domain.ts` (all spec section 6 fields plus `schemaVersion` and the additive `emailAttempts`, `emailSentAt`, `emailLastError`, `legacy` object, `organizationName`, `eventName`, `updatedAt`, `pdfGeneratedAt`); the closed type registry is `src/shared/certificate-types.ts`.
+- `parseCertificateId(value)` (`src/shared/ids.ts`) returns a branded `CertificateId` or throws `NotFoundError`, so malformed IDs answer exactly like unknown ones.
+- `schemas.ts` holds the zod field schemas shared by single and bulk issuance (`certificateContentShape(now)` is spread into a `z.strictObject`): text is NFC-normalised, stripped of zero-width/bidi characters, control characters become spaces, whitespace collapsed; e-mail lowercased; skills deduplicated case-insensitively; `issuedAt` at most 5 minutes in the future.
+- `domain.ts`: `isRevoked`, `emailInitialStatus`. The public DTO is built in the DTO layer, not here.
+
 ## Owned data
 
 Collection `certificates` with indexes `(type, issuedAt desc)`, `(status, issuedAt desc)` and `(emailStatus, issuedAt desc)`. The public lookup costs exactly one document read.
