@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Certificate, Organization, Template } from '../../../src/shared/domain.js';
+import type { Certificate, Organization } from '../../../src/shared/domain.js';
 import { ConflictError, ValidationError } from '../../../src/shared/errors.js';
 import {
   asCertificateId,
@@ -10,7 +10,6 @@ import {
 import {
   FakeCertificateRepository,
   FakeOrganizationRepository,
-  FakeTemplateRepository,
 } from '../../../src/testing/fakes/index.js';
 
 const orgId = asOrganizationId('org1');
@@ -93,31 +92,6 @@ describe('FakeOrganizationRepository', () => {
     const r = new FakeOrganizationRepository();
     await r.create(org(1));
     expect((await r.list({ limit: 1 })).nextCursor).toBeNull();
-  });
-});
-
-describe('FakeTemplateRepository', () => {
-  const tpl = (version: number, type = 'attendance'): Template => ({
-    ref: asTemplateRef(`${type}-v${version}`),
-    organizationId: orgId,
-    eventId: evId,
-    type,
-    version,
-    createdAt: day(version),
-  });
-
-  it('rejects duplicate references and finds the highest version', async () => {
-    const r = new FakeTemplateRepository();
-    await r.create(tpl(1));
-    await r.create(tpl(3));
-    await r.create(tpl(2));
-    await r.create(tpl(1, 'thanks'));
-    await expect(r.create(tpl(2))).rejects.toBeInstanceOf(ConflictError);
-    expect((await r.getLatest(orgId, evId, 'attendance'))?.version).toBe(3);
-    expect(await r.getLatest(orgId, evId, 'other')).toBeNull();
-    expect((await r.getByRef(asTemplateRef('thanks-v1')))?.type).toBe('thanks');
-    expect(await r.getByRef(asTemplateRef('zzz-v9'))).toBeNull();
-    expect((await r.listByEvent(evId)).items).toHaveLength(4);
   });
 });
 

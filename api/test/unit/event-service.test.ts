@@ -110,10 +110,7 @@ describe('EventService', () => {
 
   it('delete is blocked while templates or certificates reference the event', async () => {
     const event = await ctx.events.create({ organizationId: ctx.org.id, name: 'DevFest' });
-    ctx.services.eventReferences.register({
-      name: 'templates',
-      countReferences: () => Promise.resolve(1),
-    });
+    // The `templates` checker is registered by buildServices; certificates register theirs later.
     ctx.services.eventReferences.register({
       name: 'certificates',
       countReferences: () => Promise.resolve(3),
@@ -121,7 +118,7 @@ describe('EventService', () => {
     const error = await ctx.events.delete(event.id).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(InUseError);
     expect((error as InUseError).details).toEqual([
-      { path: 'references', message: 'IN_USE', counts: { templates: 1, certificates: 3 } },
+      { path: 'references', message: 'IN_USE', counts: { templates: 0, certificates: 3 } },
     ]);
   });
 
@@ -145,7 +142,7 @@ describe('EventService', () => {
     const error = await ctx.services.organizations.delete(ctx.org.id).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(InUseError);
     expect((error as InUseError).details).toEqual([
-      { path: 'references', message: 'IN_USE', counts: { events: 1 } },
+      { path: 'references', message: 'IN_USE', counts: { events: 1, templates: 0 } },
     ]);
     await expect(ctx.services.organizations.delete(ctx.other.id)).resolves.toBeUndefined();
   });

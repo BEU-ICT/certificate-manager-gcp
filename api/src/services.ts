@@ -1,5 +1,6 @@
 import { DefaultEventService } from './modules/events/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
+import { DefaultTemplateService } from './modules/templates/index.js';
 import { ReferenceCheckRegistry } from './shared/references.js';
 import type { Ports, Services } from './wiring.js';
 
@@ -29,5 +30,14 @@ export function buildServices(ports: Ports): Services {
     name: 'events',
     countReferences: (organizationId) => events.countByOrganization(organizationId),
   });
-  return { organizations, organizationReferences, events, eventReferences };
+  const templates = new DefaultTemplateService(ports.templates, ports.storage, ports.clock);
+  organizationReferences.register({
+    name: 'templates',
+    countReferences: (organizationId) => templates.countByOrganization(organizationId),
+  });
+  eventReferences.register({
+    name: 'templates',
+    countReferences: (eventId) => templates.countByEvent(eventId),
+  });
+  return { organizations, organizationReferences, events, eventReferences, templates };
 }

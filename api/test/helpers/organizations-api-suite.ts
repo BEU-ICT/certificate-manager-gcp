@@ -124,7 +124,7 @@ export function describeOrganizationsApi(
       const { services } = await setup();
       const created = await create({ name: 'Acme' });
       let certificates = 2;
-      // The `events` checker is registered by buildServices; templates/certificates register theirs later.
+      // The `events` and `templates` checkers are registered by buildServices; certificates register theirs later.
       services.organizationReferences.register({
         name: 'certificates',
         countReferences: () => Promise.resolve(certificates),
@@ -132,7 +132,11 @@ export function describeOrganizationsApi(
       const blocked = await call('DELETE', `/organizations/${created.id}`);
       expect(blocked.statusCode).toBe(409);
       expect(blocked.json().error.details).toEqual([
-        { path: 'references', message: 'IN_USE', counts: { events: 0, certificates: 2 } },
+        {
+          path: 'references',
+          message: 'IN_USE',
+          counts: { events: 0, templates: 0, certificates: 2 },
+        },
       ]);
       certificates = 0;
       const deleted = await call('DELETE', `/organizations/${created.id}`);
