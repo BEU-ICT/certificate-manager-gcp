@@ -19,6 +19,7 @@ import {
 } from '../../shared/ids.js';
 import { SCHEMA_VERSION } from '../../shared/schema-version.js';
 import type { TemplateConfig } from './config.js';
+import { NO_CERTIFICATES, type TemplateCertificateCounter } from './certificate-counter.js';
 import { buildTemplateReference } from './reference.js';
 import {
   TEMPLATES_BUCKET,
@@ -29,6 +30,9 @@ import {
 
 /** Attempts after the first one when a concurrent upload took the version number (#88). */
 export const MAX_REFERENCE_RETRIES = 3;
+
+/** Objects read in parallel to learn the package file sizes. */
+const SIZE_READ_CONCURRENCY = 4;
 
 export interface TemplateTarget {
   organizationId: OrganizationId;
@@ -57,6 +61,18 @@ export interface NextReference {
   version: number;
 }
 
+/** A template with `isLatest`: no newer version exists for its (organization, event, type). */
+export interface TemplateListItem {
+  template: Template;
+  isLatest: boolean;
+}
+
+export interface TemplateDetail extends TemplateListItem {
+  /** Package files in the templates bucket (relative path, size in bytes). */
+  files: { path: string; size: number }[];
+  certificateCount: number;
+}
+
 export interface TemplateService {
   /**
    * The reference of the next version: `maxVersion + 1` (0 for the first). `minVersion` skips
@@ -79,6 +95,13 @@ export interface TemplateService {
   ): Promise<Page<Template>>;
   countByEvent(eventId: string): Promise<number>;
   countByOrganization(organizationId: string): Promise<number>;
+  /** Like `list`, with `isLatest` from one `maxVersion` lookup per (organization, event, type) group on the page. */
+  listWithLatest(
+    filter?: { organizationId?: string; eventId?: string; type?: string },
+    page?: PageRequest,
+  ): Promise<Page<TemplateListItem>>;
+  /** `get` plus latest flag, package files and certificate count. `NotFoundError` as for `get`. */
+  getDetail(reference: string): Promise<TemplateDetail>;
 }
 
 const FILE_RULES: readonly { pattern: RegExp; contentType: (path: string) => string }[] = [
@@ -108,6 +131,7 @@ export class DefaultTemplateService implements TemplateService {
     private readonly repository: TemplateRepository,
     private readonly storage: StorageGateway,
     private readonly clock: Clock,
+    private readonly certificateCounter: TemplateCertificateCounter = NO_CERTIFICATES,
   ) {}
 
   async nextReference(target: TemplateTarget, minVersion = 0): Promise<NextReference> {
@@ -226,4 +250,64 @@ export class DefaultTemplateService implements TemplateService {
       ? this.repository.count({ organizationId })
       : Promise.resolve(0);
   }
+
+  async listWithLatest(
+    filter: { organizationId?: string; eventId?: string; type?: string } = {},
+    page?: PageRequest,
+  ): Promise<Page<TemplateListItem>> {
+    const result = await this.list(filter, page);
+    const maxima = await this.latestVersions(result.items);
+    return {
+      items: result.items.map((template) => ({
+        template,
+        isLatest: maxima.get(groupKey(template)) === template.version,
+      })),
+      nextCursor: result.nextCursor,
+    };
+  }
+
+  async getDetail(reference: string): Promise<TemplateDetail> {
+    const template = await this.get(reference);
+    const [maxima, keys, certificateCount] = await Promise.all([
+      this.latestVersions([template]),
+      this.storage.list(TEMPLATES_BUCKET, templateStoragePath(template.reference)),
+      this.certificateCounter.countByTemplate(template.reference),
+    ]);
+    const prefix = templateStoragePath(template.reference);
+    // StorageGateway.list returns keys only; follow-up: add size metadata to the storage port.
+    const files: { path: string; size: number }[] = [];
+    for (let i = 0; i < keys.length; i += SIZE_READ_CONCURRENCY) {
+      const batch = await Promise.all(
+        keys.slice(i, i + SIZE_READ_CONCURRENCY).map(async (key) => ({
+          path: key.slice(prefix.length),
+          body: await this.storage.get(TEMPLATES_BUCKET, key),
+        })),
+      );
+      // A null body means the object was deleted between list and get: leave it out.
+      for (const { path, body } of batch) if (body) files.push({ path, size: body.length });
+    }
+    return {
+      template,
+      isLatest: maxima.get(groupKey(template)) === template.version,
+      files,
+      certificateCount,
+    };
+  }
+
+  /** Highest version per (organization, event, type) group, one lookup per distinct group. */
+  private async latestVersions(templates: readonly Template[]): Promise<Map<string, number>> {
+    const groups = new Map<string, Template>();
+    for (const t of templates) groups.set(groupKey(t), t);
+    const entries = await Promise.all(
+      [...groups].map(async ([key, t]) => {
+        const max = await this.repository.maxVersion(t.organizationId, t.eventId, t.type);
+        return [key, max ?? t.version] as const;
+      }),
+    );
+    return new Map(entries);
+  }
+}
+
+function groupKey(t: Template): string {
+  return `${t.organizationId}\u0000${t.eventId}\u0000${t.type}`;
 }

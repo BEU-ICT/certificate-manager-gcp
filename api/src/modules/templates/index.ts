@@ -53,3 +53,5 @@ export {
   type Issue,
   type ValidationReport,
 } from './package-issues.js';
+export { NO_CERTIFICATES, type TemplateCertificateCounter } from './certificate-counter.js';
+export type { TemplateDetail, TemplateListItem } from './service.js';
