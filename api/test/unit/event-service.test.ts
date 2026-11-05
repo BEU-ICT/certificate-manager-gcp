@@ -144,7 +144,11 @@ describe('EventService', () => {
     const error = await ctx.services.organizations.delete(ctx.org.id).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(InUseError);
     expect((error as InUseError).details).toEqual([
-      { path: 'references', message: 'IN_USE', counts: { events: 1, templates: 0, certificates: 0 } },
+      {
+        path: 'references',
+        message: 'IN_USE',
+        counts: { events: 1, templates: 0, certificates: 0 },
+      },
     ]);
     await expect(ctx.services.organizations.delete(ctx.other.id)).resolves.toBeUndefined();
   });

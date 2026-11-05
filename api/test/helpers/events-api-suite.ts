@@ -173,7 +173,7 @@ export function describeEventsApi(name: string, makePorts: () => Promise<Fakes> 
     });
 
     it('delete: blocked with counts while templates/certificates reference it, then allowed', async () => {
-      const { services, fakes } = await setup();
+      const { fakes } = await setup();
       const organizationId = await createOrg('Acme');
       const created = await createEvent({ organizationId, name: 'DevFest' });
       const free = await createEvent({ organizationId, name: 'Free' });

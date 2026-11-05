@@ -11,17 +11,8 @@ import { FirestoreTemplateRepository } from './template-repository.js';
 
 const APP_NAME = 'certificate-manager-firestore';
 
-/** A repository whose Firestore implementation has not landed yet: every call fails loudly. */
-function notImplemented<T extends object>(name: string): T {
-  return new Proxy({} as T, {
-    get: (_target, method) => () =>
-      Promise.reject(new Error(`${name}.${String(method)} is not implemented for Firestore yet`)),
-  });
-}
-
 /**
- * `DB_ADAPTER=firestore`. Honours FIRESTORE_EMULATOR_HOST through the Admin SDK. Each epic replaces
- * one `notImplemented` entry with its adapter.
+ * `DB_ADAPTER=firestore`. Honours FIRESTORE_EMULATOR_HOST through the Admin SDK.
  */
 export function createRepositories({ config }: AdapterContext): RepositoryPorts {
   const app =
