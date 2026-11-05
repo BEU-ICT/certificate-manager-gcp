@@ -1,9 +1,9 @@
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import type { CertificateRepository } from '../../ports/index.js';
 import type { RepositoryPorts } from '../../wiring.js';
 import { SystemClock } from '../system/clock.js';
 import type { AdapterContext } from '../registry.js';
+import { FirestoreCertificateRepository } from './certificate-repository.js';
 import { FirestoreEventRepository } from './event-repository.js';
 import { FirestoreMigrationStateStore } from './migration-state-store.js';
 import { FirestoreOrganizationRepository } from './organization-repository.js';
@@ -32,7 +32,7 @@ export function createRepositories({ config }: AdapterContext): RepositoryPorts 
     organizations: new FirestoreOrganizationRepository(db),
     events: new FirestoreEventRepository(db),
     templates: new FirestoreTemplateRepository(db),
-    certificates: notImplemented<CertificateRepository>('CertificateRepository'),
+    certificates: new FirestoreCertificateRepository(db),
     migrationState: new FirestoreMigrationStateStore(db, new SystemClock()),
   };
 }

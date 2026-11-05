@@ -3,6 +3,8 @@ import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/app.js';
 import { buildServices } from '../../src/services.js';
+import { asOrganizationId } from '../../src/shared/ids.js';
+import { sampleCertificate } from '../../src/testing/contracts/index.js';
 import { forEachAdminRoute } from '../../src/testing/admin-routes.js';
 import { createFakes, fakeToken, type Fakes } from '../../src/testing/fakes/index.js';
 import type { Services } from '../../src/wiring.js';
@@ -22,11 +24,11 @@ export function describeOrganizationsApi(
 
   const admin = { authorization: `Bearer ${fakeToken('admin-1', 'admin')}` };
 
-  async function setup(): Promise<{ app: FastifyInstance; services: Services }> {
+  async function setup(): Promise<{ app: FastifyInstance; services: Services; ports: Fakes }> {
     const ports = await makePorts();
     const services = buildServices(ports);
     app = buildApp({ ports, services });
-    return { app, services };
+    return { app, services, ports };
   }
   const call = (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: unknown) =>
     app!.inject({
@@ -121,14 +123,15 @@ export function describeOrganizationsApi(
     });
 
     it('delete: blocked with counts while referenced, allowed afterwards, then 404', async () => {
-      const { services } = await setup();
+      const { ports } = await setup();
       const created = await create({ name: 'Acme' });
-      let certificates = 2;
-      // The `events` and `templates` checkers are registered by buildServices; certificates register theirs later.
-      services.organizationReferences.register({
-        name: 'certificates',
-        countReferences: () => Promise.resolve(certificates),
-      });
+      const free = await create({ name: 'Free' });
+      // `events`, `templates` and `certificates` checkers are registered by buildServices (services.ts).
+      for (let i = 0; i < 2; i++) {
+        await ports.certificates.create(
+          sampleCertificate({ organizationId: asOrganizationId(created.id) }),
+        );
+      }
       const blocked = await call('DELETE', `/organizations/${created.id}`);
       expect(blocked.statusCode).toBe(409);
       expect(blocked.json().error.details).toEqual([
@@ -138,13 +141,12 @@ export function describeOrganizationsApi(
           counts: { events: 0, templates: 0, certificates: 2 },
         },
       ]);
-      certificates = 0;
-      const deleted = await call('DELETE', `/organizations/${created.id}`);
+      const deleted = await call('DELETE', `/organizations/${free.id}`);
       expect(deleted.statusCode).toBe(204);
       expect(deleted.body).toBe('');
-      expect((await call('GET', `/organizations/${created.id}`)).statusCode).toBe(404);
-      expect((await call('DELETE', `/organizations/${created.id}`)).statusCode).toBe(404);
-      expect((await call('POST', '/organizations', { name: 'Acme' })).statusCode).toBe(201);
+      expect((await call('GET', `/organizations/${free.id}`)).statusCode).toBe(404);
+      expect((await call('DELETE', `/organizations/${free.id}`)).statusCode).toBe(404);
+      expect((await call('POST', '/organizations', { name: 'Free' })).statusCode).toBe(201);
     });
 
     it('lists by name with cursor pagination: default 25, max 50, 51 is a 400', async () => {
