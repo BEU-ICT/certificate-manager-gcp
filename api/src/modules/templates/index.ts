@@ -45,3 +45,13 @@ export {
   type TemplateService,
   type TemplateTarget,
 } from './service.js';
+export {
+  CachedTemplateAssets,
+  DEFAULT_TEMPLATE_CACHE_MB,
+  TEMPLATE_CACHE_TTL_MS,
+  TEMPLATE_LOAD_CONCURRENCY,
+  type AssetsLogger,
+  type LoadedTemplate,
+  type TemplateAssets,
+  type TemplateAssetsOptions,
+} from './assets.js';

@@ -41,3 +41,7 @@ Issue paths use the API detail style (`fields.subject.font`, `images[0].file`, `
 | Referenced files exist in the package (only when `files` is passed)                                                   | `background`, `images[i].file`, `fonts.<name>` |
 
 Package paths are relative, normalised, ASCII `[A-Za-z0-9._/-]`, at most 100 characters; backgrounds end in `.svg`, images are `assets/<name>.png|jpg|jpeg`, fonts `fonts/<file>.ttf`.
+
+## Template asset loader
+
+`TemplateAssets.load(reference)` (`assets.ts`, `services.templateAssets`) returns `{ template, background, fonts, images }` for rendering. Objects are read in parallel (at most 6 concurrent storage reads), cached in-process by reference (LRU with a byte budget from `TEMPLATE_CACHE_MB`, default 40; TTL 30 min; packages larger than the budget are returned uncached) and loads of one reference are single-flight. A missing document or object raises `NotFoundError` (logged at ERROR with the reference: immutable packages never lose files); errors are never cached. Each load logs `templateLoadMs`, `bytes` and `cache: hit|miss`. Returned buffers are shared: do not mutate them.
