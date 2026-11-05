@@ -3,6 +3,8 @@ import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/app.js';
 import { buildServices } from '../../src/services.js';
+import { asEventId, asOrganizationId } from '../../src/shared/ids.js';
+import { sampleCertificate } from '../../src/testing/contracts/index.js';
 import { forEachAdminRoute } from '../../src/testing/admin-routes.js';
 import { fakeToken, type Fakes } from '../../src/testing/fakes/index.js';
 import type { Services } from '../../src/wiring.js';
@@ -171,24 +173,26 @@ export function describeEventsApi(name: string, makePorts: () => Promise<Fakes> 
     });
 
     it('delete: blocked with counts while templates/certificates reference it, then allowed', async () => {
-      const { services } = await setup();
+      const { fakes } = await setup();
       const organizationId = await createOrg('Acme');
       const created = await createEvent({ organizationId, name: 'DevFest' });
-      let certificates = 1;
-      // The `templates` checker is registered by buildServices; certificates register theirs later.
-      services.eventReferences.register({
-        name: 'certificates',
-        countReferences: () => Promise.resolve(certificates),
-      });
+      const free = await createEvent({ organizationId, name: 'Free' });
+      // The `templates` and `certificates` checkers are registered by buildServices.
+      await fakes.certificates.create(
+        sampleCertificate({
+          organizationId: asOrganizationId(organizationId),
+          eventId: asEventId(created.id),
+        }),
+      );
       const blocked = await call('DELETE', `/events/${created.id}`);
       expect(blocked.statusCode).toBe(409);
       expect(blocked.json().error.details).toEqual([
         { path: 'references', message: 'IN_USE', counts: { templates: 0, certificates: 1 } },
       ]);
-      certificates = 0;
-      expect((await call('DELETE', `/events/${created.id}`)).statusCode).toBe(204);
-      expect((await call('GET', `/events/${created.id}`)).statusCode).toBe(404);
-      expect((await call('DELETE', `/events/${created.id}`)).statusCode).toBe(404);
+      expect((await call('DELETE', `/events/${created.id}`)).statusCode).toBe(409);
+      expect((await call('DELETE', `/events/${free.id}`)).statusCode).toBe(204);
+      expect((await call('GET', `/events/${free.id}`)).statusCode).toBe(404);
+      expect((await call('DELETE', `/events/${free.id}`)).statusCode).toBe(404);
     });
 
     it('an organization with events cannot be deleted until the events are gone', async () => {

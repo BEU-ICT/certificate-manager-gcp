@@ -106,26 +106,27 @@ describe('FakeCertificateRepository', () => {
     expect(page.items.map((c) => c.issuedAt.getUTCDate())).toEqual([3, 2, 1]);
   });
 
-  it('filters by equality and inclusive ranges, and counts', async () => {
+  it('filters by equality and a half-open issuedAt range, and counts', async () => {
     const r = new FakeCertificateRepository();
     await r.create(cert(1));
     await r.create(cert(2, { type: 'thanks' }));
     await r.create(cert(3));
     expect(await r.count({ type: 'attendance' })).toBe(2);
-    expect(await r.count({ issuedAt: { gte: day(2), lte: day(3) } })).toBe(2);
-    expect(await r.count({ issuedAt: { gte: day(4) } })).toBe(0);
-    expect(await r.count({ type: undefined })).toBe(3);
-    expect((await r.list({ issuedAt: day(2) })).items).toHaveLength(1);
-    await expect(r.count({ bogus: 1 })).rejects.toThrow(/Unknown certificate filter/);
+    expect(await r.count({ issuedFrom: day(2), issuedTo: day(3) })).toBe(1);
+    expect(await r.count({ issuedFrom: day(4) })).toBe(0);
+    expect(await r.countByTemplate(asTemplateRef('t-v1'))).toBe(3);
   });
 
-  it('revokes idempotently and reports missing ids', async () => {
+  it('revokes once and reports missing ids', async () => {
     const r = new FakeCertificateRepository();
     await r.create(cert(1));
-    expect(await r.revoke(cert(1).id, day(5))).toBe(true);
-    expect(await r.revoke(cert(1).id, day(6))).toBe(true);
+    expect((await r.markRevoked(cert(1).id, { reason: 'x', at: day(5) })).outcome).toBe('revoked');
+    expect((await r.markRevoked(cert(1).id, { reason: 'y', at: day(6) })).outcome).toBe(
+      'already_revoked',
+    );
     expect((await r.getById(cert(1).id))?.status).toBe('revoked');
-    expect(await r.revoke(cert(9).id, day(6))).toBe(false);
-    expect(await r.getById(cert(9).id)).toBeNull();
+    expect((await r.markRevoked(cert(9).id, { reason: 'x', at: day(6) })).outcome).toBe(
+      'not_found',
+    );
   });
 });

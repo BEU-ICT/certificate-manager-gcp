@@ -242,3 +242,7 @@ Every document a repository creates carries `schemaVersion: 1` (`SCHEMA_VERSION`
 ## Admin routes and authentication
 
 Every route under `/api/v1/admin` is registered through `adminRoutes(app, (scope) => …)` (`src/http/auth/admin-guard.ts`); paths inside are relative to the prefix. The helper installs an `onRequest` hook that throttles by IP, verifies the `Authorization: Bearer` token through the `TokenVerifier` port (401 + `WWW-Authenticate: Bearer`, identical body for every failure) and requires `role=admin` (403). Handlers read `request.admin` (`{ uid, email }`). A route under the prefix that bypasses the helper aborts startup. Tests use `forEachAdminRoute(app, fn)` (`src/testing/admin-routes.ts`) to run an authorisation matrix over the whole route table.
+
+## Certificate repository and index check
+
+`FirestoreCertificateRepository` (`src/adapters/firestore/certificate-repository.ts`) and `FakeCertificateRepository` both pass `describeCertificateRepositoryContract` (unit and emulator). `list` is ordered `issuedAt desc, id desc` with an opaque cursor `[issuedAtMillis, id]` and reads `limit + 1` documents (the extra one only decides `nextCursor`); `count` uses aggregation queries. The emulator does not validate composite indexes, so before go-live run `GOOGLE_CLOUD_PROJECT=<project> npx tsx scripts/verify-indexes.ts --yes` against the real database: it runs all 63 filter combinations and fails on `FAILED_PRECONDITION`.

@@ -2,6 +2,7 @@ import { DefaultEventService } from './modules/events/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
 import { DefaultTemplateService } from './modules/templates/index.js';
 import { ReferenceCheckRegistry } from './shared/references.js';
+import type { EventId, OrganizationId } from './shared/ids.js';
 import type { Ports, Services } from './wiring.js';
 
 /**
@@ -38,6 +39,15 @@ export function buildServices(ports: Ports): Services {
   eventReferences.register({
     name: 'templates',
     countReferences: (eventId) => templates.countByEvent(eventId),
+  });
+  organizationReferences.register({
+    name: 'certificates',
+    countReferences: (organizationId) =>
+      ports.certificates.countByOrganization(organizationId as OrganizationId),
+  });
+  eventReferences.register({
+    name: 'certificates',
+    countReferences: (eventId) => ports.certificates.countByEvent(eventId as EventId),
   });
   return { organizations, organizationReferences, events, eventReferences, templates };
 }
