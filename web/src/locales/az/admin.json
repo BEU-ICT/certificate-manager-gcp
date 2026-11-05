@@ -92,5 +92,85 @@
       "renamed": "Təşkilatın adı \"{{name}}\" olaraq dəyişdirildi",
       "deleted": "\"{{name}}\" təşkilatı silindi"
     }
+  },
+  "events": {
+    "title": "Tədbirlər",
+    "loading": "Tədbirlər yüklənir…",
+    "cancel": "Ləğv et",
+    "close": "Bağla",
+    "pageSize": "Səhifədə sətir sayı",
+    "columns": {
+      "name": "Ad",
+      "organization": "Təşkilat",
+      "slug": "Slaq",
+      "emailLanguage": "E-poçt dili",
+      "createdAt": "Yaradılıb",
+      "actions": "Əməliyyatlar"
+    },
+    "filter": {
+      "label": "Təşkilata görə filtr",
+      "all": "Bütün təşkilatlar"
+    },
+    "organizations": {
+      "loadMore": "Daha çox təşkilat yüklə",
+      "failed": "Təşkilatlar yüklənmədi.",
+      "retry": "Yenidən cəhd et"
+    },
+    "empty": {
+      "title": "Hələ tədbir yoxdur",
+      "description": "Sertifikat verməzdən əvvəl tədbir yaradın.",
+      "filteredTitle": "Bu təşkilatın tədbiri yoxdur",
+      "filteredDescription": "Bu təşkilat üçün tədbir yaradın və ya filtri dəyişin."
+    },
+    "create": {
+      "open": "Yeni tədbir",
+      "title": "Yeni tədbir",
+      "submit": "Yarat"
+    },
+    "edit": {
+      "label": "Redaktə et",
+      "action": "{{name}} tədbirini redaktə et",
+      "title": "Tədbiri redaktə et",
+      "submit": "Yadda saxla"
+    },
+    "delete": {
+      "label": "Sil",
+      "action": "{{name}} tədbirini sil",
+      "title": "Tədbiri sil",
+      "confirm": "Sil",
+      "message": "\"{{name}}\" silinsin? Bu əməliyyatı geri qaytarmaq olmaz.",
+      "blocked": "\"{{name}}\" hələ istifadə olunduğu üçün silinə bilməz:",
+      "templates_one": "{{count}} şablon",
+      "templates_other": "{{count}} şablon",
+      "certificates_one": "{{count}} sertifikat",
+      "certificates_other": "{{count}} sertifikat",
+      "hint": "Əvvəlcə bunları silin, sonra yenidən cəhd edin."
+    },
+    "fields": {
+      "organization": "Təşkilat",
+      "organizationPlaceholder": "Təşkilat seçin",
+      "organizationReadOnly": "Tədbirin təşkilatı dəyişdirilə bilməz.",
+      "name": "Ad",
+      "slug": "Slaq",
+      "slugHint": "Keçidlərdə istifadə olunur və dəyişdirilə bilməz. İllik tədbirlər üçün ili əlavə edin, məsələn, devfest-2026.",
+      "slugReadOnly": "Slaq heç vaxt dəyişdirilə bilməz.",
+      "emailLanguage": "E-poçt dili",
+      "emailLanguageHint": "Sertifikat e-poçtlarının dili."
+    },
+    "errors": {
+      "organizationRequired": "Təşkilat seçin",
+      "organizationGone": "Bu təşkilat artıq mövcud deyil",
+      "nameRequired": "Adı daxil edin",
+      "nameTooLong": "Ad ən çox {{max}} simvol ola bilər",
+      "slugRequired": "Slaqı daxil edin",
+      "slugInvalid": "2–{{max}} simvol: kiçik latın hərfləri, rəqəmlər və tək defislər istifadə edin",
+      "slugTaken": "Bu slaq bu təşkilatda artıq götürülüb",
+      "useSuggestion": "\"{{slug}}\" istifadə edilsin?"
+    },
+    "toast": {
+      "created": "\"{{name}}\" tədbiri yaradıldı",
+      "updated": "\"{{name}}\" tədbiri yeniləndi",
+      "deleted": "\"{{name}}\" tədbiri silindi"
+    }
   }
 }
