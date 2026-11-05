@@ -1,6 +1,10 @@
 export interface ApiErrorDetail {
   path: string;
   message: string;
+  /** `SLUG_TAKEN`: a free slug proposed by the server. */
+  suggestion?: string | undefined;
+  /** `IN_USE`: how many records of each kind reference the item. */
+  counts?: Record<string, number> | undefined;
 }
 
 export interface ApiErrorInit {

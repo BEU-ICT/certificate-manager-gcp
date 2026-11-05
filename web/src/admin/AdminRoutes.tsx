@@ -12,8 +12,9 @@ import { useAdminSession } from './session-context';
 // the dynamic import (and the showcase chunk) is removed entirely from dist.
 const ComponentsShowcase = import.meta.env.DEV ? lazy(() => import('./ComponentsShowcase')) : null;
 
+const OrganizationsPage = lazy(() => import('./organizations/OrganizationsPage'));
+
 const sections = [
-  { path: 'organizations', titleKey: 'layout.nav.organizations' },
   { path: 'events', titleKey: 'layout.nav.events' },
   { path: 'templates', titleKey: 'layout.nav.templates' },
   { path: 'certificates', titleKey: 'layout.nav.certificates' },
@@ -50,6 +51,14 @@ export default function AdminRoutes() {
                 </h1>
                 <p className="mt-2 text-ink-muted">{t('admin:dashboard.intro')}</p>
               </section>
+            }
+          />
+          <Route
+            path="organizations"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <OrganizationsPage />
+              </Suspense>
             }
           />
           {sections.map((s) => (
