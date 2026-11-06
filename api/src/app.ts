@@ -9,6 +9,7 @@ import { healthRoutes } from './http/routes/health.js';
 import { createFeatureFlags, parseFlags, type FeatureFlags } from './flags.js';
 import { adminEventRoutes } from './http/routes/admin-events.js';
 import { adminOrganizationRoutes } from './http/routes/admin-organizations.js';
+import { adminTemplateRoutes } from './http/routes/admin-templates.js';
 import { adminMeRoutes } from './http/routes/admin-me.js';
 import { buildServices } from './services.js';
 import type { Ports, Services } from './wiring.js';
@@ -41,6 +42,8 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     }),
     genReqId: (req) => requestIdFrom(req.headers['x-cloud-trace-context']),
     bodyLimit: BODY_LIMIT_BYTES,
+    // Fastify answers 414 above 100 characters; long path parameters must reach validation (404).
+    maxParamLength: 512,
     // Cloud Run terminates TLS behind a single Google front end hop.
     // Final value is decided in BEU-ICT/certificate-manager#176.
     trustProxy: (_address, hop) => hop < TRUSTED_PROXY_HOPS,
@@ -63,6 +66,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   if (services) {
     adminOrganizationRoutes(app, services);
     adminEventRoutes(app, services);
+    adminTemplateRoutes(app, services);
   }
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 
