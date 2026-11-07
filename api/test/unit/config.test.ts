@@ -126,6 +126,11 @@ describe('loadConfig', () => {
     it.each(['29', '101'])('rejects RATE_LIMIT_ADMIN_PER_MIN=%s', (v) => {
       expect(vars({ ...prod, RATE_LIMIT_ADMIN_PER_MIN: v })).toEqual(['RATE_LIMIT_ADMIN_PER_MIN']);
     });
+    it('defaults TEMPLATE_CACHE_MB to 40 and validates the range', () => {
+      expect(loadConfig(prod).templateCacheMb).toBe(40);
+      expect(loadConfig({ ...prod, TEMPLATE_CACHE_MB: '64' }).templateCacheMb).toBe(64);
+      expect(vars({ ...prod, TEMPLATE_CACHE_MB: '0' })).toEqual(['TEMPLATE_CACHE_MB']);
+    });
     it.each(['30', '100'])('accepts RATE_LIMIT_ADMIN_PER_MIN=%s', (v) => {
       expect(loadConfig({ ...prod, RATE_LIMIT_ADMIN_PER_MIN: v }).rateLimit.adminPerMin).toBe(
         Number(v),

@@ -1,27 +1,36 @@
 import { DefaultEventService } from './modules/events/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
 import {
+  CachedTemplateAssets,
+  DEFAULT_TEMPLATE_CACHE_MB,
   DefaultTemplateService,
+  type AssetsLogger,
   type TemplateCertificateCounter,
 } from './modules/templates/index.js';
 import { ReferenceCheckRegistry } from './shared/references.js';
 import type { EventId, OrganizationId } from './shared/ids.js';
 import type { Ports, Services } from './wiring.js';
 
+export interface ServiceOptions {
+  /** `TEMPLATE_CACHE_MB`: byte budget of the template asset cache. */
+  templateCacheMb?: number;
+  /** Receives the template load metrics. */
+  logger?: AssetsLogger;
+}
+
 /**
  * Builds the module services from ports. Each module adds its service here; cross-module
  * reference checks (who may veto a delete) are registered on the shared registries below,
  * never inside the modules themselves. Templates and certificates register their checkers on
  * `eventReferences` (and `organizationReferences`) when their services exist.
- */
-/**
- * Note for E7: pass the real certificate counter (certificates by `templateId`) as the second
- * argument; until then templates report `certificateCount` 0.
+ *
+ * E7: pass the real certificate counter (certificates by `templateId`) as the second argument;
+ * until then templates report `certificateCount` 0.
  */
 export function buildServices(
   ports: Ports,
-  /** Certificates epic (E7) passes its counter here; templates report 0 certificates until then. */
   templateCertificateCounter?: TemplateCertificateCounter,
+  options: ServiceOptions = {},
 ): Services {
   const organizationReferences = new ReferenceCheckRegistry();
   const eventReferences = new ReferenceCheckRegistry();
@@ -65,5 +74,16 @@ export function buildServices(
     name: 'certificates',
     countReferences: (eventId) => ports.certificates.countByEvent(eventId as EventId),
   });
-  return { organizations, organizationReferences, events, eventReferences, templates };
+  const templateAssets = new CachedTemplateAssets(ports.templates, ports.storage, ports.clock, {
+    maxBytes: Math.floor((options.templateCacheMb ?? DEFAULT_TEMPLATE_CACHE_MB) * 1024 * 1024),
+    ...(options.logger ? { logger: options.logger } : {}),
+  });
+  return {
+    organizations,
+    organizationReferences,
+    events,
+    eventReferences,
+    templates,
+    templateAssets,
+  };
 }

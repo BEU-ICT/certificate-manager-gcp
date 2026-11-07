@@ -1,5 +1,5 @@
 import type { EventService } from './modules/events/index.js';
-import type { TemplateService } from './modules/templates/index.js';
+import type { TemplateAssets, TemplateService } from './modules/templates/index.js';
 import type { OrganizationService } from './modules/organizations/index.js';
 import type { ReferenceCheckRegistry } from './shared/references.js';
 import type {
@@ -79,4 +79,6 @@ export interface Services {
   /** Templates and certificates register their event checkers here (services.ts). */
   readonly eventReferences: ReferenceCheckRegistry;
   readonly templates: TemplateService;
+  /** Cached loader of template packages for rendering (templates module). */
+  readonly templateAssets: TemplateAssets;
 }

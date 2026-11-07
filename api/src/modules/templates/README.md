@@ -44,32 +44,9 @@ Issue paths use the API detail style (`fields.subject.font`, `images[0].file`, `
 
 Package paths are relative, normalised, ASCII `[A-Za-z0-9._/-]`, at most 100 characters; backgrounds end in `.svg`, images are `assets/<name>.png|jpg|jpeg`, fonts `fonts/<file>.ttf`.
 
-## Package validation (`validateTemplatePackage`)
+## Template asset loader
 
-Uploaded files come from admins but are treated as untrusted. Sizes and counts are checked before anything is parsed. `path` is the config path (`background`, `images[0].file`, `fonts.main`) or the file name for name problems; `file` is the package path.
-
-Limits: at most 30 files, 10 MB in total, `background.svg` 5 MB, images 2 MB and 4000 px per side, fonts 3 MB. SVG parser limits: depth 64, 200,000 elements, 100 attributes per element.
-
-| Code                                                                         | Level                   | Meaning                                                                                      |
-| ---------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------- |
-| `TOO_MANY_FILES`, `PACKAGE_TOO_LARGE`                                        | error                   | package limits (validation stops there)                                                      |
-| `FILE_TOO_LARGE`                                                             | error                   | per-file limit (background, image, font)                                                     |
-| `FILENAME_CONTROL_CHARACTERS`, `FILENAME_INVALID`, `FILENAME_DUPLICATE_CASE` | error                   | unsafe name; duplicates differing only by case                                               |
-| `FILE_NOT_FOUND`                                                             | error                   | a file referenced by the config is not in the package                                        |
-| `UNREFERENCED_FILE`                                                          | warning                 | file not referenced by `config.json`                                                         |
-| `SVG_DOCTYPE`                                                                | error                   | `<!DOCTYPE` / `<!ENTITY` (XXE, billion laughs); never expanded                               |
-| `SVG_NOT_XML`, `SVG_TOO_COMPLEX`, `SVG_ROOT_NOT_SVG`                         | error                   | malformed XML, depth/node limits, root is not `<svg>`                                        |
-| `SVG_SCRIPT`, `SVG_FOREIGN_OBJECT`, `SVG_EVENT_HANDLER`                      | error                   | `<script>`, `<foreignObject>`, `on*` attributes                                              |
-| `SVG_EXTERNAL_REFERENCE`, `SVG_CSS_IMPORT`                                   | error                   | `href`/`url(...)` other than an in-document `#id` or `data:image/png\|jpeg`; `@import`       |
-| `SVG_NO_VIEWBOX`, `SVG_VIEWBOX_MISMATCH`, `SVG_VIEWBOX_ASPECT`               | error / error / warning | viewBox missing; aspect ratio more than 3% / 1-3% off the page                               |
-| `SVG_TEXT_ELEMENTS`                                                          | warning                 | `<text>` present: fonts are not embedded in SVG, convert text to outlines (#112)             |
-| `IMAGE_CORRUPT`, `IMAGE_TYPE_MISMATCH`, `IMAGE_TOO_LARGE_DIMENSIONS`         | error                   | not PNG/JPEG by magic bytes or bad header; extension disagrees with content; over 4000 px    |
-| `IMAGE_LOW_RESOLUTION`, `IMAGE_HIGH_RESOLUTION`                              | warning                 | below 150 DPI or above 600 DPI at the configured printed `width`                             |
-| `FONT_INVALID`                                                               | error                   | not a TrueType/OpenType font (checked with `fontkit`), empty, or a collection                |
-| `FONT_MISSING_GLYPHS`                                                        | error                   | a font used by `ownerName` or `subject` lacks the Azerbaijani alphabet, digits or `.,-'’()/` |
-| `FONT_NO_CYRILLIC`                                                           | warning                 | such a font lacks basic Cyrillic                                                             |
-
-CLI (offline, reads a directory, no symlinks): `npm run template:validate -w api -- <dir> [--json]`; exit code 0 accepted, 1 rejected, 2 usage. Test corpus: `test/fixtures/templates/` (`good/` package and `malicious/` files); `npm run template-fixtures:generate -w api` rebuilds the binary fixtures deterministically from `test/fixtures/templates/build.ts`.
+`TemplateAssets.load(reference)` (`assets.ts`, `services.templateAssets`) returns `{ template, background, fonts, images }` for rendering. Objects are read in parallel (at most 6 concurrent storage reads), cached in-process by reference (LRU with a byte budget from `TEMPLATE_CACHE_MB`, default 40; TTL 30 min; packages larger than the budget are returned uncached) and loads of one reference are single-flight. A missing document or object raises `NotFoundError` (logged at ERROR with the reference: immutable packages never lose files); errors are never cached. Each load logs `templateLoadMs`, `bytes` and `cache: hit|miss`. Returned buffers are shared: do not mutate them.
 
 ## Package validation (`validateTemplatePackage`)
 

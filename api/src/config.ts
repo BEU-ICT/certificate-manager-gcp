@@ -53,6 +53,8 @@ export interface Config {
     readonly publicPerMin: number;
     readonly adminPerMin: number;
   };
+  /** Byte budget (MB) of the in-process template asset cache. */
+  readonly templateCacheMb: number;
   readonly adapters: {
     readonly db: (typeof DB_ADAPTERS)[number];
     readonly storage: (typeof STORAGE_ADAPTERS)[number];
@@ -108,6 +110,7 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   EMAIL_DAILY_CAP: '300',
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
   RATE_LIMIT_ADMIN_PER_MIN: '60',
+  TEMPLATE_CACHE_MB: '40',
 };
 
 const MAX_URL_LENGTH = 2048;
@@ -156,6 +159,7 @@ const schema = z.object({
   EMAIL_DAILY_CAP: int(1, 1_000_000),
   RATE_LIMIT_PUBLIC_PER_MIN: int(1, 10_000),
   RATE_LIMIT_ADMIN_PER_MIN: int(30, 100),
+  TEMPLATE_CACHE_MB: int(1, 256),
   DB_ADAPTER: oneOf(DB_ADAPTERS),
   STORAGE_ADAPTER: oneOf(STORAGE_ADAPTERS),
   QUEUE_ADAPTER: oneOf(QUEUE_ADAPTERS),
@@ -288,6 +292,7 @@ export function loadConfig(env: Env): Config {
       publicPerMin: e.RATE_LIMIT_PUBLIC_PER_MIN,
       adminPerMin: e.RATE_LIMIT_ADMIN_PER_MIN,
     },
+    templateCacheMb: e.TEMPLATE_CACHE_MB,
     adapters: {
       db: e.DB_ADAPTER,
       storage: e.STORAGE_ADAPTER,
