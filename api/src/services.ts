@@ -23,16 +23,13 @@ export interface ServiceOptions {
  * reference checks (who may veto a delete) are registered on the shared registries below,
  * never inside the modules themselves. Templates and certificates register their checkers on
  * `eventReferences` (and `organizationReferences`) when their services exist.
- */
-/**
- * Note for E7: pass the real certificate counter (certificates by `templateId`) as the second
- * argument; until then templates report `certificateCount` 0.
+ *
+ * E7: pass the real certificate counter (certificates by `templateId`) as the second argument;
+ * until then templates report `certificateCount` 0.
  */
 export function buildServices(
   ports: Ports,
-  /** Certificates epic (E7) passes its counter here; templates report 0 certificates until then. */
   templateCertificateCounter?: TemplateCertificateCounter,
-  /** Template asset cache and load metrics options (`TEMPLATE_CACHE_MB`, logger). */
   options: ServiceOptions = {},
 ): Services {
   const organizationReferences = new ReferenceCheckRegistry();
