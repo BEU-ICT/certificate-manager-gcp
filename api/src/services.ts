@@ -5,8 +5,10 @@ import {
   DEFAULT_TEMPLATE_CACHE_MB,
   DefaultTemplateService,
   type AssetsLogger,
+  type TemplateCertificateCounter,
 } from './modules/templates/index.js';
 import { ReferenceCheckRegistry } from './shared/references.js';
+import type { EventId, OrganizationId } from './shared/ids.js';
 import type { Ports, Services } from './wiring.js';
 
 export interface ServiceOptions {
@@ -22,7 +24,17 @@ export interface ServiceOptions {
  * never inside the modules themselves. Templates and certificates register their checkers on
  * `eventReferences` (and `organizationReferences`) when their services exist.
  */
-export function buildServices(ports: Ports, options: ServiceOptions = {}): Services {
+/**
+ * Note for E7: pass the real certificate counter (certificates by `templateId`) as the second
+ * argument; until then templates report `certificateCount` 0.
+ */
+export function buildServices(
+  ports: Ports,
+  /** Certificates epic (E7) passes its counter here; templates report 0 certificates until then. */
+  templateCertificateCounter?: TemplateCertificateCounter,
+  /** Template asset cache and load metrics options (`TEMPLATE_CACHE_MB`, logger). */
+  options: ServiceOptions = {},
+): Services {
   const organizationReferences = new ReferenceCheckRegistry();
   const eventReferences = new ReferenceCheckRegistry();
   const organizations = new DefaultOrganizationService(
@@ -42,7 +54,12 @@ export function buildServices(ports: Ports, options: ServiceOptions = {}): Servi
     name: 'events',
     countReferences: (organizationId) => events.countByOrganization(organizationId),
   });
-  const templates = new DefaultTemplateService(ports.templates, ports.storage, ports.clock);
+  const templates = new DefaultTemplateService(
+    ports.templates,
+    ports.storage,
+    ports.clock,
+    templateCertificateCounter,
+  );
   organizationReferences.register({
     name: 'templates',
     countReferences: (organizationId) => templates.countByOrganization(organizationId),
@@ -50,6 +67,15 @@ export function buildServices(ports: Ports, options: ServiceOptions = {}): Servi
   eventReferences.register({
     name: 'templates',
     countReferences: (eventId) => templates.countByEvent(eventId),
+  });
+  organizationReferences.register({
+    name: 'certificates',
+    countReferences: (organizationId) =>
+      ports.certificates.countByOrganization(organizationId as OrganizationId),
+  });
+  eventReferences.register({
+    name: 'certificates',
+    countReferences: (eventId) => ports.certificates.countByEvent(eventId as EventId),
   });
   const templateAssets = new CachedTemplateAssets(ports.templates, ports.storage, ports.clock, {
     maxBytes: Math.floor((options.templateCacheMb ?? DEFAULT_TEMPLATE_CACHE_MB) * 1024 * 1024),

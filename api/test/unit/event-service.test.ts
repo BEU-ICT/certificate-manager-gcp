@@ -6,6 +6,7 @@ import {
   SlugTakenError,
   ValidationError,
 } from '../../src/shared/errors.js';
+import { sampleCertificate } from '../../src/testing/contracts/index.js';
 import { createFakes } from '../../src/testing/fakes/create-fakes.js';
 
 async function setup() {
@@ -110,11 +111,12 @@ describe('EventService', () => {
 
   it('delete is blocked while templates or certificates reference the event', async () => {
     const event = await ctx.events.create({ organizationId: ctx.org.id, name: 'DevFest' });
-    // The `templates` checker is registered by buildServices; certificates register theirs later.
-    ctx.services.eventReferences.register({
-      name: 'certificates',
-      countReferences: () => Promise.resolve(3),
-    });
+    // The `templates` and `certificates` checkers are registered by buildServices.
+    for (let i = 0; i < 3; i++) {
+      await ctx.fakes.certificates.create(
+        sampleCertificate({ organizationId: ctx.org.id, eventId: event.id }),
+      );
+    }
     const error = await ctx.events.delete(event.id).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(InUseError);
     expect((error as InUseError).details).toEqual([
@@ -142,7 +144,11 @@ describe('EventService', () => {
     const error = await ctx.services.organizations.delete(ctx.org.id).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(InUseError);
     expect((error as InUseError).details).toEqual([
-      { path: 'references', message: 'IN_USE', counts: { events: 1, templates: 0 } },
+      {
+        path: 'references',
+        message: 'IN_USE',
+        counts: { events: 1, templates: 0, certificates: 0 },
+      },
     ]);
     await expect(ctx.services.organizations.delete(ctx.other.id)).resolves.toBeUndefined();
   });

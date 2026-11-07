@@ -55,3 +55,13 @@ export {
   type TemplateAssets,
   type TemplateAssetsOptions,
 } from './assets.js';
+export { CONFIG_FILE, validateTemplatePackage } from './package-validator.js';
+export {
+  MAX_IMAGE_DPI,
+  MIN_IMAGE_DPI,
+  PACKAGE_LIMITS,
+  type Issue,
+  type ValidationReport,
+} from './package-issues.js';
+export { NO_CERTIFICATES, type TemplateCertificateCounter } from './certificate-counter.js';
+export type { TemplateDetail, TemplateListItem } from './service.js';

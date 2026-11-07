@@ -18,6 +18,8 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "template-schema:generate": "tsx scripts/generate-template-config-schema.ts",
     "template-schema:check": "tsx scripts/generate-template-config-schema.ts --check",
+    "template:validate": "tsx scripts/validate-template.ts",
+    "template-fixtures:generate": "tsx test/fixtures/templates/build.ts",
     "check:document-reference": "node scripts/check-document-reference.mjs",
     "check:module-readmes": "node scripts/check-module-readmes.mjs",
     "check:architecture": "npm run depcruise && npm run check:document-reference",
@@ -30,12 +32,14 @@
     "fastify": "^5.12.8",
     "fastify-type-provider-zod": "^7.0.0",
     "firebase-admin": "^14.5.0",
+    "fontkit": "^2.0.4",
     "pino": "^10.4.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@firebase/rules-unit-testing": "^5.0.2",
+    "@types/fontkit": "^2.0.9",
     "@types/node": "^26.6.6",
     "dependency-cruiser": "^18.7.2",
     "eslint": "^10.14.0",

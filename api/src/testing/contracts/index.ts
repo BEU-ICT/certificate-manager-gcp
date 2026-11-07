@@ -46,3 +46,8 @@ export {
   TPL_ORG,
   type TemplateRepositoryContractFactory,
 } from './template-repository.js';
+export {
+  describeCertificateRepositoryContract,
+  sampleCertificate,
+  type CertificateRepositoryContractFactory,
+} from './certificate-repository.js';

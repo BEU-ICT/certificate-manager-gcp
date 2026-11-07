@@ -1,12 +1,15 @@
 import type {
   Certificate,
   CertificateEvent,
+  CertificateStatus,
   EmailLanguage,
+  EmailStatus,
   Organization,
   Template,
 } from '../shared/domain.js';
+import type { CertificateType } from '../shared/certificate-types.js';
 import type { CertificateId, EventId, OrganizationId, TemplateRef } from '../shared/ids.js';
-import type { Filter, Page, PageRequest } from './common.js';
+import type { Page, PageRequest } from './common.js';
 
 /*
  * Contract shared by every repository:
@@ -93,14 +96,86 @@ export interface TemplateRepository {
   count(filter?: TemplateFilter): Promise<number>;
 }
 
+/** Equality filters plus an `issuedAt` range (`issuedFrom` inclusive, `issuedTo` exclusive); all ANDed. */
+export interface CertificateFilter {
+  organizationId?: OrganizationId;
+  eventId?: EventId;
+  type?: CertificateType;
+  status?: CertificateStatus;
+  emailStatus?: EmailStatus;
+  issuedFrom?: Date;
+  issuedTo?: Date;
+}
+
+/** Outcome of {@link CertificateRepository.markRevoked}; `previousPdfPath` is set only when revoked. */
+export type MarkRevokedResult =
+  | { outcome: 'revoked'; previousPdfPath: string | null }
+  | { outcome: 'already_revoked' }
+  | { outcome: 'not_found' };
+
+/** Outcome of {@link CertificateRepository.setPdfPathIfAbsent}; `pdfPath` is the stored one (the winner's). */
+export interface SetPdfPathResult {
+  winner: boolean;
+  pdfPath: string | null;
+  status: CertificateStatus;
+}
+
+/** Fields `updateEmailState` may change; `null` clears an optional field. `updatedAt` is required. */
+export interface EmailStatePatch {
+  emailStatus?: EmailStatus;
+  emailAttempts?: number;
+  emailSentAt?: Date | null;
+  emailLastError?: string | null;
+  updatedAt: Date;
+}
+
 export interface CertificateRepository {
-  /** Fails with `ConflictError` when the ID exists. */
+  /** Document ID = certificate ID. Fails with `ConflictError` when the ID exists. */
   create(certificate: Certificate): Promise<void>;
+  /**
+   * Creates up to 500 certificates in one atomic batch: all or none. Fails with `ConflictError`
+   * (nothing written) when any ID exists or repeats, `ValidationError` for more than 500.
+   */
+  createMany(certificates: readonly Certificate[]): Promise<void>;
   /** Exactly one document read. */
   getById(id: CertificateId): Promise<Certificate | null>;
-  /** Ordered by `issuedAt` descending. */
-  list(filter: Filter, page?: PageRequest): Promise<Page<Certificate>>;
-  count(filter: Filter): Promise<number>;
-  /** Idempotent: revoking a revoked certificate succeeds without change. Returns false if not found. */
-  revoke(id: CertificateId, at: Date): Promise<boolean>;
+  /**
+   * Ordered by `issuedAt` descending, then `id` descending (total order, stable with identical
+   * `issuedAt`). Reads `limit + 1` documents: the extra one only decides `nextCursor`.
+   * An unusable cursor is a `ValidationError`.
+   */
+  list(filter: CertificateFilter, page?: PageRequest): Promise<Page<Certificate>>;
+  /** Native aggregate count; never reads the documents. */
+  count(filter: CertificateFilter): Promise<number>;
+  /**
+   * Transaction: revokes only an `active` certificate (sets `status`, `revokedAt`, `revokeReason`,
+   * `updatedAt`) and returns its previous `pdfPath`. The PDF reference itself stays until
+   * `clearPdfPath`. Revoking a revoked certificate changes nothing.
+   */
+  markRevoked(
+    id: CertificateId,
+    revocation: { reason: string; at: Date },
+  ): Promise<MarkRevokedResult>;
+  /**
+   * Unconditionally removes `pdfPath` and `pdfGeneratedAt`; does not touch `updatedAt`.
+   * False if the certificate does not exist.
+   */
+  clearPdfPath(id: CertificateId): Promise<boolean>;
+  /**
+   * Transaction: sets `pdfPath`/`pdfGeneratedAt` only when `pdfPath` is unset **and** the status is
+   * `active`; `winner` says whether this call wrote. `null` if the certificate does not exist.
+   */
+  setPdfPathIfAbsent(
+    id: CertificateId,
+    pdf: { pdfPath: string; generatedAt: Date },
+  ): Promise<SetPdfPathResult | null>;
+  /**
+   * Unconditional merge: changes only the given e-mail fields and `updatedAt`, with no status or
+   * attempt guard. False if the certificate does not exist.
+   */
+  updateEmailState(id: CertificateId, patch: EmailStatePatch): Promise<boolean>;
+  /** Certificates rendered from the template reference (reference checks). */
+  countByTemplate(ref: TemplateRef): Promise<number>;
+  countByOrganization(organizationId: OrganizationId): Promise<number>;
+  countByEvent(eventId: EventId): Promise<number>;
 }
