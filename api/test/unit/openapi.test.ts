@@ -7,11 +7,12 @@ import { z } from 'zod';
 import { buildApp } from '../../src/app.js';
 import { openApiDocument } from '../../src/http/openapi/plugin.js';
 import { errorResponses, jsonResponse } from '../../src/http/openapi/responses.js';
+import { createFakes } from '../../src/testing/fakes/index.js';
 
 const committedPath = fileURLToPath(new URL('../../openapi.json', import.meta.url));
 
 async function liveSpec(): Promise<ReturnType<typeof openApiDocument>> {
-  const app = buildApp();
+  const app = buildApp({ ports: createFakes() });
   await app.ready();
   const doc = openApiDocument(app);
   await app.close();
@@ -31,7 +32,40 @@ describe('OpenAPI document', () => {
   it('is OpenAPI 3.1 and documents the health and admin routes', async () => {
     const doc = await liveSpec();
     expect(doc.openapi).toBe('3.1.0');
-    expect(Object.keys(doc.paths ?? {})).toEqual(['/api/v1/admin/me', '/internal/healthz']);
+    expect(Object.keys(doc.paths ?? {})).toEqual([
+      '/api/v1/admin/events',
+      '/api/v1/admin/events/{id}',
+      '/api/v1/admin/me',
+      '/api/v1/admin/organizations',
+      '/api/v1/admin/organizations/{id}',
+      '/api/v1/admin/templates',
+      '/api/v1/admin/templates/{reference}',
+      '/api/v1/public/certificates/{id}',
+      '/internal/healthz',
+    ]);
+  });
+
+  it('describes the template upload as multipart/form-data with the TEMPLATE_INVALID details', async () => {
+    const doc = await liveSpec();
+    const post = (doc.paths?.['/api/v1/admin/templates'] as Record<string, unknown>)['post'] as {
+      requestBody: { content: Record<string, { schema: { $ref?: string } }> };
+      responses: Record<string, unknown>;
+    };
+    expect(Object.keys(post.requestBody.content)).toEqual(['multipart/form-data']);
+    const schemas = doc.components?.schemas as Record<string, Record<string, unknown>>;
+    expect(post.requestBody.content['multipart/form-data']?.schema.$ref).toBe(
+      '#/components/schemas/TemplateUploadBodyInput',
+    );
+    expect(schemas['TemplateUploadBodyInput']).toMatchObject({
+      required: ['organizationId', 'eventId', 'type', 'config'],
+      additionalProperties: { type: 'string', format: 'binary' },
+    });
+    for (const status of ['201', '400', '401', '403', '404', '413', '422']) {
+      expect(post.responses).toHaveProperty(status);
+    }
+    expect(Object.keys((schemas['ErrorDetail'] as { properties: object }).properties)).toEqual(
+      expect.arrayContaining(['path', 'message', 'code', 'file']),
+    );
   });
 
   it('documents every error response with the shared ErrorBody schema', async () => {
@@ -54,7 +88,7 @@ describe('OpenAPI document', () => {
 
 describe('GET /internal/openapi.json', () => {
   it('serves the live document when the endpoint is enabled', async () => {
-    const app = buildApp({ openApiEndpoint: true });
+    const app = buildApp({ openApiEndpoint: true, ports: createFakes() });
     const res = await app.inject({ method: 'GET', url: '/internal/openapi.json' });
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('application/json');
