@@ -79,3 +79,5 @@ Targets: public route <= 150 KB gzipped JS (issue #16 §7). 360 MB/day allows ab
 4. Cloud Run: lower `--max-instances` (cost ceiling) and check for retry storms from Cloud Tasks.
 5. Hosting: enable long cache headers for hashed assets (in `firebase.json`) and trim the bundle.
 6. Last resort: unlink billing is destructive (services stop); prefer lowering instance caps and disabling the offending endpoint with a `FEATURE_*` flag.
+
+Admin certificate list (`GET /api/v1/admin/certificates`) reads at most `limit + 1` (<= 51) documents; `GET /api/v1/admin/certificates/count` and the filtered counts use the native aggregation query and cost one read per 1,000 index entries scanned (minimum one read).
