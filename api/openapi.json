@@ -1,6 +1,210 @@
 {
   "components": {
     "schemas": {
+      "AdminCertificate": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "createdBy": {
+            "description": "Admin user ID that issued the certificate.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Only in the detail view; null when none was given.",
+            "type": ["string", "null"]
+          },
+          "emailAttempts": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "emailLastError": { "type": ["string", "null"] },
+          "emailSentAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "emailStatus": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" },
+          "eventId": { "type": "string" },
+          "eventName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "id": { "type": "string" },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "legacy": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "certificateType": { "type": "string" },
+                  "id": { "type": "string" },
+                  "template": { "type": "string" }
+                },
+                "required": ["id"],
+                "type": "object"
+              },
+              { "type": "null" }
+            ],
+            "description": "Set for certificates imported from the legacy system."
+          },
+          "organizationId": { "type": "string" },
+          "organizationName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "ownerName": { "type": "string" },
+          "pdfGeneratedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "pdfUrl": {
+            "description": "Public PDF URL; null while no PDF is stored.",
+            "type": ["string", "null"]
+          },
+          "publicUrl": {
+            "description": "Public verification page of the certificate.",
+            "type": "string"
+          },
+          "revokeReason": { "type": ["string", "null"] },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "skills": { "items": { "type": "string" }, "type": "array" },
+          "status": { "enum": ["active", "revoked"], "type": "string" },
+          "subject": { "type": "string" },
+          "templateId": {
+            "description": "Reference (`<name>-v<n>`) of the template used.",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "eventId",
+          "organizationName",
+          "eventName",
+          "templateId",
+          "type",
+          "ownerName",
+          "email",
+          "subject",
+          "skills",
+          "status",
+          "issuedAt",
+          "revokedAt",
+          "revokeReason",
+          "emailStatus",
+          "emailAttempts",
+          "emailSentAt",
+          "emailLastError",
+          "publicUrl",
+          "pdfUrl",
+          "pdfGeneratedAt",
+          "legacy",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "AdminCertificatePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": { "$ref": "#/components/schemas/AdminCertificateSummary" },
+            "type": "array"
+          },
+          "nextCursor": {
+            "description": "Opaque; pass as `cursor` for the next page.",
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["items", "nextCursor"],
+        "type": "object"
+      },
+      "AdminCertificateSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "emailStatus": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" },
+          "eventName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "hasEmail": { "type": "boolean" },
+          "id": { "type": "string" },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "organizationName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "ownerName": { "type": "string" },
+          "status": { "enum": ["active", "revoked"], "type": "string" },
+          "subject": { "type": "string" },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ownerName",
+          "organizationName",
+          "eventName",
+          "type",
+          "subject",
+          "issuedAt",
+          "status",
+          "emailStatus",
+          "hasEmail"
+        ],
+        "type": "object"
+      },
       "AdminMe": {
         "additionalProperties": false,
         "properties": {
@@ -19,6 +223,14 @@
           "uid": { "type": "string" }
         },
         "required": ["uid", "email", "role", "features"],
+        "type": "object"
+      },
+      "CertificateCount": {
+        "additionalProperties": false,
+        "properties": {
+          "count": { "maximum": 9007199254740991, "minimum": -9007199254740991, "type": "integer" }
+        },
+        "required": ["count"],
         "type": "object"
       },
       "CreateEventBodyInput": {
@@ -247,6 +459,93 @@
         "additionalProperties": false,
         "properties": { "name": { "description": "1 to 120 characters.", "type": "string" } },
         "required": ["name"],
+        "type": "object"
+      },
+      "RevokeCertificateBodyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Plain text, 1 to 500 characters; escaped on output.",
+            "maxLength": 4000,
+            "type": "string"
+          }
+        },
+        "required": ["reason"],
+        "type": "object"
+      },
+      "RevokedCertificate": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "email": { "type": ["string", "null"] },
+          "emailStatus": { "type": "string" },
+          "eventId": { "type": "string" },
+          "eventName": { "type": "string" },
+          "hasPdf": {
+            "description": "False once the PDF reference was cleared.",
+            "type": "boolean"
+          },
+          "id": { "type": "string" },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "organizationId": { "type": "string" },
+          "organizationName": { "type": "string" },
+          "ownerName": { "type": "string" },
+          "revokeReason": { "type": ["string", "null"] },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "skills": { "items": { "type": "string" }, "type": "array" },
+          "status": { "enum": ["active", "revoked"], "type": "string" },
+          "subject": { "type": "string" },
+          "templateId": { "type": "string" },
+          "type": { "type": "string" },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "warnings": {
+            "description": "Present when the revocation succeeded but the PDF object could not be deleted; repeat the call to retry the deletion.",
+            "items": { "const": "PDF_DELETE_FAILED", "type": "string" },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "organizationName",
+          "eventId",
+          "eventName",
+          "templateId",
+          "type",
+          "ownerName",
+          "email",
+          "subject",
+          "skills",
+          "status",
+          "issuedAt",
+          "revokedAt",
+          "revokeReason",
+          "emailStatus",
+          "hasPdf",
+          "createdAt",
+          "updatedAt"
+        ],
         "type": "object"
       },
       "Template": {
@@ -532,6 +831,371 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/certificates": {
+      "get": {
+        "description": "Filters are ANDed. Summaries never contain the e-mail address (only `hasEmail`). Ordered by `issuedAt` descending, then `id` descending.",
+        "operationId": "listCertificates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "eventId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "enum": [
+                "attendance",
+                "appreciation",
+                "thanks",
+                "distinction",
+                "instructor",
+                "student",
+                "team",
+                "other"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": { "enum": ["active", "revoked"], "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "emailStatus",
+            "required": false,
+            "schema": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" }
+          },
+          {
+            "description": "Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time.",
+            "in": "query",
+            "name": "issuedFrom",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          },
+          {
+            "description": "Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span).",
+            "in": "query",
+            "name": "issuedTo",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": { "maximum": 50, "minimum": 1, "type": "integer" }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": { "maxLength": 512, "minLength": 1, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminCertificatePage" }
+              }
+            },
+            "description": "A page of certificate summaries"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "List certificates (newest first, cursor pagination, filters)"
+      }
+    },
+    "/api/v1/admin/certificates/count": {
+      "get": {
+        "description": "Uses the native aggregation query: one read per 1,000 index entries, no documents are read.",
+        "operationId": "countCertificates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "eventId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "enum": [
+                "attendance",
+                "appreciation",
+                "thanks",
+                "distinction",
+                "instructor",
+                "student",
+                "team",
+                "other"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": { "enum": ["active", "revoked"], "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "emailStatus",
+            "required": false,
+            "schema": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" }
+          },
+          {
+            "description": "Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time.",
+            "in": "query",
+            "name": "issuedFrom",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          },
+          {
+            "description": "Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span).",
+            "in": "query",
+            "name": "issuedTo",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CertificateCount" } }
+            },
+            "description": "The number of matching certificates"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Count certificates matching the filters"
+      }
+    },
+    "/api/v1/admin/certificates/{id}": {
+      "get": {
+        "description": "All fields including the e-mail address, `publicUrl` and `pdfUrl`. Malformed and unknown ids both yield 404. The storage object name (`pdfPath`) is never returned.",
+        "operationId": "getCertificate",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminCertificate" } }
+            },
+            "description": "The certificate"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Get a certificate (admin detail)"
+      }
+    },
+    "/api/v1/admin/certificates/{id}/revoke": {
+      "post": {
+        "description": "Idempotent. An active certificate becomes `revoked` (reason and time stored) and its PDF is deleted. Repeating the call returns the current state with `200`; the original reason is kept and a different `reason` is ignored. If the PDF could not be deleted the response is still `200` with `warnings: [\"PDF_DELETE_FAILED\"]`; repeating the call retries the deletion. There is no un-revoke: re-issue instead.",
+        "operationId": "revokeCertificate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 512, "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RevokeCertificateBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RevokedCertificate" }
+              }
+            },
+            "description": "The revoked certificate"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Revoke a certificate"
+      }
+    },
     "/api/v1/admin/events": {
       "get": {
         "operationId": "listEvents",

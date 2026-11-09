@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+  '/api/v1/admin/certificates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List certificates (newest first, cursor pagination, filters)
+     * @description Filters are ANDed. Summaries never contain the e-mail address (only `hasEmail`). Ordered by `issuedAt` descending, then `id` descending.
+     */
+    get: operations['listCertificates'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/certificates/count': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Count certificates matching the filters
+     * @description Uses the native aggregation query: one read per 1,000 index entries, no documents are read.
+     */
+    get: operations['countCertificates'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/certificates/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a certificate (admin detail)
+     * @description All fields including the e-mail address, `publicUrl` and `pdfUrl`. Malformed and unknown ids both yield 404. The storage object name (`pdfPath`) is never returned.
+     */
+    get: operations['getCertificate'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/certificates/{id}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revoke a certificate
+     * @description Idempotent. An active certificate becomes `revoked` (reason and time stored) and its PDF is deleted. Repeating the call returns the current state with `200`; the original reason is kept and a different `reason` is ignored. If the PDF could not be deleted the response is still `200` with `warnings: ["PDF_DELETE_FAILED"]`; repeating the call retries the deletion. There is no un-revoke: re-issue instead.
+     */
+    post: operations['revokeCertificate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/events': {
     parameters: {
       query?: never;
@@ -201,6 +281,91 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    AdminCertificate: {
+      /** Format: date-time */
+      createdAt: string;
+      /** @description Admin user ID that issued the certificate. */
+      createdBy: string;
+      /** @description Only in the detail view; null when none was given. */
+      email: string | null;
+      emailAttempts: number;
+      emailLastError: string | null;
+      emailSentAt: string | null;
+      /** @enum {string} */
+      emailStatus: 'pending' | 'sent' | 'failed' | 'skipped';
+      eventId: string;
+      /** @description Snapshot taken at issue time. */
+      eventName: string;
+      id: string;
+      /** Format: date-time */
+      issuedAt: string;
+      /** @description Set for certificates imported from the legacy system. */
+      legacy: {
+        certificateType?: string;
+        id: string;
+        template?: string;
+      } | null;
+      organizationId: string;
+      /** @description Snapshot taken at issue time. */
+      organizationName: string;
+      ownerName: string;
+      pdfGeneratedAt: string | null;
+      /** @description Public PDF URL; null while no PDF is stored. */
+      pdfUrl: string | null;
+      /** @description Public verification page of the certificate. */
+      publicUrl: string;
+      revokeReason: string | null;
+      revokedAt: string | null;
+      skills: string[];
+      /** @enum {string} */
+      status: 'active' | 'revoked';
+      subject: string;
+      /** @description Reference (`<name>-v<n>`) of the template used. */
+      templateId: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    AdminCertificatePage: {
+      items: components['schemas']['AdminCertificateSummary'][];
+      /** @description Opaque; pass as `cursor` for the next page. */
+      nextCursor: string | null;
+    };
+    AdminCertificateSummary: {
+      /** @enum {string} */
+      emailStatus: 'pending' | 'sent' | 'failed' | 'skipped';
+      /** @description Snapshot taken at issue time. */
+      eventName: string;
+      hasEmail: boolean;
+      id: string;
+      /** Format: date-time */
+      issuedAt: string;
+      /** @description Snapshot taken at issue time. */
+      organizationName: string;
+      ownerName: string;
+      /** @enum {string} */
+      status: 'active' | 'revoked';
+      subject: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+    };
     AdminMe: {
       email: string;
       /** @description Feature flags relevant to the admin UI. */
@@ -211,6 +376,9 @@ export interface components {
       /** @constant */
       role: 'admin';
       uid: string;
+    };
+    CertificateCount: {
+      count: number;
     };
     CreateEventBodyInput: {
       /**
@@ -321,6 +489,38 @@ export interface components {
     RenameOrganizationBodyInput: {
       /** @description 1 to 120 characters. */
       name: string;
+    };
+    RevokeCertificateBodyInput: {
+      /** @description Plain text, 1 to 500 characters; escaped on output. */
+      reason: string;
+    };
+    RevokedCertificate: {
+      /** Format: date-time */
+      createdAt: string;
+      email: string | null;
+      emailStatus: string;
+      eventId: string;
+      eventName: string;
+      /** @description False once the PDF reference was cleared. */
+      hasPdf: boolean;
+      id: string;
+      /** Format: date-time */
+      issuedAt: string;
+      organizationId: string;
+      organizationName: string;
+      ownerName: string;
+      revokeReason: string | null;
+      revokedAt: string | null;
+      skills: string[];
+      /** @enum {string} */
+      status: 'active' | 'revoked';
+      subject: string;
+      templateId: string;
+      type: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** @description Present when the revocation succeeded but the PDF object could not be deleted; repeat the call to retry the deletion. */
+      warnings?: 'PDF_DELETE_FAILED'[];
     };
     Template: {
       /** Format: date-time */
@@ -461,6 +661,357 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  listCertificates: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        eventId?: string;
+        type?:
+          | 'attendance'
+          | 'appreciation'
+          | 'thanks'
+          | 'distinction'
+          | 'instructor'
+          | 'student'
+          | 'team'
+          | 'other';
+        status?: 'active' | 'revoked';
+        emailStatus?: 'pending' | 'sent' | 'failed' | 'skipped';
+        /** @description Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time. */
+        issuedFrom?: string;
+        /** @description Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span). */
+        issuedTo?: string;
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of certificate summaries */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCertificatePage'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  countCertificates: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        eventId?: string;
+        type?:
+          | 'attendance'
+          | 'appreciation'
+          | 'thanks'
+          | 'distinction'
+          | 'instructor'
+          | 'student'
+          | 'team'
+          | 'other';
+        status?: 'active' | 'revoked';
+        emailStatus?: 'pending' | 'sent' | 'failed' | 'skipped';
+        /** @description Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time. */
+        issuedFrom?: string;
+        /** @description Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span). */
+        issuedTo?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The number of matching certificates */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CertificateCount'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getCertificate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The certificate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCertificate'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  revokeCertificate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RevokeCertificateBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The revoked certificate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RevokedCertificate'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
   listEvents: {
     parameters: {
       query?: {

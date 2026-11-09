@@ -1,4 +1,8 @@
-import type { CertificateService } from './modules/certificates/index.js';
+import type {
+  CertificateQueryService,
+  CertificateService,
+  RevocationService,
+} from './modules/certificates/index.js';
 import type { EventService } from './modules/events/index.js';
 import type { TemplateAssets, TemplateService } from './modules/templates/index.js';
 import type { OrganizationService } from './modules/organizations/index.js';
@@ -84,4 +88,8 @@ export interface Services {
   readonly templateAssets: TemplateAssets;
   /** Certificates module (public lookup now; issuance and admin APIs follow in the certificates epic). */
   readonly certificates: CertificateService;
+  /** Admin read side of certificates: list, count, detail (certificates module). */
+  readonly certificateQueries: CertificateQueryService;
+  /** Certificate revocation (certificates module). */
+  readonly revocation: RevocationService;
 }
