@@ -5,10 +5,12 @@ import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
 import { buildApp } from '../src/app.js';
 import { openApiDocument } from '../src/http/openapi/plugin.js';
+import { createFakes } from '../src/testing/fakes/index.js';
 
 const target = fileURLToPath(new URL('../openapi.json', import.meta.url));
 
-const app = buildApp();
+// In-memory fakes so that the routes that need services (organizations, events, templates) are in the document.
+const app = buildApp({ ports: createFakes() });
 await app.ready();
 const document = openApiDocument(app);
 await app.close();
