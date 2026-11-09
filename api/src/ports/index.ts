@@ -4,6 +4,7 @@ export * from './common.js';
 export * from './email-sender.js';
 export * from './event-bus.js';
 export * from './id-generator.js';
+export * from './idempotency-store.js';
 export * from './migration-state-store.js';
 export * from './rate-limiter.js';
 export * from './repositories.js';

@@ -87,5 +87,6 @@ export function buildServices(
     templates,
     templateAssets,
     certificates: new DefaultCertificateService(ports.certificates),
+    idempotency: ports.idempotency,
   };
 }

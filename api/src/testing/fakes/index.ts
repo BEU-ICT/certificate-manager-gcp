@@ -4,6 +4,7 @@ export * from './fake-email-sender.js';
 export * from './fake-event-bus.js';
 export * from './fake-event-repository.js';
 export * from './fake-id-generator.js';
+export * from './fake-idempotency-store.js';
 export * from './fake-migration-state-store.js';
 export * from './fake-organization-repository.js';
 export * from './fake-rate-limiter.js';
