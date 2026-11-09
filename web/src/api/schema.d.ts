@@ -4,6 +4,132 @@
  */
 
 export interface paths {
+  '/api/v1/admin/certificates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List certificates (newest first, cursor pagination, filters)
+     * @description Filters are ANDed. Summaries never contain the e-mail address (only `hasEmail`). Ordered by `issuedAt` descending, then `id` descending.
+     */
+    get: operations['listCertificates'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/certificates/count': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Count certificates matching the filters
+     * @description Uses the native aggregation query: one read per 1,000 index entries, no documents are read.
+     */
+    get: operations['countCertificates'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/certificates/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a certificate (admin detail)
+     * @description All fields including the e-mail address, `publicUrl` and `pdfUrl`. Malformed and unknown ids both yield 404. The storage object name (`pdfPath`) is never returned.
+     */
+    get: operations['getCertificate'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/certificates/{id}/revoke': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Revoke a certificate
+     * @description Idempotent. An active certificate becomes `revoked` (reason and time stored) and its PDF is deleted. Repeating the call returns the current state with `200`; the original reason is kept and a different `reason` is ignored. If the PDF could not be deleted the response is still `200` with `warnings: ["PDF_DELETE_FAILED"]`; repeating the call retries the deletion. There is no un-revoke: re-issue instead.
+     */
+    post: operations['revokeCertificate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List events (newest first, cursor pagination) */
+    get: operations['listEvents'];
+    put?: never;
+    /**
+     * Create an event
+     * @description The slug is generated from the name when omitted and is unique within the organization. A taken slug yields 409 with `details[0].suggestion`. An unknown organization yields 404 with `details[0].path = organizationId`.
+     */
+    post: operations['createEvent'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/events/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get an event */
+    get: operations['getEvent'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete an unreferenced event
+     * @description Hard delete. Fails with 409 `IN_USE` and per-kind `counts` while templates or certificates reference it.
+     */
+    delete: operations['deleteEvent'];
+    options?: never;
+    head?: never;
+    /**
+     * Update the name and/or e-mail language of an event
+     * @description At least one of `name`, `emailLanguage`. The slug and the organization are immutable (rejected with 400).
+     */
+    patch: operations['updateEvent'];
+    trace?: never;
+  };
   '/api/v1/admin/me': {
     parameters: {
       query?: never;
@@ -16,6 +142,116 @@ export interface paths {
      * @description Requires a Firebase ID token with the `role=admin` claim.
      */
     get: operations['getAdminMe'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/organizations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List organizations (by name, cursor pagination) */
+    get: operations['listOrganizations'];
+    put?: never;
+    /**
+     * Create an organization
+     * @description The slug is generated from the name when omitted. A taken slug yields 409 with `details[0].suggestion`; the server never appends a suffix silently.
+     */
+    post: operations['createOrganization'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/organizations/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get an organization */
+    get: operations['getOrganization'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete an unreferenced organization
+     * @description Hard delete. Fails with 409 `IN_USE` and per-kind `counts` while events, templates or certificates reference it.
+     */
+    delete: operations['deleteOrganization'];
+    options?: never;
+    head?: never;
+    /**
+     * Rename an organization
+     * @description Only `name` can change. The slug is immutable (a `slug` property is rejected with 400) and existing certificates keep their snapshot.
+     */
+    patch: operations['renameOrganization'];
+    trace?: never;
+  };
+  '/api/v1/admin/templates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List template versions (newest first, cursor pagination)
+     * @description Filters `organizationId`, `eventId`, `type` combine with AND; an unknown organization or event yields an empty page.
+     */
+    get: operations['listTemplates'];
+    put?: never;
+    /**
+     * Upload a template package (creates the next version)
+     * @description Creates the next version for the organization, event and type and generates the reference. Nothing is stored unless the whole package is valid. `422 TEMPLATE_INVALID` lists every finding in `error.details[]` as `{ code, path, file?, message }`; `422 EVENT_ORG_MISMATCH` means the event belongs to another organization. Existing versions are never overwritten.
+     */
+    post: operations['uploadTemplate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/templates/{reference}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a template version with config, files and certificate count
+     * @description Unknown and malformed references are both 404.
+     */
+    get: operations['getTemplate'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/certificates/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Verify a certificate by ID
+     * @description Public. A malformed and an unknown ID return the same 404. Revoked certificates keep their public fields with `status: "revoked"` and `pdfUrl: null`; the revocation reason and time are never public. Always revalidated (`Cache-Control: no-cache`).
+     */
+    get: operations['getPublicCertificate'];
     put?: never;
     post?: never;
     delete?: never;
@@ -45,6 +281,91 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    AdminCertificate: {
+      /** Format: date-time */
+      createdAt: string;
+      /** @description Admin user ID that issued the certificate. */
+      createdBy: string;
+      /** @description Only in the detail view; null when none was given. */
+      email: string | null;
+      emailAttempts: number;
+      emailLastError: string | null;
+      emailSentAt: string | null;
+      /** @enum {string} */
+      emailStatus: 'pending' | 'sent' | 'failed' | 'skipped';
+      eventId: string;
+      /** @description Snapshot taken at issue time. */
+      eventName: string;
+      id: string;
+      /** Format: date-time */
+      issuedAt: string;
+      /** @description Set for certificates imported from the legacy system. */
+      legacy: {
+        certificateType?: string;
+        id: string;
+        template?: string;
+      } | null;
+      organizationId: string;
+      /** @description Snapshot taken at issue time. */
+      organizationName: string;
+      ownerName: string;
+      pdfGeneratedAt: string | null;
+      /** @description Public PDF URL; null while no PDF is stored. */
+      pdfUrl: string | null;
+      /** @description Public verification page of the certificate. */
+      publicUrl: string;
+      revokeReason: string | null;
+      revokedAt: string | null;
+      skills: string[];
+      /** @enum {string} */
+      status: 'active' | 'revoked';
+      subject: string;
+      /** @description Reference (`<name>-v<n>`) of the template used. */
+      templateId: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    AdminCertificatePage: {
+      items: components['schemas']['AdminCertificateSummary'][];
+      /** @description Opaque; pass as `cursor` for the next page. */
+      nextCursor: string | null;
+    };
+    AdminCertificateSummary: {
+      /** @enum {string} */
+      emailStatus: 'pending' | 'sent' | 'failed' | 'skipped';
+      /** @description Snapshot taken at issue time. */
+      eventName: string;
+      hasEmail: boolean;
+      id: string;
+      /** Format: date-time */
+      issuedAt: string;
+      /** @description Snapshot taken at issue time. */
+      organizationName: string;
+      ownerName: string;
+      /** @enum {string} */
+      status: 'active' | 'revoked';
+      subject: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+    };
     AdminMe: {
       email: string;
       /** @description Feature flags relevant to the admin UI. */
@@ -55,6 +376,27 @@ export interface components {
       /** @constant */
       role: 'admin';
       uid: string;
+    };
+    CertificateCount: {
+      count: number;
+    };
+    CreateEventBodyInput: {
+      /**
+       * @description Language of the e-mails; default `az`.
+       * @enum {string}
+       */
+      emailLanguage?: 'az' | 'en';
+      /** @description 1 to 120 characters; plain text, escaped on output. */
+      name: string;
+      organizationId: string;
+      /** @description Optional; generated from the name. For yearly events include the year. */
+      slug?: string;
+    };
+    CreateOrganizationBodyInput: {
+      /** @description 1 to 120 characters; plain text, escaped on output. */
+      name: string;
+      /** @description Optional; generated from the name when omitted. Immutable. */
+      slug?: string;
     };
     ErrorBody: {
       error: {
@@ -67,19 +409,248 @@ export interface components {
       };
     };
     ErrorDetail: {
+      /** @description TEMPLATE_INVALID: stable code of the finding, e.g. SVG_SCRIPT. */
+      code?: string;
       /** @description IN_USE: number of referencing records per kind. */
       counts?: {
         [key: string]: number;
       };
+      /** @description TEMPLATE_INVALID: package path of the offending file. */
+      file?: string;
       message: string;
       /** @description Location of the problem in the request, e.g. items[3].email */
       path: string;
       /** @description SLUG_TAKEN: a free slug to retry with. */
       suggestion?: string;
     };
+    Event: {
+      /** Format: date-time */
+      createdAt: string;
+      /** @enum {string} */
+      emailLanguage: 'az' | 'en';
+      id: string;
+      name: string;
+      organizationId: string;
+      /** @description Current name of the organization. */
+      organizationName: string;
+      /** @description Unique within the organization; immutable. */
+      slug: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    EventPage: {
+      items: components['schemas']['Event'][];
+      /** @description Opaque; pass as `cursor` for the next page. */
+      nextCursor: string | null;
+    };
     Health: {
       /** @constant */
       status: 'ok';
+    };
+    Organization: {
+      /** Format: date-time */
+      createdAt: string;
+      id: string;
+      name: string;
+      /** @description Unique, immutable, ASCII kebab-case. */
+      slug: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    OrganizationPage: {
+      items: components['schemas']['Organization'][];
+      /** @description Opaque; pass as `cursor` for the next page. */
+      nextCursor: string | null;
+    };
+    PublicCertificate: {
+      eventName: string;
+      id: string;
+      /** Format: date-time */
+      issuedAt: string;
+      organizationName: string;
+      ownerName: string;
+      /** @description Direct PDF URL when generated; the on-demand generation endpoint when not generated yet; null when revoked. */
+      pdfUrl: string | null;
+      skills: string[];
+      /** @enum {string} */
+      status: 'active' | 'revoked';
+      subject: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+    };
+    RenameOrganizationBodyInput: {
+      /** @description 1 to 120 characters. */
+      name: string;
+    };
+    RevokeCertificateBodyInput: {
+      /** @description Plain text, 1 to 500 characters; escaped on output. */
+      reason: string;
+    };
+    RevokedCertificate: {
+      /** Format: date-time */
+      createdAt: string;
+      email: string | null;
+      emailStatus: string;
+      eventId: string;
+      eventName: string;
+      /** @description False once the PDF reference was cleared. */
+      hasPdf: boolean;
+      id: string;
+      /** Format: date-time */
+      issuedAt: string;
+      organizationId: string;
+      organizationName: string;
+      ownerName: string;
+      revokeReason: string | null;
+      revokedAt: string | null;
+      skills: string[];
+      /** @enum {string} */
+      status: 'active' | 'revoked';
+      subject: string;
+      templateId: string;
+      type: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** @description Present when the revocation succeeded but the PDF object could not be deleted; repeat the call to retry the deletion. */
+      warnings?: 'PDF_DELETE_FAILED'[];
+    };
+    Template: {
+      /** Format: date-time */
+      createdAt: string;
+      eventId: string;
+      eventSlug: string;
+      /** @description No newer version exists for the organization, event and type. */
+      isLatest: boolean;
+      organizationId: string;
+      organizationSlug: string;
+      /** @description `<orgSlug>-<eventSlug>-<type>-v<n>`; never parse it. */
+      reference: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+      version: number;
+    };
+    TemplateDetail: {
+      certificateCount: number;
+      /** @description The stored template config. */
+      config: {
+        [key: string]: unknown;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      eventId: string;
+      eventSlug: string;
+      /** @description Package files in storage, relative to the template. */
+      files: {
+        path: string;
+        /** @description Bytes. */
+        size: number;
+      }[];
+      /** @description No newer version exists for the organization, event and type. */
+      isLatest: boolean;
+      organizationId: string;
+      organizationSlug: string;
+      /** @description `<orgSlug>-<eventSlug>-<type>-v<n>`; never parse it. */
+      reference: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+      version: number;
+    };
+    TemplateIssue: {
+      /** @description Stable code, e.g. SVG_SCRIPT, FILE_NOT_FOUND. */
+      code: string;
+      file?: string;
+      message: string;
+      /** @description Config path or package file the finding belongs to. */
+      path: string;
+    };
+    TemplatePage: {
+      items: components['schemas']['Template'][];
+      /** @description Opaque; pass as `cursor` for the next page. */
+      nextCursor: string | null;
+    };
+    /** @description multipart/form-data. Besides the fields above, every other part is a package file whose **filename is its relative path** (`background.svg`, `fonts/Inter-Regular.ttf`, `assets/logo.png`); the part name is free. Limits: 30 files, 10 MB of files, 5 MB per part (fonts 3 MB), 10.5 MB per request. The part content type is ignored. */
+    TemplateUploadBodyInput: {
+      /**
+       * Format: binary
+       * @description The template config JSON: a file part named `config` or a plain text field `config`.
+       */
+      config: string;
+      /** @description ID of the event; it must belong to the organization. */
+      eventId: string;
+      /** @description ID of the organization that owns the event. */
+      organizationId: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+    } & {
+      [key: string]: string;
+    };
+    TemplateUploadResult: {
+      /** @description The stored template config. */
+      config: {
+        [key: string]: unknown;
+      };
+      /** Format: date-time */
+      createdAt: string;
+      eventId: string;
+      /** @description Stored package files including `config.json`, sorted by path. */
+      files: {
+        path: string;
+        /** @description Bytes. */
+        size: number;
+      }[];
+      organizationId: string;
+      /** @description `<orgSlug>-<eventSlug>-<type>-v<n>`; never parse it. */
+      reference: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+      version: number;
+      /** @description Advisory findings; they did not block the upload. */
+      warnings: components['schemas']['TemplateIssue'][];
+    };
+    UpdateEventBodyInput: {
+      /** @enum {string} */
+      emailLanguage?: 'az' | 'en';
+      name?: string;
     };
   };
   responses: never;
@@ -90,6 +661,781 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  listCertificates: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        eventId?: string;
+        type?:
+          | 'attendance'
+          | 'appreciation'
+          | 'thanks'
+          | 'distinction'
+          | 'instructor'
+          | 'student'
+          | 'team'
+          | 'other';
+        status?: 'active' | 'revoked';
+        emailStatus?: 'pending' | 'sent' | 'failed' | 'skipped';
+        /** @description Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time. */
+        issuedFrom?: string;
+        /** @description Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span). */
+        issuedTo?: string;
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of certificate summaries */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCertificatePage'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  countCertificates: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        eventId?: string;
+        type?:
+          | 'attendance'
+          | 'appreciation'
+          | 'thanks'
+          | 'distinction'
+          | 'instructor'
+          | 'student'
+          | 'team'
+          | 'other';
+        status?: 'active' | 'revoked';
+        emailStatus?: 'pending' | 'sent' | 'failed' | 'skipped';
+        /** @description Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time. */
+        issuedFrom?: string;
+        /** @description Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span). */
+        issuedTo?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The number of matching certificates */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CertificateCount'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getCertificate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The certificate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCertificate'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  revokeCertificate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RevokeCertificateBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The revoked certificate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RevokedCertificate'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  listEvents: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of events */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['EventPage'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  createEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateEventBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The created event */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Event'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The event */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Event'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  deleteEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': null;
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  updateEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateEventBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The updated event */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Event'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
   getAdminMe: {
     parameters: {
       query?: never;
@@ -119,6 +1465,756 @@ export interface operations {
       };
       /** @description FORBIDDEN: not allowed to perform this action */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  listOrganizations: {
+    parameters: {
+      query?: {
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of organizations */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OrganizationPage'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  createOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateOrganizationBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The created organization */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Organization'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The organization */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Organization'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  deleteOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': null;
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  renameOrganization: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RenameOrganizationBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The renamed organization */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Organization'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  listTemplates: {
+    parameters: {
+      query?: {
+        organizationId?: string;
+        eventId?: string;
+        type?:
+          | 'attendance'
+          | 'appreciation'
+          | 'thanks'
+          | 'distinction'
+          | 'instructor'
+          | 'student'
+          | 'team'
+          | 'other';
+        limit?: number;
+        cursor?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of templates */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TemplatePage'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  uploadTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['TemplateUploadBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The created template version */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TemplateUploadResult'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description PAYLOAD_TOO_LARGE */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description Well-formed request that violates a business rule (domain specific code) */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        reference: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The template */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TemplateDetail'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getPublicCertificate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The certificate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PublicCertificate'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
         headers: {
           [name: string]: unknown;
         };

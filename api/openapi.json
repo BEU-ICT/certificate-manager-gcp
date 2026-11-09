@@ -1,6 +1,210 @@
 {
   "components": {
     "schemas": {
+      "AdminCertificate": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "createdBy": {
+            "description": "Admin user ID that issued the certificate.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Only in the detail view; null when none was given.",
+            "type": ["string", "null"]
+          },
+          "emailAttempts": {
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "emailLastError": { "type": ["string", "null"] },
+          "emailSentAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "emailStatus": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" },
+          "eventId": { "type": "string" },
+          "eventName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "id": { "type": "string" },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "legacy": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "certificateType": { "type": "string" },
+                  "id": { "type": "string" },
+                  "template": { "type": "string" }
+                },
+                "required": ["id"],
+                "type": "object"
+              },
+              { "type": "null" }
+            ],
+            "description": "Set for certificates imported from the legacy system."
+          },
+          "organizationId": { "type": "string" },
+          "organizationName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "ownerName": { "type": "string" },
+          "pdfGeneratedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "pdfUrl": {
+            "description": "Public PDF URL; null while no PDF is stored.",
+            "type": ["string", "null"]
+          },
+          "publicUrl": {
+            "description": "Public verification page of the certificate.",
+            "type": "string"
+          },
+          "revokeReason": { "type": ["string", "null"] },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "skills": { "items": { "type": "string" }, "type": "array" },
+          "status": { "enum": ["active", "revoked"], "type": "string" },
+          "subject": { "type": "string" },
+          "templateId": {
+            "description": "Reference (`<name>-v<n>`) of the template used.",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "eventId",
+          "organizationName",
+          "eventName",
+          "templateId",
+          "type",
+          "ownerName",
+          "email",
+          "subject",
+          "skills",
+          "status",
+          "issuedAt",
+          "revokedAt",
+          "revokeReason",
+          "emailStatus",
+          "emailAttempts",
+          "emailSentAt",
+          "emailLastError",
+          "publicUrl",
+          "pdfUrl",
+          "pdfGeneratedAt",
+          "legacy",
+          "createdBy",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "AdminCertificatePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": { "$ref": "#/components/schemas/AdminCertificateSummary" },
+            "type": "array"
+          },
+          "nextCursor": {
+            "description": "Opaque; pass as `cursor` for the next page.",
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["items", "nextCursor"],
+        "type": "object"
+      },
+      "AdminCertificateSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "emailStatus": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" },
+          "eventName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "hasEmail": { "type": "boolean" },
+          "id": { "type": "string" },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "organizationName": { "description": "Snapshot taken at issue time.", "type": "string" },
+          "ownerName": { "type": "string" },
+          "status": { "enum": ["active", "revoked"], "type": "string" },
+          "subject": { "type": "string" },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ownerName",
+          "organizationName",
+          "eventName",
+          "type",
+          "subject",
+          "issuedAt",
+          "status",
+          "emailStatus",
+          "hasEmail"
+        ],
+        "type": "object"
+      },
       "AdminMe": {
         "additionalProperties": false,
         "properties": {
@@ -19,6 +223,50 @@
           "uid": { "type": "string" }
         },
         "required": ["uid", "email", "role", "features"],
+        "type": "object"
+      },
+      "CertificateCount": {
+        "additionalProperties": false,
+        "properties": {
+          "count": { "maximum": 9007199254740991, "minimum": -9007199254740991, "type": "integer" }
+        },
+        "required": ["count"],
+        "type": "object"
+      },
+      "CreateEventBodyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "emailLanguage": {
+            "description": "Language of the e-mails; default `az`.",
+            "enum": ["az", "en"],
+            "type": "string"
+          },
+          "name": {
+            "description": "1 to 120 characters; plain text, escaped on output.",
+            "type": "string"
+          },
+          "organizationId": { "maxLength": 128, "type": "string" },
+          "slug": {
+            "description": "Optional; generated from the name. For yearly events include the year.",
+            "type": "string"
+          }
+        },
+        "required": ["organizationId", "name"],
+        "type": "object"
+      },
+      "CreateOrganizationBodyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "1 to 120 characters; plain text, escaped on output.",
+            "type": "string"
+          },
+          "slug": {
+            "description": "Optional; generated from the name when omitted. Immutable.",
+            "type": "string"
+          }
+        },
+        "required": ["name"],
         "type": "object"
       },
       "ErrorBody": {
@@ -48,11 +296,19 @@
       "ErrorDetail": {
         "additionalProperties": false,
         "properties": {
+          "code": {
+            "description": "TEMPLATE_INVALID: stable code of the finding, e.g. SVG_SCRIPT.",
+            "type": "string"
+          },
           "counts": {
             "additionalProperties": { "type": "number" },
             "description": "IN_USE: number of referencing records per kind.",
             "propertyNames": { "type": "string" },
             "type": "object"
+          },
+          "file": {
+            "description": "TEMPLATE_INVALID: package path of the offending file.",
+            "type": "string"
           },
           "message": { "type": "string" },
           "path": {
@@ -67,10 +323,495 @@
         "required": ["path", "message"],
         "type": "object"
       },
+      "Event": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "emailLanguage": { "enum": ["az", "en"], "type": "string" },
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "organizationId": { "type": "string" },
+          "organizationName": {
+            "description": "Current name of the organization.",
+            "type": "string"
+          },
+          "slug": { "description": "Unique within the organization; immutable.", "type": "string" },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "organizationName",
+          "name",
+          "slug",
+          "emailLanguage",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "EventPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": { "items": { "$ref": "#/components/schemas/Event" }, "type": "array" },
+          "nextCursor": {
+            "description": "Opaque; pass as `cursor` for the next page.",
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["items", "nextCursor"],
+        "type": "object"
+      },
       "Health": {
         "additionalProperties": false,
         "properties": { "status": { "const": "ok", "type": "string" } },
         "required": ["status"],
+        "type": "object"
+      },
+      "Organization": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "description": "Unique, immutable, ASCII kebab-case.", "type": "string" },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "slug", "createdAt", "updatedAt"],
+        "type": "object"
+      },
+      "OrganizationPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": { "items": { "$ref": "#/components/schemas/Organization" }, "type": "array" },
+          "nextCursor": {
+            "description": "Opaque; pass as `cursor` for the next page.",
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["items", "nextCursor"],
+        "type": "object"
+      },
+      "PublicCertificate": {
+        "additionalProperties": false,
+        "properties": {
+          "eventName": { "type": "string" },
+          "id": { "type": "string" },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "organizationName": { "type": "string" },
+          "ownerName": { "type": "string" },
+          "pdfUrl": {
+            "description": "Direct PDF URL when generated; the on-demand generation endpoint when not generated yet; null when revoked.",
+            "type": ["string", "null"]
+          },
+          "skills": { "items": { "type": "string" }, "type": "array" },
+          "status": { "enum": ["active", "revoked"], "type": "string" },
+          "subject": { "type": "string" },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ownerName",
+          "organizationName",
+          "eventName",
+          "type",
+          "subject",
+          "skills",
+          "issuedAt",
+          "status",
+          "pdfUrl"
+        ],
+        "type": "object"
+      },
+      "RenameOrganizationBodyInput": {
+        "additionalProperties": false,
+        "properties": { "name": { "description": "1 to 120 characters.", "type": "string" } },
+        "required": ["name"],
+        "type": "object"
+      },
+      "RevokeCertificateBodyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "description": "Plain text, 1 to 500 characters; escaped on output.",
+            "maxLength": 4000,
+            "type": "string"
+          }
+        },
+        "required": ["reason"],
+        "type": "object"
+      },
+      "RevokedCertificate": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "email": { "type": ["string", "null"] },
+          "emailStatus": { "type": "string" },
+          "eventId": { "type": "string" },
+          "eventName": { "type": "string" },
+          "hasPdf": {
+            "description": "False once the PDF reference was cleared.",
+            "type": "boolean"
+          },
+          "id": { "type": "string" },
+          "issuedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "organizationId": { "type": "string" },
+          "organizationName": { "type": "string" },
+          "ownerName": { "type": "string" },
+          "revokeReason": { "type": ["string", "null"] },
+          "revokedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                "type": "string"
+              },
+              { "type": "null" }
+            ]
+          },
+          "skills": { "items": { "type": "string" }, "type": "array" },
+          "status": { "enum": ["active", "revoked"], "type": "string" },
+          "subject": { "type": "string" },
+          "templateId": { "type": "string" },
+          "type": { "type": "string" },
+          "updatedAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "warnings": {
+            "description": "Present when the revocation succeeded but the PDF object could not be deleted; repeat the call to retry the deletion.",
+            "items": { "const": "PDF_DELETE_FAILED", "type": "string" },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "organizationId",
+          "organizationName",
+          "eventId",
+          "eventName",
+          "templateId",
+          "type",
+          "ownerName",
+          "email",
+          "subject",
+          "skills",
+          "status",
+          "issuedAt",
+          "revokedAt",
+          "revokeReason",
+          "emailStatus",
+          "hasPdf",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "Template": {
+        "additionalProperties": false,
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "eventId": { "type": "string" },
+          "eventSlug": { "type": "string" },
+          "isLatest": {
+            "description": "No newer version exists for the organization, event and type.",
+            "type": "boolean"
+          },
+          "organizationId": { "type": "string" },
+          "organizationSlug": { "type": "string" },
+          "reference": {
+            "description": "`<orgSlug>-<eventSlug>-<type>-v<n>`; never parse it.",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          },
+          "version": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" }
+        },
+        "required": [
+          "reference",
+          "organizationId",
+          "organizationSlug",
+          "eventId",
+          "eventSlug",
+          "type",
+          "version",
+          "createdAt",
+          "isLatest"
+        ],
+        "type": "object"
+      },
+      "TemplateDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "certificateCount": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+          "config": {
+            "additionalProperties": {},
+            "description": "The stored template config.",
+            "propertyNames": { "type": "string" },
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "eventId": { "type": "string" },
+          "eventSlug": { "type": "string" },
+          "files": {
+            "description": "Package files in storage, relative to the template.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "path": { "type": "string" },
+                "size": {
+                  "description": "Bytes.",
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": ["path", "size"],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "isLatest": {
+            "description": "No newer version exists for the organization, event and type.",
+            "type": "boolean"
+          },
+          "organizationId": { "type": "string" },
+          "organizationSlug": { "type": "string" },
+          "reference": {
+            "description": "`<orgSlug>-<eventSlug>-<type>-v<n>`; never parse it.",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          },
+          "version": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" }
+        },
+        "required": [
+          "reference",
+          "organizationId",
+          "organizationSlug",
+          "eventId",
+          "eventSlug",
+          "type",
+          "version",
+          "createdAt",
+          "isLatest",
+          "config",
+          "files",
+          "certificateCount"
+        ],
+        "type": "object"
+      },
+      "TemplateIssue": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "description": "Stable code, e.g. SVG_SCRIPT, FILE_NOT_FOUND.",
+            "type": "string"
+          },
+          "file": { "type": "string" },
+          "message": { "type": "string" },
+          "path": {
+            "description": "Config path or package file the finding belongs to.",
+            "type": "string"
+          }
+        },
+        "required": ["code", "path", "message"],
+        "type": "object"
+      },
+      "TemplatePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": { "items": { "$ref": "#/components/schemas/Template" }, "type": "array" },
+          "nextCursor": {
+            "description": "Opaque; pass as `cursor` for the next page.",
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["items", "nextCursor"],
+        "type": "object"
+      },
+      "TemplateUploadBodyInput": {
+        "additionalProperties": { "format": "binary", "type": "string" },
+        "description": "multipart/form-data. Besides the fields above, every other part is a package file whose **filename is its relative path** (`background.svg`, `fonts/Inter-Regular.ttf`, `assets/logo.png`); the part name is free. Limits: 30 files, 10 MB of files, 5 MB per part (fonts 3 MB), 10.5 MB per request. The part content type is ignored.",
+        "properties": {
+          "config": {
+            "description": "The template config JSON: a file part named `config` or a plain text field `config`.",
+            "format": "binary",
+            "type": "string"
+          },
+          "eventId": {
+            "description": "ID of the event; it must belong to the organization.",
+            "type": "string"
+          },
+          "organizationId": {
+            "description": "ID of the organization that owns the event.",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          }
+        },
+        "required": ["organizationId", "eventId", "type", "config"],
+        "type": "object"
+      },
+      "TemplateUploadResult": {
+        "additionalProperties": false,
+        "properties": {
+          "config": {
+            "additionalProperties": {},
+            "description": "The stored template config.",
+            "propertyNames": { "type": "string" },
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "type": "string"
+          },
+          "eventId": { "type": "string" },
+          "files": {
+            "description": "Stored package files including `config.json`, sorted by path.",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "path": { "type": "string" },
+                "size": {
+                  "description": "Bytes.",
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              },
+              "required": ["path", "size"],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "organizationId": { "type": "string" },
+          "reference": {
+            "description": "`<orgSlug>-<eventSlug>-<type>-v<n>`; never parse it.",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "attendance",
+              "appreciation",
+              "thanks",
+              "distinction",
+              "instructor",
+              "student",
+              "team",
+              "other"
+            ],
+            "type": "string"
+          },
+          "version": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+          "warnings": {
+            "description": "Advisory findings; they did not block the upload.",
+            "items": { "$ref": "#/components/schemas/TemplateIssue" },
+            "type": "array"
+          }
+        },
+        "required": [
+          "reference",
+          "organizationId",
+          "eventId",
+          "type",
+          "version",
+          "createdAt",
+          "config",
+          "files",
+          "warnings"
+        ],
+        "type": "object"
+      },
+      "UpdateEventBodyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "emailLanguage": { "enum": ["az", "en"], "type": "string" },
+          "name": { "type": "string" }
+        },
         "type": "object"
       }
     },
@@ -90,6 +831,705 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/certificates": {
+      "get": {
+        "description": "Filters are ANDed. Summaries never contain the e-mail address (only `hasEmail`). Ordered by `issuedAt` descending, then `id` descending.",
+        "operationId": "listCertificates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "eventId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "enum": [
+                "attendance",
+                "appreciation",
+                "thanks",
+                "distinction",
+                "instructor",
+                "student",
+                "team",
+                "other"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": { "enum": ["active", "revoked"], "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "emailStatus",
+            "required": false,
+            "schema": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" }
+          },
+          {
+            "description": "Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time.",
+            "in": "query",
+            "name": "issuedFrom",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          },
+          {
+            "description": "Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span).",
+            "in": "query",
+            "name": "issuedTo",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": { "maximum": 50, "minimum": 1, "type": "integer" }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": { "maxLength": 512, "minLength": 1, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminCertificatePage" }
+              }
+            },
+            "description": "A page of certificate summaries"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "List certificates (newest first, cursor pagination, filters)"
+      }
+    },
+    "/api/v1/admin/certificates/count": {
+      "get": {
+        "description": "Uses the native aggregation query: one read per 1,000 index entries, no documents are read.",
+        "operationId": "countCertificates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "eventId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "enum": [
+                "attendance",
+                "appreciation",
+                "thanks",
+                "distinction",
+                "instructor",
+                "student",
+                "team",
+                "other"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": { "enum": ["active", "revoked"], "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "emailStatus",
+            "required": false,
+            "schema": { "enum": ["pending", "sent", "failed", "skipped"], "type": "string" }
+          },
+          {
+            "description": "Inclusive lower bound: `YYYY-MM-DD` (start of that UTC day) or an ISO date-time.",
+            "in": "query",
+            "name": "issuedFrom",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          },
+          {
+            "description": "Upper bound: `YYYY-MM-DD` includes that whole UTC day; an ISO date-time is exclusive. Must not precede `issuedFrom`; the range spans at most 5 years (a date-only value counts a whole day in that span).",
+            "in": "query",
+            "name": "issuedTo",
+            "required": false,
+            "schema": { "maxLength": 40, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CertificateCount" } }
+            },
+            "description": "The number of matching certificates"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Count certificates matching the filters"
+      }
+    },
+    "/api/v1/admin/certificates/{id}": {
+      "get": {
+        "description": "All fields including the e-mail address, `publicUrl` and `pdfUrl`. Malformed and unknown ids both yield 404. The storage object name (`pdfPath`) is never returned.",
+        "operationId": "getCertificate",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminCertificate" } }
+            },
+            "description": "The certificate"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Get a certificate (admin detail)"
+      }
+    },
+    "/api/v1/admin/certificates/{id}/revoke": {
+      "post": {
+        "description": "Idempotent. An active certificate becomes `revoked` (reason and time stored) and its PDF is deleted. Repeating the call returns the current state with `200`; the original reason is kept and a different `reason` is ignored. If the PDF could not be deleted the response is still `200` with `warnings: [\"PDF_DELETE_FAILED\"]`; repeating the call retries the deletion. There is no un-revoke: re-issue instead.",
+        "operationId": "revokeCertificate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 512, "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RevokeCertificateBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RevokedCertificate" }
+              }
+            },
+            "description": "The revoked certificate"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Revoke a certificate"
+      }
+    },
+    "/api/v1/admin/events": {
+      "get": {
+        "operationId": "listEvents",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": { "maximum": 50, "minimum": 1, "type": "integer" }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": { "maxLength": 512, "minLength": 1, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/EventPage" } }
+            },
+            "description": "A page of events"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "List events (newest first, cursor pagination)"
+      },
+      "post": {
+        "description": "The slug is generated from the name when omitted and is unique within the organization. A taken slug yields 409 with `details[0].suggestion`. An unknown organization yields 404 with `details[0].path = organizationId`.",
+        "operationId": "createEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateEventBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Event" } }
+            },
+            "description": "The created event"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Create an event"
+      }
+    },
+    "/api/v1/admin/events/{id}": {
+      "delete": {
+        "description": "Hard delete. Fails with 409 `IN_USE` and per-kind `counts` while templates or certificates reference it.",
+        "operationId": "deleteEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 128, "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": { "application/json": { "schema": { "type": "null" } } },
+            "description": "Deleted"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Delete an unreferenced event"
+      },
+      "get": {
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 128, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Event" } }
+            },
+            "description": "The event"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Get an event"
+      },
+      "patch": {
+        "description": "At least one of `name`, `emailLanguage`. The slug and the organization are immutable (rejected with 400).",
+        "operationId": "updateEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 128, "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateEventBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Event" } }
+            },
+            "description": "The updated event"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Update the name and/or e-mail language of an event"
+      }
+    },
     "/api/v1/admin/me": {
       "get": {
         "description": "Requires a Firebase ID token with the `role=admin` claim.",
@@ -134,6 +1574,605 @@
         },
         "security": [{ "bearerAuth": [] }],
         "summary": "Current administrator"
+      }
+    },
+    "/api/v1/admin/organizations": {
+      "get": {
+        "operationId": "listOrganizations",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": { "maximum": 50, "minimum": 1, "type": "integer" }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": { "maxLength": 512, "minLength": 1, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/OrganizationPage" } }
+            },
+            "description": "A page of organizations"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "List organizations (by name, cursor pagination)"
+      },
+      "post": {
+        "description": "The slug is generated from the name when omitted. A taken slug yields 409 with `details[0].suggestion`; the server never appends a suffix silently.",
+        "operationId": "createOrganization",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateOrganizationBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Organization" } }
+            },
+            "description": "The created organization"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Create an organization"
+      }
+    },
+    "/api/v1/admin/organizations/{id}": {
+      "delete": {
+        "description": "Hard delete. Fails with 409 `IN_USE` and per-kind `counts` while events, templates or certificates reference it.",
+        "operationId": "deleteOrganization",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 128, "type": "string" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": { "application/json": { "schema": { "type": "null" } } },
+            "description": "Deleted"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Delete an unreferenced organization"
+      },
+      "get": {
+        "operationId": "getOrganization",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 128, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Organization" } }
+            },
+            "description": "The organization"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Get an organization"
+      },
+      "patch": {
+        "description": "Only `name` can change. The slug is immutable (a `slug` property is rejected with 400) and existing certificates keep their snapshot.",
+        "operationId": "renameOrganization",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 128, "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RenameOrganizationBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Organization" } }
+            },
+            "description": "The renamed organization"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Rename an organization"
+      }
+    },
+    "/api/v1/admin/templates": {
+      "get": {
+        "description": "Filters `organizationId`, `eventId`, `type` combine with AND; an unknown organization or event yields an empty page.",
+        "operationId": "listTemplates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "organizationId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "eventId",
+            "required": false,
+            "schema": { "maxLength": 128, "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "enum": [
+                "attendance",
+                "appreciation",
+                "thanks",
+                "distinction",
+                "instructor",
+                "student",
+                "team",
+                "other"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": { "maximum": 50, "minimum": 1, "type": "integer" }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": { "maxLength": 512, "minLength": 1, "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TemplatePage" } }
+            },
+            "description": "A page of templates"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "List template versions (newest first, cursor pagination)"
+      },
+      "post": {
+        "description": "Creates the next version for the organization, event and type and generates the reference. Nothing is stored unless the whole package is valid. `422 TEMPLATE_INVALID` lists every finding in `error.details[]` as `{ code, path, file?, message }`; `422 EVENT_ORG_MISMATCH` means the event belongs to another organization. Existing versions are never overwritten.",
+        "operationId": "uploadTemplate",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/TemplateUploadBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TemplateUploadResult" }
+              }
+            },
+            "description": "The created template version"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "413": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "PAYLOAD_TOO_LARGE"
+          },
+          "422": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "Well-formed request that violates a business rule (domain specific code)"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Upload a template package (creates the next version)"
+      }
+    },
+    "/api/v1/admin/templates/{reference}": {
+      "get": {
+        "description": "Unknown and malformed references are both 404.",
+        "operationId": "getTemplate",
+        "parameters": [
+          { "in": "path", "name": "reference", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/TemplateDetail" } }
+            },
+            "description": "The template"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Get a template version with config, files and certificate count"
+      }
+    },
+    "/api/v1/public/certificates/{id}": {
+      "get": {
+        "description": "Public. A malformed and an unknown ID return the same 404. Revoked certificates keep their public fields with `status: \"revoked\"` and `pdfUrl: null`; the revocation reason and time are never public. Always revalidated (`Cache-Control: no-cache`).",
+        "operationId": "getPublicCertificate",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PublicCertificate" } }
+            },
+            "description": "The certificate"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "summary": "Verify a certificate by ID"
       }
     },
     "/internal/healthz": {

@@ -61,6 +61,7 @@ export function buildServices(
     ports.storage,
     ports.clock,
     templateCertificateCounter,
+    options.logger,
   );
   organizationReferences.register({
     name: 'templates',
