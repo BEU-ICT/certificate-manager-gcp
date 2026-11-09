@@ -13,6 +13,7 @@ export {
 } from './schemas.js';
 export { parseCertificateId } from '../../shared/ids.js';
 export { DefaultCertificateService, type CertificateService } from './service.js';
+export { DefaultCertificateQueryService, type CertificateQueryService } from './query-service.js';
 export {
   DefaultRevocationService,
   PDF_DELETE_FAILED,
