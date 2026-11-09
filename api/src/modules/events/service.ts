@@ -54,6 +54,8 @@ export interface EventService {
   exists(id: string): Promise<boolean>;
   getSnapshot(id: string): Promise<EventSnapshot>;
   countByOrganization(organizationId: string): Promise<number>;
+  /** Total number of events (native count, never reads documents). */
+  count(): Promise<number>;
 }
 
 const SUGGESTION_ATTEMPTS = 20;
@@ -152,6 +154,10 @@ export class DefaultEventService implements EventService {
   async getSnapshot(id: string): Promise<EventSnapshot> {
     const event = await this.get(id);
     return { id: event.id, name: event.name, organizationId: event.organizationId };
+  }
+
+  count(): Promise<number> {
+    return this.repository.count();
   }
 
   countByOrganization(organizationId: string): Promise<number> {

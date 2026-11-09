@@ -95,6 +95,8 @@ export interface TemplateService {
   ): Promise<Page<Template>>;
   countByEvent(eventId: string): Promise<number>;
   countByOrganization(organizationId: string): Promise<number>;
+  /** Total number of templates (native count, never reads documents). */
+  count(): Promise<number>;
   /** Like `list`, with `isLatest` from one `maxVersion` lookup per (organization, event, type) group on the page. */
   listWithLatest(
     filter?: { organizationId?: string; eventId?: string; type?: string },
@@ -239,6 +241,10 @@ export class DefaultTemplateService implements TemplateService {
     }
     if (filter.type !== undefined) scoped.type = filter.type;
     return this.repository.list(scoped, page);
+  }
+
+  count(): Promise<number> {
+    return this.repository.count();
   }
 
   countByEvent(eventId: string): Promise<number> {

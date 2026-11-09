@@ -30,6 +30,8 @@ export interface OrganizationService {
   /** `InUseError` (409, with counts) while any registered module still references it. */
   delete(id: string): Promise<void>;
   exists(id: string): Promise<boolean>;
+  /** Total number of organizations (native count, never reads documents). */
+  count(): Promise<number>;
   /** Name for embedding in other records (snapshot at issue time). */
   getSnapshotName(id: string): Promise<string>;
   /** Names of the existing organizations among `ids`, one batched read. */
@@ -99,6 +101,10 @@ export class DefaultOrganizationService implements OrganizationService {
 
   async exists(id: string): Promise<boolean> {
     return isOrganizationId(id) && (await this.repository.getById(id)) !== null;
+  }
+
+  count(): Promise<number> {
+    return this.repository.count();
   }
 
   async getSnapshotName(id: string): Promise<string> {

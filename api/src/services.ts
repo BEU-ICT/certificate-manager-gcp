@@ -12,6 +12,7 @@ import {
   type AssetsLogger,
   type TemplateCertificateCounter,
 } from './modules/templates/index.js';
+import { DefaultStatsService } from './modules/stats/index.js';
 import { ReferenceCheckRegistry } from './shared/references.js';
 import type { EventId, OrganizationId } from './shared/ids.js';
 import type { Ports, Services } from './wiring.js';
@@ -21,6 +22,8 @@ export interface ServiceOptions {
   templateCacheMb?: number;
   /** Receives the template load metrics. */
   logger?: AssetsLogger;
+  /** `STATS_CACHE_SECONDS`: per-instance cache of the admin statistics (default 60). */
+  statsCacheSeconds?: number;
 }
 
 /**
@@ -83,6 +86,7 @@ export function buildServices(
     maxBytes: Math.floor((options.templateCacheMb ?? DEFAULT_TEMPLATE_CACHE_MB) * 1024 * 1024),
     ...(options.logger ? { logger: options.logger } : {}),
   });
+  const certificateQueries = new DefaultCertificateQueryService(ports.certificates);
   const revocation = new DefaultRevocationService(
     ports.certificates,
     ports.storage,
@@ -97,7 +101,18 @@ export function buildServices(
     templates,
     templateAssets,
     certificates: new DefaultCertificateService(ports.certificates),
-    certificateQueries: new DefaultCertificateQueryService(ports.certificates),
+    certificateQueries,
     revocation,
+    stats: new DefaultStatsService(
+      {
+        certificates: certificateQueries,
+        organizations,
+        events,
+        templates,
+      },
+      ports.clock,
+      ports.rateLimiter,
+      options.statsCacheSeconds ?? 60,
+    ),
   };
 }
