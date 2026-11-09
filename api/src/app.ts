@@ -10,9 +10,11 @@ import { createFeatureFlags, parseFlags, type FeatureFlags } from './flags.js';
 import { adminEventRoutes } from './http/routes/admin-events.js';
 import { adminOrganizationRoutes } from './http/routes/admin-organizations.js';
 import { adminTemplateRoutes } from './http/routes/admin-templates.js';
+import { adminCertificateRevocationRoutes } from './http/routes/admin-certificate-revocation.js';
 import { adminMeRoutes } from './http/routes/admin-me.js';
 import { publicCertificateRoutes } from './http/routes/public-certificates.js';
 import type { PublicUrls } from './http/dto/public/certificate.js';
+import { adminCertificateRoutes } from './http/routes/admin-certificates.js';
 import { buildServices } from './services.js';
 import type { Ports, Services } from './wiring.js';
 
@@ -76,6 +78,8 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     adminEventRoutes(app, services);
     adminTemplateRoutes(app, services);
     publicCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
+    adminCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
+    adminCertificateRevocationRoutes(app, services);
   }
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 
