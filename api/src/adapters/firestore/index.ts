@@ -5,6 +5,7 @@ import { SystemClock } from '../system/clock.js';
 import type { AdapterContext } from '../registry.js';
 import { FirestoreCertificateRepository } from './certificate-repository.js';
 import { FirestoreEventRepository } from './event-repository.js';
+import { FirestoreIdempotencyStore } from './idempotency-store.js';
 import { FirestoreMigrationStateStore } from './migration-state-store.js';
 import { FirestoreOrganizationRepository } from './organization-repository.js';
 import { FirestoreTemplateRepository } from './template-repository.js';
@@ -25,5 +26,6 @@ export function createRepositories({ config }: AdapterContext): RepositoryPorts 
     templates: new FirestoreTemplateRepository(db),
     certificates: new FirestoreCertificateRepository(db),
     migrationState: new FirestoreMigrationStateStore(db, new SystemClock()),
+    idempotency: new FirestoreIdempotencyStore(db, new SystemClock()),
   };
 }

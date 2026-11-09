@@ -5,6 +5,7 @@ import { FakeEmailSender } from './fake-email-sender.js';
 import { FakeEventBus } from './fake-event-bus.js';
 import { FakeEventRepository } from './fake-event-repository.js';
 import { FakeIdGenerator } from './fake-id-generator.js';
+import { FakeIdempotencyStore } from './fake-idempotency-store.js';
 import { FakeMigrationStateStore } from './fake-migration-state-store.js';
 import { FakeOrganizationRepository } from './fake-organization-repository.js';
 import { FakeRateLimiter } from './fake-rate-limiter.js';
@@ -25,6 +26,7 @@ export function createFakes() {
     templates: new FakeTemplateRepository(),
     certificates: new FakeCertificateRepository(),
     migrationState: new FakeMigrationStateStore(clock),
+    idempotency: new FakeIdempotencyStore(clock),
     storage: new FakeStorageGateway(),
     taskQueue: new FakeTaskQueue(),
     scheduler: new FakeScheduler(),
