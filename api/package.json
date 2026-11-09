@@ -28,6 +28,7 @@
     "test:integration": "firebase emulators:exec --only firestore,auth --project demo-certificate-manager \"vitest run --config vitest.integration.config.ts\""
   },
   "dependencies": {
+    "@fastify/multipart": "^10.1.8",
     "@fastify/swagger": "^9.9.3",
     "fastify": "^5.12.8",
     "fastify-type-provider-zod": "^7.0.0",
