@@ -11,6 +11,8 @@ import { adminEventRoutes } from './http/routes/admin-events.js';
 import { adminOrganizationRoutes } from './http/routes/admin-organizations.js';
 import { adminTemplateRoutes } from './http/routes/admin-templates.js';
 import { adminMeRoutes } from './http/routes/admin-me.js';
+import { publicCertificateRoutes } from './http/routes/public-certificates.js';
+import type { PublicUrls } from './http/dto/public/certificate.js';
 import { buildServices } from './services.js';
 import type { Ports, Services } from './wiring.js';
 
@@ -26,10 +28,16 @@ export interface AppDeps {
   flags?: FeatureFlags;
   /** Pre-authentication requests per minute and IP on admin routes (config.rateLimit.adminPerMin). */
   adminRateLimitPerMin?: number;
+  /** Bases for public PDF links (config.publicBaseUrl / pdfPublicBaseUrl); defaults to the local-dev values. */
+  publicUrls?: PublicUrls;
 }
 
 const BODY_LIMIT_BYTES = 1024 * 1024;
 const TRUSTED_PROXY_HOPS = 1;
+const DEFAULT_PUBLIC_URLS: PublicUrls = {
+  publicBaseUrl: 'http://localhost:5173',
+  pdfPublicBaseUrl: 'http://localhost:8080',
+};
 
 /** Pure factory: no side effects at import time, no environment access. */
 export function buildApp(deps: AppDeps = {}): FastifyInstance {
@@ -67,6 +75,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     adminOrganizationRoutes(app, services);
     adminEventRoutes(app, services);
     adminTemplateRoutes(app, services);
+    publicCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
   }
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 
