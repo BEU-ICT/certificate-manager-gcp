@@ -102,8 +102,7 @@ describe('admin guard', () => {
   });
 
   it('matrix: every admin route rejects missing, malformed and non-admin credentials', async () => {
-    // The matrix makes four calls per route; keep the pre-auth throttle out of the way.
-    const { app } = appWithProbe({ perMin: 10_000 });
+    const { app } = appWithProbe({ perMin: 10_000 }); // 4 calls per route must stay below the IP throttle;
     let count = 0;
     await forEachAdminRoute(app, async (route) => {
       count++;
