@@ -27,3 +27,7 @@ Collection `certificates` with indexes `(type, issuedAt desc)`, `(status, issued
 ## Non-goals
 
 PDF rendering and storage (see `pdf`) and e-mail delivery (see `notifications`); both react to the events above.
+
+## Revocation (`revocation.ts`)
+
+`RevocationService.revoke(id, reason)` (`POST /api/v1/admin/certificates/:id/revoke`, ADR 0010): `markRevoked` (only `active -> revoked`), then, after the commit, `StorageGateway.delete('pdfs', pdfPath)` (a missing object is success), `clearPdfPath`, and `certificate.revoked` (published only by the call that revoked). Idempotent: repeating the call answers `200`, keeps the original reason (a different one is ignored) and retries a deletion that left `pdfPath` set. A failed deletion yields `200` with `warnings: ["PDF_DELETE_FAILED"]` and an ERROR log with the certificate ID (alert-worthy). No un-revoke exists: re-issue instead.

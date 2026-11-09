@@ -1,4 +1,5 @@
 import { DefaultCertificateService } from './modules/certificates/index.js';
+import { DefaultRevocationService } from './modules/certificates/index.js';
 import { DefaultEventService } from './modules/events/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
 import {
@@ -79,6 +80,12 @@ export function buildServices(
     maxBytes: Math.floor((options.templateCacheMb ?? DEFAULT_TEMPLATE_CACHE_MB) * 1024 * 1024),
     ...(options.logger ? { logger: options.logger } : {}),
   });
+  const revocation = new DefaultRevocationService(
+    ports.certificates,
+    ports.storage,
+    ports.clock,
+    ports.eventBus,
+  );
   return {
     organizations,
     organizationReferences,
@@ -87,5 +94,6 @@ export function buildServices(
     templates,
     templateAssets,
     certificates: new DefaultCertificateService(ports.certificates),
+    revocation,
   };
 }
