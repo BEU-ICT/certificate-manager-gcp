@@ -10,6 +10,11 @@ export const ErrorDetailDto = z
       .record(z.string(), z.number())
       .optional()
       .describe('IN_USE: number of referencing records per kind.'),
+    code: z
+      .string()
+      .optional()
+      .describe('TEMPLATE_INVALID: stable code of the finding, e.g. SVG_SCRIPT.'),
+    file: z.string().optional().describe('TEMPLATE_INVALID: package path of the offending file.'),
   })
   .meta({ id: 'ErrorDetail' });
 

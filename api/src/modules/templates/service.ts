@@ -18,6 +18,7 @@ import {
   type OrganizationId,
 } from '../../shared/ids.js';
 import { SCHEMA_VERSION } from '../../shared/schema-version.js';
+import type { AssetsLogger } from './assets.js';
 import type { TemplateConfig } from './config.js';
 import { NO_CERTIFICATES, type TemplateCertificateCounter } from './certificate-counter.js';
 import { buildTemplateReference } from './reference.js';
@@ -113,6 +114,13 @@ const FILE_RULES: readonly { pattern: RegExp; contentType: (path: string) => str
   },
 ];
 
+/** Why `path` cannot be stored in a template package, or `undefined` when it can. */
+export function packageLayoutProblem(path: string): string | undefined {
+  return FILE_RULES.some((r) => r.pattern.test(path))
+    ? undefined
+    : 'Must be background.svg, fonts/<name>.ttf or assets/<name>.png|jpg|jpeg';
+}
+
 function putOptions(path: string): PutOptions {
   const rule = FILE_RULES.find((r) => r.pattern.test(path));
   if (!rule) {
@@ -123,6 +131,7 @@ function putOptions(path: string): PutOptions {
       },
     ]);
   }
+  // The content type comes from the path, never from the client's multipart header.
   return { contentType: rule.contentType(path) };
 }
 
@@ -132,6 +141,7 @@ export class DefaultTemplateService implements TemplateService {
     private readonly storage: StorageGateway,
     private readonly clock: Clock,
     private readonly certificateCounter: TemplateCertificateCounter = NO_CERTIFICATES,
+    private readonly logger?: AssetsLogger,
   ) {}
 
   async nextReference(target: TemplateTarget, minVersion = 0): Promise<NextReference> {
@@ -203,7 +213,18 @@ export class DefaultTemplateService implements TemplateService {
         // A document already exists for this reference: its files are the winner's, keep them.
         if (error instanceof ConflictError) continue;
         // Best effort: do not leave an unreferenced package behind.
-        await Promise.allSettled(keys.map((key) => this.storage.delete(TEMPLATES_BUCKET, key)));
+        const cleanup = await Promise.allSettled(
+          keys.map((key) => this.storage.delete(TEMPLATES_BUCKET, key)),
+        );
+        // Orphans are harmless but must be visible: no document exists for this reference.
+        this.logger?.error(
+          {
+            reference,
+            storedObjects: keys.length,
+            leakedObjects: cleanup.filter((r) => r.status === 'rejected').length,
+          },
+          'template publish failed after objects were stored; cleanup attempted',
+        );
         throw error;
       }
     }

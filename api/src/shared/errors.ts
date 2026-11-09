@@ -6,6 +6,10 @@ export interface ErrorDetail {
   suggestion?: string;
   /** Reference counts for `IN_USE`, e.g. `{ events: 2, certificates: 10 }`. */
   counts?: Record<string, number>;
+  /** `TEMPLATE_INVALID`: stable machine-readable code of the finding, e.g. `SVG_SCRIPT`. */
+  code?: string;
+  /** `TEMPLATE_INVALID`: package path of the offending file. */
+  file?: string;
 }
 
 /**

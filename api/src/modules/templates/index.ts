@@ -39,6 +39,7 @@ export {
 export {
   DefaultTemplateService,
   MAX_REFERENCE_RETRIES,
+  packageLayoutProblem,
   type NextReference,
   type PublishTemplateInput,
   type TemplateFile,
@@ -65,3 +66,4 @@ export {
 } from './package-issues.js';
 export { NO_CERTIFICATES, type TemplateCertificateCounter } from './certificate-counter.js';
 export type { TemplateDetail, TemplateListItem } from './service.js';
+export { checkTemplateUpload, type CheckedTemplateUpload } from './upload.js';
