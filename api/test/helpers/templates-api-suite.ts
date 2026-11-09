@@ -188,7 +188,7 @@ export function describeTemplatesApi(name: string, makePorts: () => Promise<Fake
         });
         expect([none.statusCode, user.statusCode]).toEqual([401, 403]);
       });
-      expect(seen).toBe(2);
+      expect(seen).toBe(3);
     });
   });
 }

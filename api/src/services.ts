@@ -64,6 +64,7 @@ export function buildServices(
     ports.storage,
     ports.clock,
     templateCertificateCounter,
+    options.logger,
   );
   organizationReferences.register({
     name: 'templates',
@@ -101,6 +102,7 @@ export function buildServices(
     templates,
     templateAssets,
     certificates: new DefaultCertificateService(ports.certificates),
+    idempotency: ports.idempotency,
     certificateQueries,
     revocation,
     stats: new DefaultStatsService(

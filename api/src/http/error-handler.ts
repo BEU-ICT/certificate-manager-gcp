@@ -85,6 +85,14 @@ export function errorHandler(
     }));
     return send(request, reply, 400, 'VALIDATION_FAILED', 'Request validation failed', details);
   }
+  // FST_ERR_HANDLER_TIMEOUT is raised by Fastify 5.x for a route's handlerTimeout.
+  if ((error as { code?: unknown } | null)?.code === 'FST_ERR_HANDLER_TIMEOUT') {
+    // The route's handlerTimeout fired (e.g. a slow template upload): retryable.
+    request.log.warn({ code: 'UNAVAILABLE', status: 503 }, 'request timed out');
+    return send(request, reply, 503, 'UNAVAILABLE', 'The request took too long', undefined, {
+      'retry-after': '5',
+    });
+  }
   if (isFastifyClientError(error)) {
     request.log.warn({ code: error.code, status: error.statusCode }, 'request rejected');
     if (error.statusCode === 413) {

@@ -3,6 +3,7 @@ import { AdapterError, type AdapterFactory, type Registries } from '../registry.
 import { FakeCertificateRepository } from '../../testing/fakes/fake-certificate-repository.js';
 import { FakeEmailSender } from '../../testing/fakes/fake-email-sender.js';
 import { FakeEventRepository } from '../../testing/fakes/fake-event-repository.js';
+import { FakeIdempotencyStore } from '../../testing/fakes/fake-idempotency-store.js';
 import { FakeMigrationStateStore } from '../../testing/fakes/fake-migration-state-store.js';
 import { FakeOrganizationRepository } from '../../testing/fakes/fake-organization-repository.js';
 import { FakeScheduler } from '../../testing/fakes/fake-scheduler.js';
@@ -33,6 +34,7 @@ export function registerMemoryAdapters(r: Registries): void {
     templates: new FakeTemplateRepository(),
     certificates: new FakeCertificateRepository(),
     migrationState: new FakeMigrationStateStore(new SystemClock()),
+    idempotency: new FakeIdempotencyStore(new SystemClock()),
   }));
   r.storage.register('memory', () => new FakeStorageGateway());
   r.queue.register('in-process', () => ({

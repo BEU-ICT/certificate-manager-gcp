@@ -219,3 +219,17 @@ describe('central error handler', () => {
     expect(res.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
   });
 });
+
+describe('route handler timeout', () => {
+  it('is answered 503 UNAVAILABLE with Retry-After', async () => {
+    app = buildApp();
+    app.get('/slow', { handlerTimeout: 20 }, async () => {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return {};
+    });
+    const res = await app.inject({ method: 'GET', url: '/slow' });
+    expect(res.statusCode).toBe(503);
+    expect(res.headers['retry-after']).toBe('5');
+    expect(res.json<{ error: { code: string } }>().error.code).toBe('UNAVAILABLE');
+  });
+});

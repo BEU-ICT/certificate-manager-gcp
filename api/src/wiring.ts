@@ -16,6 +16,7 @@ import type {
   EventBus,
   EventRepository,
   IdGenerator,
+  IdempotencyStore,
   MigrationStateStore,
   OrganizationRepository,
   RateLimiter,
@@ -39,6 +40,7 @@ export interface RepositoryPorts {
   readonly templates: TemplateRepository;
   readonly certificates: CertificateRepository;
   readonly migrationState: MigrationStateStore;
+  readonly idempotency: IdempotencyStore;
 }
 
 /** Result of the `QUEUE_ADAPTER` selection. */
@@ -63,6 +65,7 @@ export interface Ports {
   templates: TemplateRepository;
   certificates: CertificateRepository;
   migrationState: MigrationStateStore;
+  idempotency: IdempotencyStore;
   storage: StorageGateway;
   taskQueue: TaskQueue;
   scheduler: Scheduler;
@@ -89,6 +92,8 @@ export interface Services {
   readonly templateAssets: TemplateAssets;
   /** Certificates module (public lookup now; issuance and admin APIs follow in the certificates epic). */
   readonly certificates: CertificateService;
+  /** Idempotency-Key records for `withIdempotency` (http/idempotency.ts). */
+  readonly idempotency: IdempotencyStore;
   /** Admin read side of certificates: list, count, detail (certificates module). */
   readonly certificateQueries: CertificateQueryService;
   /** Certificate revocation (certificates module). */

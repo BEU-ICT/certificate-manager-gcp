@@ -23,6 +23,11 @@ export {
   type MigrationStateStoreContractFactory,
 } from './migration-state-store.js';
 export {
+  describeIdempotencyStoreContract,
+  type IdempotencyStoreContractFactory,
+  type IdempotencyStoreHandle,
+} from './idempotency-store.js';
+export {
   describeTokenVerifierContract,
   type TokenVerifierContractFactory,
   type TokenVerifierHandle,
