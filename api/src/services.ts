@@ -1,3 +1,4 @@
+import { DefaultCertificateService } from './modules/certificates/index.js';
 import { DefaultEventService } from './modules/events/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
 import {
@@ -85,5 +86,6 @@ export function buildServices(
     eventReferences,
     templates,
     templateAssets,
+    certificates: new DefaultCertificateService(ports.certificates),
   };
 }

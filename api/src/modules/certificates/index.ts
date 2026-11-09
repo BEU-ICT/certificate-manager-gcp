@@ -12,3 +12,4 @@ export {
   subjectSchema,
 } from './schemas.js';
 export { parseCertificateId } from '../../shared/ids.js';
+export { DefaultCertificateService, type CertificateService } from './service.js';

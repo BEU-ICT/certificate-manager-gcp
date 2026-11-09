@@ -32,6 +32,7 @@ const app = buildApp({
   openApiEndpoint: config.flags.openApiEndpoint,
   flags: createFeatureFlags(config.flags),
   adminRateLimitPerMin: config.rateLimit.adminPerMin,
+  publicUrls: { publicBaseUrl: config.publicBaseUrl, pdfPublicBaseUrl: config.pdfPublicBaseUrl },
 });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
