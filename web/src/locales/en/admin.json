@@ -412,6 +412,28 @@
       "notFoundBody": "No certificate has this ID. It may have been mistyped.",
       "openPublic": "Open public page",
       "revoke": "Revoke",
+      "revokeDialog": {
+        "title": "Revoke certificate",
+        "consequences": "The public page will show the certificate as revoked, the PDF will be deleted. This cannot be undone.",
+        "reasonLabel": "Reason for revocation",
+        "reasonHint": "Plain text, shown to administrators only.",
+        "counter": "{{count}} / {{max}}",
+        "reasonRequired": "Enter a reason.",
+        "reasonTooLong": "The reason must be at most {{max}} characters.",
+        "understand": "I understand",
+        "understandRequired": "Confirm that you understand.",
+        "cancel": "Cancel",
+        "submit": "Revoke certificate",
+        "toast": "Certificate revoked.",
+        "notFound": "This certificate no longer exists."
+      },
+      "pdfWarning": {
+        "title": "The certificate is revoked, but the PDF could not be deleted",
+        "body": "The PDF file may still be reachable by anyone who knows its address. Retry the cleanup.",
+        "retry": "Retry cleanup",
+        "stillFailed": "Cleanup failed again. The PDF may still be reachable; try again later.",
+        "done": "PDF deleted."
+      },
       "resend": "Resend email",
       "actionSoon": "Coming soon.",
       "recipient": "Recipient",

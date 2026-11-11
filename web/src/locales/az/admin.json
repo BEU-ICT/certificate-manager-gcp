@@ -412,6 +412,28 @@
       "notFoundBody": "Bu ID ilə sertifikat yoxdur. ID səhv yazılmış ola bilər.",
       "openPublic": "İctimai səhifəni aç",
       "revoke": "Ləğv et",
+      "revokeDialog": {
+        "title": "Sertifikatı ləğv et",
+        "consequences": "İctimai səhifə sertifikatı ləğv edilmiş kimi göstərəcək, PDF silinəcək. Bu əməliyyatı geri qaytarmaq olmaz.",
+        "reasonLabel": "Ləğv səbəbi",
+        "reasonHint": "Sadə mətn, yalnız administratorlara göstərilir.",
+        "counter": "{{count}} / {{max}}",
+        "reasonRequired": "Səbəbi daxil edin.",
+        "reasonTooLong": "Səbəb ən çox {{max}} simvol ola bilər.",
+        "understand": "Başa düşürəm",
+        "understandRequired": "Başa düşdüyünüzü təsdiqləyin.",
+        "cancel": "Bağla",
+        "submit": "Sertifikatı ləğv et",
+        "toast": "Sertifikat ləğv edildi.",
+        "notFound": "Bu sertifikat artıq mövcud deyil."
+      },
+      "pdfWarning": {
+        "title": "Sertifikat ləğv edildi, lakin PDF silinmədi",
+        "body": "PDF faylı ünvanını bilən hər kəs üçün hələ də əlçatan ola bilər. Təmizləməni təkrar cəhd edin.",
+        "retry": "Təmizləməni təkrarla",
+        "stillFailed": "Təmizləmə yenə alınmadı. PDF hələ də əlçatan ola bilər; sonra təkrar cəhd edin.",
+        "done": "PDF silindi."
+      },
       "resend": "E-poçtu yenidən göndər",
       "actionSoon": "Tezliklə əlçatan olacaq.",
       "recipient": "Sahib",
