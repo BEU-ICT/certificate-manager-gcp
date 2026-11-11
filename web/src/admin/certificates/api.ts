@@ -61,3 +61,16 @@ export function useCertificateCount(filters: CertificateFilters, enabled = true)
     enabled,
   });
 }
+
+export type CertificateDetail = components['schemas']['AdminCertificate'];
+
+/** One certificate with every field (including the e-mail address); 404 for malformed and unknown IDs. */
+export function useCertificate(id: string, enabled = true) {
+  return useQuery<CertificateDetail, ApiError>({
+    queryKey: [...CERTIFICATES_KEY, 'detail', id],
+    queryFn: ({ signal }) =>
+      api().get<CertificateDetail>(`${BASE}/${encodeURIComponent(id)}`, { signal }),
+    staleTime: STALE_TIME.detail,
+    enabled,
+  });
+}
