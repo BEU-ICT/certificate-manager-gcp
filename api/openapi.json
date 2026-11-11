@@ -225,6 +225,70 @@
         "required": ["uid", "email", "role", "features"],
         "type": "object"
       },
+      "AdminStats": {
+        "additionalProperties": false,
+        "properties": {
+          "certificates": {
+            "additionalProperties": false,
+            "properties": {
+              "active": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+              "issuedLast30Days": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+              "revoked": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+              "total": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" }
+            },
+            "required": ["total", "active", "revoked", "issuedLast30Days"],
+            "type": "object"
+          },
+          "email": {
+            "additionalProperties": false,
+            "properties": {
+              "failed": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+              "pending": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+              "sent": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" },
+              "skipped": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" }
+            },
+            "required": ["pending", "sent", "failed", "skipped"],
+            "type": "object"
+          },
+          "events": {
+            "additionalProperties": false,
+            "properties": {
+              "total": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" }
+            },
+            "required": ["total"],
+            "type": "object"
+          },
+          "generatedAt": {
+            "description": "ISO-8601 UTC time the numbers were computed.",
+            "type": "string"
+          },
+          "organizations": {
+            "additionalProperties": false,
+            "properties": {
+              "total": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" }
+            },
+            "required": ["total"],
+            "type": "object"
+          },
+          "templates": {
+            "additionalProperties": false,
+            "properties": {
+              "total": { "maximum": 9007199254740991, "minimum": 0, "type": "integer" }
+            },
+            "required": ["total"],
+            "type": "object"
+          }
+        },
+        "required": [
+          "generatedAt",
+          "certificates",
+          "email",
+          "templates",
+          "organizations",
+          "events"
+        ],
+        "type": "object"
+      },
       "CertificateCount": {
         "additionalProperties": false,
         "properties": {
@@ -1896,6 +1960,66 @@
         },
         "security": [{ "bearerAuth": [] }],
         "summary": "Rename an organization"
+      }
+    },
+    "/api/v1/admin/stats": {
+      "get": {
+        "description": "Computed with native count aggregations only (no documents are read) and cached in memory per instance (`STATS_CACHE_SECONDS`, default 60); concurrent requests share one computation. `refresh=true` bypasses the cache but is limited to once per 10 seconds per administrator (`429 RATE_LIMITED` with `Retry-After`).",
+        "operationId": "getAdminStats",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": { "enum": ["true", "false"], "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminStats" } }
+            },
+            "description": "The statistics"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Dashboard counts"
       }
     },
     "/api/v1/admin/templates": {

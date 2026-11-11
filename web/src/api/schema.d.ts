@@ -196,6 +196,26 @@ export interface paths {
     patch: operations['renameOrganization'];
     trace?: never;
   };
+  '/api/v1/admin/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Dashboard counts
+     * @description Computed with native count aggregations only (no documents are read) and cached in memory per instance (`STATS_CACHE_SECONDS`, default 60); concurrent requests share one computation. `refresh=true` bypasses the cache but is limited to once per 10 seconds per administrator (`429 RATE_LIMITED` with `Retry-After`).
+     */
+    get: operations['getAdminStats'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/templates': {
     parameters: {
       query?: never;
@@ -376,6 +396,31 @@ export interface components {
       /** @constant */
       role: 'admin';
       uid: string;
+    };
+    AdminStats: {
+      certificates: {
+        active: number;
+        issuedLast30Days: number;
+        revoked: number;
+        total: number;
+      };
+      email: {
+        failed: number;
+        pending: number;
+        sent: number;
+        skipped: number;
+      };
+      events: {
+        total: number;
+      };
+      /** @description ISO-8601 UTC time the numbers were computed. */
+      generatedAt: string;
+      organizations: {
+        total: number;
+      };
+      templates: {
+        total: number;
+      };
     };
     CertificateCount: {
       count: number;
@@ -1879,6 +1924,82 @@ export interface operations {
       };
       /** @description NOT_FOUND: resource does not exist */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getAdminStats: {
+    parameters: {
+      query?: {
+        refresh?: 'true' | 'false';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The statistics */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminStats'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
         headers: {
           [name: string]: unknown;
         };

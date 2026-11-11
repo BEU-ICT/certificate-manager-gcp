@@ -42,6 +42,7 @@ describe('OpenAPI document', () => {
       '/api/v1/admin/me',
       '/api/v1/admin/organizations',
       '/api/v1/admin/organizations/{id}',
+      '/api/v1/admin/stats',
       '/api/v1/admin/templates',
       '/api/v1/admin/templates/{reference}',
       '/api/v1/public/certificates/{id}',

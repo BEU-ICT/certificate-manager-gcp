@@ -3,6 +3,7 @@ import type {
   CertificateService,
   RevocationService,
 } from './modules/certificates/index.js';
+import type { StatsService } from './modules/stats/index.js';
 import type { EventService } from './modules/events/index.js';
 import type { TemplateAssets, TemplateService } from './modules/templates/index.js';
 import type { OrganizationService } from './modules/organizations/index.js';
@@ -97,4 +98,6 @@ export interface Services {
   readonly certificateQueries: CertificateQueryService;
   /** Certificate revocation (certificates module). */
   readonly revocation: RevocationService;
+  /** Cached dashboard counts (stats module). */
+  readonly stats: StatsService;
 }

@@ -81,3 +81,9 @@ Targets: public route <= 150 KB gzipped JS (issue BEU-ICT/certificate-manager#23
 6. Last resort: unlink billing is destructive (services stop); prefer lowering instance caps and disabling the offending endpoint with a `FEATURE_*` flag.
 
 Admin certificate list (`GET /api/v1/admin/certificates`) reads at most `limit + 1` (<= 51) documents; `GET /api/v1/admin/certificates/count` and the filtered counts use the native aggregation query and cost one read per 1,000 index entries scanned (minimum one read).
+
+## Admin statistics (`GET /api/v1/admin/stats`)
+
+The dashboard counts use only native `count()` aggregations (no documents are read): 11 queries per computation (certificates: total, active, revoked, issued in the last 30 days, and the four e-mail states; plus templates, organizations and events). Each query costs about ⌈N/1,000⌉ reads for the N index entries it matches (minimum 1). With 10,000 certificates: `total` 10, `active` about 10, `revoked` about 1, `issuedLast30Days` about 1 to 5, the four e-mail states together about 10 (they partition the certificates), and 3 for the small collections, so about 35 to 40 reads per computation, below the 50-read budget.
+
+Quota protection: the result is cached in memory per instance for `STATS_CACHE_SECONDS` (default 60), so one instance computes at most 1,440 times per day, and only while somebody requests the dashboard (about 55,000 reads in the theoretical worst case of a permanently polled dashboard on 10,000 certificates, in practice a few computations per day). Concurrent requests share one computation (single flight), and `?refresh=true` is limited to once per 10 s per administrator.

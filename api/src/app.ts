@@ -15,6 +15,7 @@ import { adminMeRoutes } from './http/routes/admin-me.js';
 import { publicCertificateRoutes } from './http/routes/public-certificates.js';
 import type { PublicUrls } from './http/dto/public/certificate.js';
 import { adminCertificateRoutes } from './http/routes/admin-certificates.js';
+import { adminStatsRoutes } from './http/routes/admin-stats.js';
 import { buildServices } from './services.js';
 import type { Ports, Services } from './wiring.js';
 
@@ -80,6 +81,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     publicCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
     adminCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
     adminCertificateRevocationRoutes(app, services);
+    adminStatsRoutes(app, services);
   }
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 

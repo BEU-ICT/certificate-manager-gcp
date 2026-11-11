@@ -137,7 +137,11 @@ export async function compose(
   return {
     config,
     ports,
-    services: buildServices(ports, undefined, { templateCacheMb: config.templateCacheMb, logger }),
+    services: buildServices(ports, undefined, {
+      templateCacheMb: config.templateCacheMb,
+      statsCacheSeconds: config.statsCacheSeconds,
+      logger,
+    }),
   };
 }
 

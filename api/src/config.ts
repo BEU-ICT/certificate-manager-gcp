@@ -55,6 +55,8 @@ export interface Config {
   };
   /** Byte budget (MB) of the in-process template asset cache. */
   readonly templateCacheMb: number;
+  /** Per-instance cache lifetime (seconds) of `GET /api/v1/admin/stats`; 0 disables it. */
+  readonly statsCacheSeconds: number;
   readonly adapters: {
     readonly db: (typeof DB_ADAPTERS)[number];
     readonly storage: (typeof STORAGE_ADAPTERS)[number];
@@ -111,6 +113,7 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
   RATE_LIMIT_ADMIN_PER_MIN: '60',
   TEMPLATE_CACHE_MB: '40',
+  STATS_CACHE_SECONDS: '60',
 };
 
 const MAX_URL_LENGTH = 2048;
@@ -160,6 +163,7 @@ const schema = z.object({
   RATE_LIMIT_PUBLIC_PER_MIN: int(1, 10_000),
   RATE_LIMIT_ADMIN_PER_MIN: int(30, 100),
   TEMPLATE_CACHE_MB: int(1, 256),
+  STATS_CACHE_SECONDS: int(0, 3600),
   DB_ADAPTER: oneOf(DB_ADAPTERS),
   STORAGE_ADAPTER: oneOf(STORAGE_ADAPTERS),
   QUEUE_ADAPTER: oneOf(QUEUE_ADAPTERS),
@@ -293,6 +297,7 @@ export function loadConfig(env: Env): Config {
       adminPerMin: e.RATE_LIMIT_ADMIN_PER_MIN,
     },
     templateCacheMb: e.TEMPLATE_CACHE_MB,
+    statsCacheSeconds: e.STATS_CACHE_SECONDS,
     adapters: {
       db: e.DB_ADAPTER,
       storage: e.STORAGE_ADAPTER,
