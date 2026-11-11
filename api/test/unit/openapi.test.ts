@@ -38,6 +38,7 @@ describe('OpenAPI document', () => {
     expect(doc.openapi).toBe('3.1.0');
     expect(Object.keys(doc.paths ?? {})).toEqual([
       '/api/v1/admin/certificates',
+      '/api/v1/admin/certificates/bulk',
       '/api/v1/admin/certificates/count',
       '/api/v1/admin/certificates/{id}',
       '/api/v1/admin/certificates/{id}/revoke',

@@ -146,6 +146,11 @@ export interface CertificateRepository {
   /** Exactly one document read. */
   getById(id: CertificateId): Promise<Certificate | null>;
   /**
+   * Reads up to 500 certificates by ID (chunked batch reads, no queries). Returns the existing
+   * ones in the order of `ids`, each once; unknown IDs are skipped. `ValidationError` above 500 IDs.
+   */
+  getMany(ids: readonly CertificateId[]): Promise<Certificate[]>;
+  /**
    * Ordered by `issuedAt` descending, then `id` descending (total order, stable with identical
    * `issuedAt`). Reads `limit + 1` documents: the extra one only decides `nextCursor`.
    * An unusable cursor is a `ValidationError`.

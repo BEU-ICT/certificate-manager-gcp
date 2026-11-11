@@ -122,3 +122,19 @@ export function certificateContentShape(now: () => Date = () => new Date()) {
     type: certificateTypeSchema,
   };
 }
+
+/**
+ * One element of a bulk request (`items[]`), validated and normalised exactly like a single
+ * issuance. Strict: unknown properties are rejected. `subject` is optional here because the
+ * request-level subject is the default; the service reports an item without any subject.
+ */
+export function bulkItemSchema(now: () => Date = () => new Date()) {
+  const content = certificateContentShape(now);
+  return z.strictObject({
+    ownerName: content.ownerName,
+    email: content.email,
+    subject: content.subject.optional(),
+    skills: content.skills,
+    issuedAt: content.issuedAt.optional(),
+  });
+}

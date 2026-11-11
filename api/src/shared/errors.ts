@@ -108,6 +108,20 @@ export class UnprocessableError extends AppError {
   }
 }
 
+/**
+ * Bulk issuance: at least one item is invalid; nothing was written. `details` lists up to
+ * {@link BULK_INVALID_MAX_DETAILS} problems with paths like `items[17].ownerName`; `truncated`
+ * says that more problems exist than are listed.
+ */
+export const BULK_INVALID_MAX_DETAILS = 200;
+export class BulkInvalidError extends UnprocessableError {
+  readonly truncated: boolean;
+  constructor(details: ErrorDetail[], truncated: boolean) {
+    super('BULK_INVALID', 'Some items are invalid; nothing was created', details);
+    this.truncated = truncated;
+  }
+}
+
 export class RateLimitedError extends AppError {
   readonly statusCode = 429;
   override readonly headers: Readonly<Record<string, string>>;

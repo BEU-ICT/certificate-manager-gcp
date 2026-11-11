@@ -19,6 +19,7 @@
     "template-schema:generate": "tsx scripts/generate-template-config-schema.ts",
     "template-schema:check": "tsx scripts/generate-template-config-schema.ts --check",
     "bench:render": "tsx scripts/bench-render.ts",
+    "bench:bulk": "tsx scripts/bench-bulk-issue.ts",
     "template:validate": "tsx scripts/validate-template.ts",
     "template-authoring:generate": "tsx scripts/generate-template-authoring-reference.ts",
     "template-authoring:check": "tsx scripts/generate-template-authoring-reference.ts --check",

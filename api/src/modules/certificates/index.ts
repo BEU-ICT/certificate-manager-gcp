@@ -2,6 +2,7 @@
 export { emailInitialStatus, isRevoked } from './domain.js';
 export {
   OWNER_NAME_MAX,
+  bulkItemSchema,
   SKILLS_MAX_ITEMS,
   SKILL_MAX,
   SUBJECT_MAX,
@@ -25,6 +26,7 @@ export {
   type RevokeResult,
 } from './revocation.js';
 export {
+  BULK_MAX_ITEMS,
   DefaultCertificateIssuanceService,
   EVENT_ORG_MISMATCH,
   TEMPLATE_MISMATCH,
@@ -33,4 +35,5 @@ export {
   type CertificateIssuanceService,
   type FitChecker,
   type IssueCertificateInput,
+  type IssueManyInput,
 } from './issuance.js';

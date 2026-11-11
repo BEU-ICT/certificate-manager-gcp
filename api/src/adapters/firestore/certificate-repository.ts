@@ -24,6 +24,8 @@ import type { CertificateId, EventId, OrganizationId, TemplateRef } from '../../
 export const CERTIFICATES_COLLECTION = 'certificates';
 /** Firestore allows 500 writes per batch. */
 export const MAX_CREATE_MANY = 500;
+/** Documents per `getAll` call of `getMany`. */
+const GET_MANY_CHUNK = 100;
 /** gRPC status ALREADY_EXISTS, raised by `create()` on an existing document. */
 const ALREADY_EXISTS = 6;
 
@@ -175,6 +177,23 @@ export class FirestoreCertificateRepository implements CertificateRepository {
   async getById(id: CertificateId): Promise<Certificate | null> {
     const snap = await this.collection.doc(id).get();
     return snap.exists ? toCertificate(snap.id, snap.data() as CertificateDocument) : null;
+  }
+
+  async getMany(ids: readonly CertificateId[]): Promise<Certificate[]> {
+    if (ids.length > MAX_CREATE_MANY) {
+      throw new ValidationError(`At most ${String(MAX_CREATE_MANY)} certificates per read`);
+    }
+    const unique = [...new Set(ids)];
+    const byId = new Map<string, Certificate>();
+    for (let i = 0; i < unique.length; i += GET_MANY_CHUNK) {
+      const chunk = unique.slice(i, i + GET_MANY_CHUNK);
+      const snaps = await this.db.getAll(...chunk.map((id) => this.collection.doc(id)));
+      for (const snap of snaps) {
+        if (snap.exists)
+          byId.set(snap.id, toCertificate(snap.id, snap.data() as CertificateDocument));
+      }
+    }
+    return unique.flatMap((id) => byId.get(id) ?? []);
   }
 
   private filtered(filter: CertificateFilter): Query {
