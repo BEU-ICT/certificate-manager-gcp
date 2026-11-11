@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/app.js';
 import {
@@ -9,6 +11,14 @@ import {
   type Registries,
 } from '../../src/compose.js';
 import { loadConfig } from '../../src/config.js';
+import { TEMPLATES_BUCKET, templateKey } from '../../src/modules/templates/index.js';
+import { asTemplateRef } from '../../src/shared/ids.js';
+import {
+  sampleEvent,
+  sampleOrganization,
+  sampleTemplate,
+} from '../../src/testing/contracts/index.js';
+import { fakeToken } from '../../src/testing/fakes/index.js';
 import type { EmailSender, StorageGateway } from '../../src/ports/index.js';
 import type { AuthPorts, QueuePorts, RepositoryPorts } from '../../src/wiring.js';
 
@@ -265,6 +275,67 @@ describe('buildApp with a dependency bag', () => {
     const app = buildApp({ ports, services });
     const res = await app.inject({ method: 'GET', url: '/internal/healthz' });
     expect(res.statusCode).toBe(200);
+    await app.close();
+  });
+});
+
+describe('compose: certificate issuance wiring', () => {
+  it('serves POST /api/v1/admin/certificates and rejects text overflow with the real PdfService', async () => {
+    const { ports, services } = await compose(loadConfig({ NODE_ENV: 'development' }));
+    expect(services.issuance).toBeDefined();
+    const org = sampleOrganization();
+    const event = sampleEvent({ organizationId: org.id });
+    await ports.organizations.create(org);
+    await ports.events.create(event);
+    const dir = path.resolve(import.meta.dirname, '../fixtures/templates/good');
+    const files = ['background.svg', 'fonts/main.ttf', 'assets/logo.png'];
+    const reference = 'acme-devfest-attendance-v1';
+    for (const file of files) {
+      await ports.storage.put(
+        TEMPLATES_BUCKET,
+        templateKey(reference, file),
+        readFileSync(path.join(dir, file)),
+        {
+          contentType: 'application/octet-stream',
+        },
+      );
+    }
+    const config = JSON.parse(readFileSync(path.join(dir, 'config.json'), 'utf8')) as Record<
+      string,
+      unknown
+    >;
+    await ports.templates.create(
+      sampleTemplate({
+        organizationId: org.id,
+        eventId: event.id,
+        reference: asTemplateRef(reference),
+        version: 1,
+        config,
+      }),
+    );
+    const app = buildApp({ ports, services, adminRateLimitPerMin: 100_000 });
+    const headers = { authorization: `Bearer ${fakeToken('admin-1', 'admin')}` };
+    const body = {
+      organizationId: org.id,
+      eventId: event.id,
+      type: 'attendance',
+      ownerName: 'Aysel Məmmədova',
+      subject: 'Cloud workshop',
+    };
+    const url = '/api/v1/admin/certificates';
+    const ok = await app.inject({ method: 'POST', url, headers, payload: body });
+    expect(ok.statusCode).toBe(201);
+    expect(await ports.certificates.count({})).toBe(1);
+
+    const overflow = await app.inject({
+      method: 'POST',
+      url,
+      headers,
+      payload: { ...body, ownerName: 'a'.repeat(70) },
+    });
+    expect(overflow.statusCode).toBe(422);
+    expect(overflow.json<{ error: { code: string } }>().error.code).toBe('TEXT_DOES_NOT_FIT');
+    expect(await ports.certificates.count({})).toBe(1);
     await app.close();
   });
 });
