@@ -172,5 +172,82 @@
       "updated": "\"{{name}}\" tədbiri yeniləndi",
       "deleted": "\"{{name}}\" tədbiri silindi"
     }
+  },
+  "templates": {
+    "title": "Şablonlar",
+    "loading": "Şablonlar yüklənir…",
+    "pageSize": "Səhifədə sətir",
+    "upload": "Şablon yüklə",
+    "uploadSoon": "Şablon yükləmə tezliklə əlavə olunacaq.",
+    "previewSoon": "Önbaxış tezliklə əlavə olunacaq.",
+    "latest": "ən son",
+    "copy": {
+      "title": "Başqa tədbirə köçür",
+      "intro": "{{reference}} əsasında seçilmiş tədbirdə yeni şablon yaradılır.",
+      "submit": "Şablonu köçür",
+      "sameType": "Eyni növ ({{type}})",
+      "typeHint": "Mənbə şablonun növünü saxlamaq üçün dəyişməyin.",
+      "toast": "{{reference}} şablonu yaradıldı",
+      "errors": {
+        "organizationRequired": "Təşkilat seçin",
+        "eventRequired": "Tədbir seçin",
+        "invalid": "Bu dəyər köçürmə üçün yararsızdır",
+        "eventMismatch": "Bu tədbir seçilmiş təşkilata aid deyil",
+        "rejected": "Şablonu köçürmək mümkün olmadı. Seçimi yoxlayın."
+      }
+    },
+    "copied": "Mübadilə buferinə köçürüldü",
+    "copyLabel": "Panoya köçür",
+    "copyFailed": "Mübadilə buferinə köçürmək mümkün olmadı",
+    "copyReference": "{{reference}} istinadını köçür",
+    "immutable": "Şablonlar redaktə edilə bilməz. Yeni versiya yükləyin; mövcud sertifikatlar öz versiyasını saxlayır.",
+    "fields": {
+      "organization": "Təşkilat",
+      "event": "Tədbir",
+      "eventPlaceholder": "Tədbir seçin",
+      "type": "Növ"
+    },
+    "filter": {
+      "allOrganizations": "Bütün təşkilatlar",
+      "allEvents": "Bütün tədbirlər",
+      "allTypes": "Bütün növlər"
+    },
+    "columns": {
+      "reference": "İstinad",
+      "organization": "Təşkilat",
+      "event": "Tədbir",
+      "type": "Növ",
+      "version": "Versiya",
+      "createdAt": "Yaradılıb"
+    },
+    "empty": {
+      "title": "Hələ şablon yoxdur",
+      "description": "Sertifikat vermək üçün şablon paketi yükləyin.",
+      "filteredTitle": "Uyğun şablon tapılmadı",
+      "filteredDescription": "Daha çox şablon görmək üçün filtrləri dəyişin və ya təmizləyin."
+    },
+    "events": {
+      "failed": "Tədbirləri yükləmək mümkün olmadı.",
+      "loadMore": "Daha çox tədbir yüklə"
+    },
+    "detail": {
+      "title": "Şablon",
+      "loading": "Şablon yüklənir…",
+      "back": "Şablonlara qayıt",
+      "notFoundTitle": "Şablon tapılmadı",
+      "notFoundBody": "Bu istinadla şablon yoxdur. İstinad səhv yazılmış ola bilər.",
+      "summary": "Xülasə",
+      "certificateCount": "Verilmiş sertifikatlar",
+      "config": "Konfiqurasiya",
+      "showConfig": "Konfiqurasiyanı göstər",
+      "hideConfig": "Konfiqurasiyanı gizlət",
+      "configLabel": "Şablon konfiqurasiyası (JSON)",
+      "copyConfig": "Konfiqurasiyanı köçür",
+      "files": "Fayllar",
+      "noFiles": "Bu şablonda fayl yoxdur.",
+      "newVersion": "Yeni versiya",
+      "copy": "Başqa tədbirə köçür",
+      "preview": "Önbaxış"
+    }
   }
 }
