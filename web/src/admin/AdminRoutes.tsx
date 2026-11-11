@@ -20,6 +20,7 @@ const TemplateUploadPage = lazy(() => import('./templates/TemplateUploadPage'));
 const CertificatesPage = lazy(() => import('./certificates/CertificatesPage'));
 const CertificateDetailPage = lazy(() => import('./certificates/CertificateDetailPage'));
 const IssueCertificatePage = lazy(() => import('./certificates/IssueCertificatePage'));
+const ImportWizardPage = lazy(() => import('./certificates/import/ImportWizardPage'));
 
 const sections = [{ path: 'import', titleKey: 'layout.nav.import' }] as const;
 
@@ -108,6 +109,14 @@ export default function AdminRoutes() {
             element={
               <Suspense fallback={<Spinner />}>
                 <IssueCertificatePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="certificates/import"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <ImportWizardPage />
               </Suspense>
             }
           />
