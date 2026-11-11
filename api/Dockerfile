@@ -24,6 +24,9 @@ FROM ${RUNTIME_IMAGE} AS runtime
 RUN apk add --no-cache libstdc++ && adduser -D -u 10001 app
 COPY --from=node-bin /usr/local/bin/node /usr/local/bin/node
 ENV NODE_ENV=production
+# Build argument `--build-arg GIT_SHA=<sha>`: reported as the service version in Error Reporting.
+ARG GIT_SHA=unknown
+ENV GIT_SHA=$GIT_SHA
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist

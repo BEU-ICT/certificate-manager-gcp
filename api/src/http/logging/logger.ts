@@ -5,6 +5,7 @@ import {
   type Logger,
   type LoggerOptions,
 } from 'pino';
+import type { ServiceContext } from './error-reporting.js';
 
 export interface LogOptions {
   /** pino level; `silent` disables output. */
@@ -13,6 +14,8 @@ export interface LogOptions {
   gcpProject?: string | undefined;
   /** Output stream; defaults to stdout (Cloud Run forwards it to Cloud Logging). */
   destination?: DestinationStream | undefined;
+  /** Added to every ERROR and CRITICAL line so Cloud Error Reporting can group by service version. */
+  serviceContext?: ServiceContext | undefined;
 }
 
 /** pino level -> Cloud Logging severity. */
@@ -25,6 +28,7 @@ const SEVERITY: Record<string, string> = {
   fatal: 'CRITICAL',
 };
 
+const ERROR_LEVEL = 50;
 const SECRET_KEYS = ['email', 'token', 'password', 'apiKey', 'ownerName'];
 const MAX_REDACT_DEPTH = 4;
 
@@ -54,6 +58,10 @@ export function createLogger(options: LogOptions = {}): Logger {
       level: (label) => ({ severity: SEVERITY[label] ?? 'DEFAULT' }),
     },
     serializers: { err: stdSerializers.err },
+    ...(options.serviceContext && {
+      mixin: (_obj: object, level: number) =>
+        level >= ERROR_LEVEL ? { serviceContext: options.serviceContext } : {},
+    }),
     redact: { paths: REDACT_PATHS, censor: '[Redacted]' },
   };
   return options.destination ? pino(config, options.destination) : pino(config);
