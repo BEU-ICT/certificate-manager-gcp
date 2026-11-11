@@ -9,7 +9,12 @@ import type {
 } from '../../ports/index.js';
 import type { CertificateType } from '../../shared/certificate-types.js';
 import type { Template } from '../../shared/domain.js';
-import { ConflictError, NotFoundError, ValidationError } from '../../shared/errors.js';
+import {
+  ConflictError,
+  NotFoundError,
+  UnavailableError,
+  ValidationError,
+} from '../../shared/errors.js';
 import {
   isEventId,
   isOrganizationId,
@@ -57,6 +62,22 @@ export interface PublishTemplateInput extends TemplateTarget {
   createdBy: string;
 }
 
+export interface CopyTemplateInput {
+  /** Reference of the version to copy; `NotFoundError` when unknown or malformed. */
+  sourceReference: string;
+  /** Where the copy goes: the next version of this organization, event and type. */
+  target: TemplateTarget;
+  /** Admin user ID of the person who copies. */
+  createdBy: string;
+}
+
+export interface CopiedTemplate {
+  template: Template;
+  copiedFrom: Template['reference'];
+  /** Stored package files of the copy including `config.json` (relative path, size in bytes). */
+  files: { path: string; size: number }[];
+}
+
 export interface NextReference {
   reference: Template['reference'];
   version: number;
@@ -87,6 +108,12 @@ export interface TemplateService {
    * `ConflictError`). Nothing is written when the reference would be invalid.
    */
   publish(input: PublishTemplateInput): Promise<Template>;
+  /**
+   * Copies a version under the next reference of the target, server side (`StorageGateway.copy`),
+   * with the same claim, retry and cleanup semantics as `publish`. The config is stored unchanged;
+   * the source stays untouched.
+   */
+  copy(input: CopyTemplateInput): Promise<CopiedTemplate>;
   /** `NotFoundError` for unknown or malformed references. */
   get(reference: string): Promise<Template>;
   getLatest(organizationId: string, eventId: string, type: string): Promise<Template | null>;
@@ -229,6 +256,88 @@ export class DefaultTemplateService implements TemplateService {
         );
         throw error;
       }
+    }
+    throw new ConflictError('Template version is being created concurrently, try again');
+  }
+
+  async copy(input: CopyTemplateInput): Promise<CopiedTemplate> {
+    const source = await this.get(input.sourceReference);
+    const sourcePrefix = templateStoragePath(source.reference);
+    const sourceConfigKey = templateConfigKey(source.reference);
+    const paths = (await this.storage.list(TEMPLATES_BUCKET, sourcePrefix))
+      .filter((key) => key !== sourceConfigKey)
+      .map((key) => key.slice(sourcePrefix.length))
+      // Stray objects that are not part of a package layout are never copied.
+      .filter((path) => packageLayoutProblem(path) === undefined);
+    const configBody = Buffer.from(JSON.stringify(source.config), 'utf8');
+
+    let minVersion = 0;
+    for (let attempt = 0; attempt <= MAX_REFERENCE_RETRIES; attempt++) {
+      const { reference, version } = await this.nextReference(input.target, minVersion);
+      minVersion = version + 1;
+      // Same claim as publish: config.json first, "create if absent".
+      const claim = await this.storage.putIfAbsent(
+        TEMPLATES_BUCKET,
+        templateConfigKey(reference),
+        configBody,
+        { contentType: 'application/json' },
+      );
+      if (!claim.created) continue;
+      const keys = [templateConfigKey(reference)];
+      let created: Template;
+      try {
+        for (const path of paths) {
+          const key = templateKey(reference, path);
+          await this.storage.copy(TEMPLATES_BUCKET, templateKey(source.reference, path), key);
+          keys.push(key);
+        }
+        const template: Template = {
+          reference,
+          organizationId: input.target.organizationId,
+          eventId: input.target.eventId,
+          organizationSlug: input.target.organizationSlug,
+          eventSlug: input.target.eventSlug,
+          type: input.target.type,
+          version,
+          storagePath: templateStoragePath(reference),
+          config: { ...source.config },
+          createdAt: this.clock.now(),
+          createdBy: input.createdBy,
+          schemaVersion: SCHEMA_VERSION,
+        };
+        await this.repository.create(template);
+        created = template;
+      } catch (error) {
+        if (error instanceof ConflictError) continue;
+        const cleanup = await Promise.allSettled(
+          keys.map((key) => this.storage.delete(TEMPLATES_BUCKET, key)),
+        );
+        this.logger?.error(
+          {
+            reference,
+            copiedFrom: source.reference,
+            storedObjects: keys.length,
+            leakedObjects: cleanup.filter((r) => r.status === 'rejected').length,
+          },
+          'template copy failed after objects were stored; cleanup attempted',
+        );
+        // The source object vanished mid-copy: not the caller's fault, and nothing is left behind.
+        if (error instanceof NotFoundError) throw new UnavailableError();
+        throw error;
+      }
+      // The document exists now: nothing below may delete anything, a failure only costs the listing.
+      const template = created;
+      const files = await this.getDetail(reference).then(
+        (detail) => detail.files,
+        (error: unknown) => {
+          this.logger?.error(
+            { reference, error: error instanceof Error ? error.name : 'unknown' },
+            'template copied but its file listing failed',
+          );
+          return [];
+        },
+      );
+      return { template, copiedFrom: source.reference, files };
     }
     throw new ConflictError('Template version is being created concurrently, try again');
   }

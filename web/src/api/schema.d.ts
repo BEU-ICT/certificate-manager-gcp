@@ -260,6 +260,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/templates/{reference}/copy': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Copy a template version to an organization, event and type
+     * @description Creates the next version for the target organization, event and type (`type` defaults to the source's) with the same files and config; objects are copied server side. Copying to the same organization, event and type creates the next version. The source and its certificates are untouched. `422 EVENT_ORG_MISMATCH` means the event belongs to another organization.
+     */
+    post: operations['copyTemplate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/public/certificates/{id}': {
     parameters: {
       query?: never;
@@ -589,6 +609,39 @@ export interface components {
         | 'team'
         | 'other';
       version: number;
+    };
+    TemplateCopyResult: {
+      /** @description The stored template config. */
+      config: {
+        [key: string]: unknown;
+      };
+      /** @description Reference of the template version that was copied. */
+      copiedFrom: string;
+      /** Format: date-time */
+      createdAt: string;
+      eventId: string;
+      /** @description Stored package files including `config.json`, sorted by path. */
+      files: {
+        path: string;
+        /** @description Bytes. */
+        size: number;
+      }[];
+      organizationId: string;
+      /** @description `<orgSlug>-<eventSlug>-<type>-v<n>`; never parse it. */
+      reference: string;
+      /** @enum {string} */
+      type:
+        | 'attendance'
+        | 'appreciation'
+        | 'thanks'
+        | 'distinction'
+        | 'instructor'
+        | 'student'
+        | 'team'
+        | 'other';
+      version: number;
+      /** @description Advisory findings; they did not block the upload. */
+      warnings: components['schemas']['TemplateIssue'][];
     };
     TemplateDetail: {
       certificateCount: number;
@@ -2278,6 +2331,129 @@ export interface operations {
       };
       /** @description NOT_FOUND: resource does not exist */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  copyTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        reference: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          eventId: string;
+          organizationId: string;
+          /**
+           * @description Defaults to the source template's type.
+           * @enum {string}
+           */
+          type?:
+            | 'attendance'
+            | 'appreciation'
+            | 'thanks'
+            | 'distinction'
+            | 'instructor'
+            | 'student'
+            | 'team'
+            | 'other';
+        };
+      };
+    };
+    responses: {
+      /** @description The created template version */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TemplateCopyResult'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description Well-formed request that violates a business rule (domain specific code) */
+      422: {
         headers: {
           [name: string]: unknown;
         };

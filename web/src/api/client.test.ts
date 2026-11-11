@@ -191,6 +191,122 @@ describe('api client', () => {
   });
 });
 
+describe('api client: FormData with onUploadProgress (XHR path)', () => {
+  const form = () => {
+    const f = new FormData();
+    f.append('a', new File(['hello'], 'a.txt'));
+    return f;
+  };
+  const upload = (client: ReturnType<typeof createApiClient>, extra: object = {}) =>
+    client.post('/admin/templates', form(), { onUploadProgress: () => undefined, ...extra });
+
+  it('attaches the token, parses the response and reads headers', async () => {
+    let auth: string | null = null;
+    let sent: FormData | undefined;
+    server.use(
+      http.post('*/api/v1/admin/templates', async ({ request }) => {
+        auth = request.headers.get('Authorization');
+        sent = await request.formData();
+        return HttpResponse.json({ ok: true }, { status: 201 });
+      }),
+    );
+    const client = createApiClient({ getToken: () => Promise.resolve('tok') });
+    await expect(upload(client)).resolves.toEqual({ ok: true });
+    expect(auth).toBe('Bearer tok');
+    expect((sent?.get('a') as File).name).toBe('a.txt');
+  });
+
+  it('maps error bodies and the request id header', async () => {
+    server.use(
+      http.post('*/api/v1/admin/templates', () =>
+        HttpResponse.json(
+          errorBody('TEMPLATE_INVALID', 'bad', {
+            details: [{ path: 'p', message: 'm', code: 'SVG_SCRIPT', file: 'background.svg' }],
+          }),
+          { status: 422, headers: { 'X-Request-Id': 'hdr-1' } },
+        ),
+      ),
+    );
+    const err = await catchError(upload(createApiClient()));
+    expect(err.status).toBe(422);
+    expect(err.details).toEqual([
+      { path: 'p', message: 'm', code: 'SVG_SCRIPT', file: 'background.svg' },
+    ]);
+  });
+
+  it('handles 204 without a body', async () => {
+    server.use(
+      http.post('*/api/v1/admin/templates', () => new HttpResponse(null, { status: 204 })),
+    );
+    await expect(upload(createApiClient())).resolves.toBeUndefined();
+  });
+
+  it('refreshes the token on 401 and retries with the same FormData', async () => {
+    const seen: (string | null)[] = [];
+    const bodies: string[] = [];
+    server.use(
+      http.post('*/api/v1/admin/templates', async ({ request }) => {
+        const header = request.headers.get('Authorization');
+        seen.push(header);
+        bodies.push(String(((await request.formData()).get('a') as File).name));
+        return header === 'Bearer fresh'
+          ? HttpResponse.json({ ok: true })
+          : HttpResponse.json(errorBody('UNAUTHENTICATED', 'expired'), { status: 401 });
+      }),
+    );
+    const getToken = vi.fn((force: boolean) => Promise.resolve(force ? 'fresh' : 'stale'));
+    const client = createApiClient({ getToken });
+    await expect(upload(client)).resolves.toEqual({ ok: true });
+    expect(seen).toEqual(['Bearer stale', 'Bearer fresh']);
+    expect(bodies).toEqual(['a.txt', 'a.txt']);
+  });
+
+  it('signs out after a second 401', async () => {
+    server.use(
+      http.post('*/api/v1/admin/templates', () =>
+        HttpResponse.json(errorBody('UNAUTHENTICATED', 'nope'), { status: 401 }),
+      ),
+    );
+    const onUnauthorized = vi.fn();
+    const client = createApiClient({ getToken: () => Promise.resolve('t'), onUnauthorized });
+    const err = await catchError(upload(client));
+    expect(err.status).toBe(401);
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects with the abort reason when the caller aborts, also when pre-aborted', async () => {
+    server.use(
+      http.post('*/api/v1/admin/templates', async () => {
+        await new Promise((r) => setTimeout(r, 1000));
+        return HttpResponse.json({});
+      }),
+    );
+    const controller = new AbortController();
+    const running = upload(createApiClient(), { signal: controller.signal });
+    controller.abort();
+    await expect(running).rejects.toMatchObject({ name: 'AbortError' });
+    await expect(running).rejects.not.toBeInstanceOf(ApiError);
+
+    const pre = new AbortController();
+    pre.abort();
+    await expect(upload(createApiClient(), { signal: pre.signal })).rejects.toMatchObject({
+      name: 'AbortError',
+    });
+  });
+
+  it('reports TIMEOUT and NETWORK', async () => {
+    server.use(
+      http.post('*/api/v1/admin/templates', async () => {
+        await new Promise((r) => setTimeout(r, 1000));
+        return HttpResponse.json({});
+      }),
+    );
+    expect((await catchError(upload(createApiClient(), { timeoutMs: 20 }))).code).toBe('TIMEOUT');
+    server.use(http.post('*/api/v1/admin/templates', () => HttpResponse.error()));
+    expect((await catchError(upload(createApiClient()))).code).toBe('NETWORK');
+  });
+});
+
 describe('query defaults', () => {
   it('retries only network/5xx errors, at most twice', () => {
     const e = (status: number, code = 'X') => new ApiError({ status, code, message: '' });

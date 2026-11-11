@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { CERTIFICATE_TYPES } from '../../../shared/certificate-types.js';
-import type { Issue, TemplateDetail, TemplateListItem } from '../../../modules/templates/index.js';
+import type {
+  CopiedTemplate,
+  Issue,
+  TemplateDetail,
+  TemplateListItem,
+} from '../../../modules/templates/index.js';
 import type { Template } from '../../../shared/domain.js';
 import { ENTITY_ID_PATTERN } from '../../../shared/ids.js';
 import { pageOf } from './page.js';
@@ -84,6 +89,16 @@ export const TemplateUploadResultDto = TemplateDto.omit({
   })
   .meta({ id: 'TemplateUploadResult' });
 
+export const TemplateCopyBodyDto = z.strictObject({
+  organizationId: z.string().regex(ENTITY_ID_PATTERN, { error: 'Not a valid organization ID' }),
+  eventId: z.string().regex(ENTITY_ID_PATTERN, { error: 'Not a valid event ID' }),
+  type: z.enum(CERTIFICATE_TYPES).optional().describe("Defaults to the source template's type."),
+});
+
+export const TemplateCopyResultDto = TemplateUploadResultDto.extend({
+  copiedFrom: z.string().describe('Reference of the template version that was copied.'),
+}).meta({ id: 'TemplateCopyResult' });
+
 export const TemplatePageDto = pageOf(TemplateDto, 'TemplatePage');
 
 export const TemplateListQueryDto = z.strictObject({
@@ -151,5 +166,23 @@ export function toTemplateUploadResultDto(
       message: w.message,
     })),
     createdAt: template.createdAt.toISOString(),
+  };
+}
+
+export function toTemplateCopyResultDto(
+  copied: CopiedTemplate,
+): z.infer<typeof TemplateCopyResultDto> {
+  const result = toTemplateUploadResultDto(copied.template, copied.files, []);
+  return {
+    reference: result.reference,
+    version: result.version,
+    organizationId: result.organizationId,
+    eventId: result.eventId,
+    type: result.type,
+    config: result.config,
+    files: result.files,
+    warnings: result.warnings,
+    createdAt: result.createdAt,
+    copiedFrom: copied.copiedFrom,
   };
 }

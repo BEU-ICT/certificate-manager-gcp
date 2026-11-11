@@ -28,6 +28,11 @@ export interface RequestOptions {
   /** Defaults to 30 s; use LONG_TIMEOUT_MS for template upload/preview. */
   timeoutMs?: number;
   headers?: Record<string, string>;
+  /**
+   * Upload progress (`loaded` of `total` bytes of the request body). Only for FormData bodies:
+   * `fetch` cannot report it, so such a request is sent with XMLHttpRequest.
+   */
+  onUploadProgress?: ((loaded: number, total: number) => void) | undefined;
 }
 
 export function isAdminPath(path: string): boolean {
@@ -54,6 +59,8 @@ function parseDetails(value: unknown): ApiErrorDetail[] | undefined {
     if (isRecord(item) && typeof item['path'] === 'string' && typeof item['message'] === 'string') {
       const detail: ApiErrorDetail = { path: item['path'], message: item['message'] };
       if (typeof item['suggestion'] === 'string') detail.suggestion = item['suggestion'];
+      if (typeof item['code'] === 'string') detail.code = item['code'];
+      if (typeof item['file'] === 'string') detail.file = item['file'];
       const counts = item['counts'];
       if (isRecord(counts)) {
         detail.counts = Object.fromEntries(
@@ -104,6 +111,65 @@ async function toApiError(response: Response): Promise<ApiError> {
   });
 }
 
+/** `fetch` stand-in for FormData uploads that need progress events; resolves with a `Response`. */
+function xhrSend(
+  url: URL,
+  method: string,
+  headers: Headers,
+  body: FormData,
+  options: RequestOptions,
+): Promise<Response> {
+  const callerSignal = options.signal;
+  const abortReason = (): Error => {
+    const reason: unknown = callerSignal?.reason;
+    return reason instanceof Error ? reason : new DOMException('Aborted', 'AbortError');
+  };
+  // Like fetch: an already-aborted signal rejects before anything is sent.
+  if (callerSignal?.aborted) return Promise.reject(abortReason());
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const onAbort = () => xhr.abort();
+    const settle = () => callerSignal?.removeEventListener('abort', onAbort);
+    const fail = (code: string, message: string) => {
+      settle();
+      reject(new ApiError({ status: 0, code, message }));
+    };
+    xhr.open(method, url.toString());
+    headers.forEach((value, key) => xhr.setRequestHeader(key, value));
+    xhr.timeout = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) options.onUploadProgress?.(event.loaded, event.total);
+    };
+    xhr.onload = () => {
+      settle();
+      const responseHeaders = new Headers();
+      for (const line of xhr
+        .getAllResponseHeaders()
+        .trim()
+        .split(/[\r\n]+/)) {
+        const index = line.indexOf(':');
+        if (index > 0)
+          responseHeaders.append(line.slice(0, index).trim(), line.slice(index + 1).trim());
+      }
+      const empty = xhr.status === 204 || xhr.status === 205 || xhr.status === 304;
+      resolve(
+        new Response(empty ? null : xhr.responseText, {
+          status: xhr.status,
+          headers: responseHeaders,
+        }),
+      );
+    };
+    xhr.onerror = () => fail(NETWORK, 'Network request failed.');
+    xhr.ontimeout = () => fail(TIMEOUT, 'The request timed out.');
+    xhr.onabort = () => {
+      settle();
+      reject(abortReason());
+    };
+    callerSignal?.addEventListener('abort', onAbort, { once: true });
+    xhr.send(body);
+  });
+}
+
 export interface ApiClient {
   request<T = unknown>(path: string, options?: RequestOptions): Promise<T>;
   get<T = unknown>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T>;
@@ -148,6 +214,9 @@ export function createApiClient(deps: ApiClientDeps = {}): ApiClient {
     }
     if (token !== null) headers.set('Authorization', `Bearer ${token}`);
 
+    if (body instanceof FormData && options.onUploadProgress) {
+      return xhrSend(url, options.method ?? 'GET', headers, body, options);
+    }
     const timeoutSignal = AbortSignal.timeout(options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
     const signal = options.signal
       ? AbortSignal.any([options.signal, timeoutSignal])

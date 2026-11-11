@@ -16,6 +16,7 @@ export const ALLOW_DYNAMIC = [
   'errors:*',
   'common:certificateTypes.*',
   'common:layout.nav.*', // admin nav items are rendered from a list
+  'admin:templates.uploadForm.check.*', // package pre-check messages are keyed by issue
 ];
 
 function walk(dir, filter) {

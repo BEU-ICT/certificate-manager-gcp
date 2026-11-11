@@ -8,3 +8,4 @@ export {
   type FieldsPlugin,
 } from './fields.js';
 export { layoutField, type FieldFont, type FieldLayout, type LayoutLine } from './layout.js';
+export { QR_TOO_SMALL, checkQrFit, drawQr } from './qr.js';

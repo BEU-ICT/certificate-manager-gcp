@@ -30,6 +30,13 @@ Render a certificate PDF on first request from its template, store it in the pub
 - Not registered in the composition root yet (see "Adding an engine"): that happens together with the fields layer.
 - Formatters (`FormatterRegistry`, `createFormatterRegistry`) are exported from the module index for the fields layer.
 
+### QR code layer (BEU-ICT/certificate-manager#323)
+
+- `engines/svg-pdf/qr.ts`: `drawQr` is the `qrLayer` (`new SvgPdfRenderer({ qrLayer: drawQr })`); `checkQrFit(input, config)` returns the layout `FitIssue[]` for the QR code.
+- Encodes `RenderInput.publicUrl` (`https://{domain}/c/{id}`) with `qrcode` at error correction M, automatic version (22-char and legacy 32-hex IDs stay at version <= 5).
+- Draws a white `qr.size` square at `qr.x, qr.y` with the black modules inside it; the 4-module quiet zone is part of `size`. Horizontal runs are merged; all rectangles form one path filled once, with edges snapped to a 0.01 pt grid so neighbours share identical coordinates (no seams).
+- Modules below 0.4 mm (about 1.13 pt) raise `UnprocessableError('QR_TOO_SMALL')` (detail path `config.qr.size`) in `render`; `checkQrFit` reports the same as a `FitIssue` (`field: 'qr'`, message starting with `QR_TOO_SMALL`) so `checkFit` can merge it.
+
 ## Owned data
 
 Objects in the public PDF bucket with deterministic names derived from the certificate ID. No collection.

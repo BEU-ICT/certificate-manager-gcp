@@ -38,3 +38,4 @@ export {
   type RegisterOptions,
 } from './formatters.js';
 export { createFormatterRegistry, registerBuiltinFormatters } from './formatters-builtin.js';
+export { QR_TOO_SMALL, checkQrFit, drawQr } from './engines/svg-pdf/index.js';
