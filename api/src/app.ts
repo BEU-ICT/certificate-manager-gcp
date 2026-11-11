@@ -1,6 +1,6 @@
 import Fastify, { LogController, type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import { installAdminGuard } from './http/auth/admin-guard.js';
-import { installErrorHandling } from './http/error-handler.js';
+import { frameworkErrorHandler, installErrorHandling } from './http/error-handler.js';
 import { createLogger, type LogOptions } from './http/logging/logger.js';
 import { requestIdFrom } from './http/logging/trace.js';
 import { installOpenApi, registerOpenApiEndpoint } from './http/openapi/plugin.js';
@@ -17,6 +17,7 @@ import { adminMeRoutes } from './http/routes/admin-me.js';
 import { publicCertificateRoutes } from './http/routes/public-certificates.js';
 import { publicCertificatePdfRoutes } from './http/routes/public-certificate-pdf.js';
 import type { PublicUrls } from './http/dto/public/certificate.js';
+import { installSecurity } from './http/security.js';
 import { adminCertificateRoutes } from './http/routes/admin-certificates.js';
 import { internalSendEmailRoutes } from './http/routes/internal-send-email.js';
 import { adminStatsRoutes } from './http/routes/admin-stats.js';
@@ -48,6 +49,10 @@ export interface AppDeps {
 export type SendEmailHandler = ReturnType<typeof createSendEmailHandler>;
 
 const BODY_LIMIT_BYTES = 1024 * 1024;
+const MAX_PARAM_LENGTH = 128;
+const MAX_HEADER_BYTES = 16 * 1024;
+const REQUEST_TIMEOUT_MS = 55_000;
+const KEEP_ALIVE_TIMEOUT_MS = 65_000;
 const TRUSTED_PROXY_HOPS = 1;
 const DEFAULT_PUBLIC_URLS: PublicUrls = {
   publicBaseUrl: 'http://localhost:5173',
@@ -65,15 +70,21 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     }),
     genReqId: (req) => requestIdFrom(req.headers['x-cloud-trace-context']),
     bodyLimit: BODY_LIMIT_BYTES,
-    // Fastify answers 414 above 100 characters; long path parameters must reach validation (404).
-    maxParamLength: 512,
+    // Longer path parameters are rejected by the router (404) before any handler logic runs.
+    maxParamLength: MAX_PARAM_LENGTH,
+    // Google's front end keeps connections for 60 s: stay above it; requests end before its 60 s limit.
+    connectionTimeout: REQUEST_TIMEOUT_MS,
+    requestTimeout: REQUEST_TIMEOUT_MS,
+    keepAliveTimeout: KEEP_ALIVE_TIMEOUT_MS,
+    frameworkErrors: frameworkErrorHandler,
     // Cloud Run terminates TLS behind a single Google front end hop.
     // Final value is decided in BEU-ICT/certificate-manager#388.
     trustProxy: (_address, hop) => hop < TRUSTED_PROXY_HOPS,
   };
-  const app = Fastify(options);
+  const app = Fastify({ ...options, http: { maxHeaderSize: MAX_HEADER_BYTES } });
 
   installRequestContext(app, { gcpProject: deps.log?.gcpProject });
+  installSecurity(app);
   installErrorHandling(app);
   installOpenApi(app);
   installAdminGuard(app, {

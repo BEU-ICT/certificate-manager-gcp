@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { applySecurityHeaders } from './security.js';
 import { logUnexpectedError } from './logging/error-reporting.js';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
@@ -51,6 +52,24 @@ function isFastifyClientError(error: unknown): error is FastifyError {
   if (typeof error !== 'object' || error === null) return false;
   const { statusCode } = error as { statusCode?: unknown };
   return typeof statusCode === 'number' && statusCode >= 400 && statusCode < 500;
+}
+
+/**
+ * Errors Fastify raises before routing (`frameworkErrors`). A path parameter beyond
+ * `maxParamLength` is answered exactly like an unknown ID (404), so absurd IDs reveal nothing.
+ * Security headers are added here because `onSend` hooks do not run for these replies.
+ */
+export function frameworkErrorHandler(
+  error: FastifyError,
+  request: FastifyRequest,
+  reply: FastifyReply,
+): void {
+  applySecurityHeaders(reply);
+  if (error.code === 'FST_ERR_MAX_PARAM_LENGTH') {
+    void send(request, reply, 404, 'NOT_FOUND', 'Resource not found');
+    return;
+  }
+  void errorHandler(error, request, reply);
 }
 
 export function errorHandler(
@@ -108,6 +127,9 @@ export function errorHandler(
   }
   if (isFastifyClientError(error)) {
     request.log.warn({ code: error.code, status: error.statusCode }, 'request rejected');
+    if (error.statusCode === 415) {
+      return send(request, reply, 415, 'UNSUPPORTED_MEDIA_TYPE', 'Unsupported content type');
+    }
     if (error.statusCode === 413) {
       return send(request, reply, 413, 'PAYLOAD_TOO_LARGE', 'Request body is too large');
     }
@@ -151,7 +173,8 @@ export function installErrorHandling(app: FastifyInstance): void {
     const allowed = [
       ...new Set(routes.filter((r) => r.matcher.test(path)).map((r) => r.method)),
     ].sort();
-    if (allowed.length > 0) {
+    // No CORS: a preflight must look like any unknown route, even where the path exists.
+    if (allowed.length > 0 && request.method !== 'OPTIONS') {
       return send(request, reply, 405, 'METHOD_NOT_ALLOWED', 'Method not allowed', undefined, {
         allow: allowed.join(', '),
       });
