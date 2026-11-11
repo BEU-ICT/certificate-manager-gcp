@@ -20,6 +20,7 @@ import { RandomIdGenerator } from './adapters/system/id-generator.js';
 import { registerMemoryAdapters } from './adapters/memory/index.js';
 import { SystemClock } from './adapters/system/clock.js';
 import { buildServices } from './services.js';
+import type { FitChecker } from './modules/certificates/index.js';
 import { createLogger } from './http/logging/logger.js';
 import type { EmailSender, StorageGateway } from './ports/index.js';
 import type { AuthPorts, Ports, QueuePorts, RepositoryPorts, Services } from './wiring.js';
@@ -134,17 +135,20 @@ export async function compose(
     rateLimiter: new InProcessRateLimiter(clock),
     eventBus,
   };
-  return {
-    config,
-    ports,
-    services: buildServices(ports, undefined, {
-      templateCacheMb: config.templateCacheMb,
-      statsCacheSeconds: config.statsCacheSeconds,
-      publicBaseUrl: config.publicBaseUrl,
-      pdf: config.pdf,
-      logger,
-    }),
+  // Issuance (POST /api/v1/admin/certificates) is served only with a FitChecker. The real
+  // PdfService is built inside buildServices, so it is resolved lazily (first request).
+  const fitChecker: FitChecker = {
+    checkFit: (certificate, template) => services.pdf.checkFit(certificate, template),
   };
+  const services = buildServices(ports, undefined, {
+    templateCacheMb: config.templateCacheMb,
+    statsCacheSeconds: config.statsCacheSeconds,
+    publicBaseUrl: config.publicBaseUrl,
+    pdf: config.pdf,
+    logger,
+    fitChecker,
+  });
+  return { config, ports, services };
 }
 
 export { AdapterError, AdapterRegistry, buildServices };
