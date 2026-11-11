@@ -178,7 +178,6 @@
     "loading": "Şablonlar yüklənir…",
     "pageSize": "Səhifədə sətir",
     "upload": "Şablon yüklə",
-    "uploadSoon": "Şablon yükləmə tezliklə əlavə olunacaq.",
     "previewSoon": "Önbaxış tezliklə əlavə olunacaq.",
     "latest": "ən son",
     "copy": {
@@ -248,6 +247,60 @@
       "newVersion": "Yeni versiya",
       "copy": "Başqa tədbirə köçür",
       "preview": "Önbaxış"
+    },
+    "uploadForm": {
+      "title": "Şablon yüklə",
+      "newVersionTitle": "Yeni versiya yüklə",
+      "lockedIntro": "{{reference}} şablonunun yeni versiyası. Təşkilat, tədbir və növ dəyişmir.",
+      "typePlaceholder": "Növü seçin",
+      "package": "Şablon paketi",
+      "packageHint": "Şablon qovluğunu (config.json, background.svg, fonts/, assets/) seçin və ya fayllarını seçin. Ən çox 30 fayl və cəmi 10 MB.",
+      "pickFailed": "Buraxılan elementlər oxuna bilmədi. Qovluğu və ya faylları düymələrlə seçin.",
+      "picker": {
+        "prompt": "Şablon qovluğunu bura buraxın və ya seçin:",
+        "folder": "Qovluq seç",
+        "files": "Fayllar seç"
+      },
+      "selected_one": "{{count}} fayl seçildi ({{size}})",
+      "selected_other": "{{count}} fayl seçildi ({{size}})",
+      "clear": "Seçimi təmizlə",
+      "tree": "Paketdəki fayllar",
+      "checks": "Yükləməzdən əvvəl bu problemləri düzəldin",
+      "check": {
+        "configMissing": "config.json yoxdur.",
+        "configInvalid": "config.json etibarlı JSON deyil.",
+        "tooManyFiles": "Paketdə {{count}} fayl var; ən çox {{max}} fayla icazə verilir.",
+        "totalTooLarge": "Paket 10 MB-dan böyükdür.",
+        "duplicate": "{{path}} bir neçə dəfə təkrarlanır.",
+        "badName": "{{path}}: fayl adına icazə verilmir (yalnız hərf, rəqəm, . _ - və /, ən çox 100 simvol).",
+        "fileTooLarge": "{{path}} {{max}} MB-dan böyükdür.",
+        "referencedMissing": "config.json {{file}} faylına ({{path}}) istinad edir, lakin paketdə yoxdur.",
+        "layout": "{{path}}: bu fayla burada icazə verilmir (background.svg, fonts/<ad>.ttf və ya assets/<ad>.png, .jpg, .jpeg istifadə edin)."
+      },
+      "errors": {
+        "typeRequired": "Növ seçilməlidir",
+        "noFiles": "Əvvəlcə şablon qovluğunu və ya faylları seçin."
+      },
+      "rejected": "Server paketi rədd etdi. Heç nə saxlanmadı; fayllarınız seçili qalır, problemləri düzəldib yenidən yükləyin.",
+      "findings_one": "{{count}} qeyd",
+      "findings_other": "{{count}} qeyd",
+      "mismatch": "Tədbir seçilmiş təşkilata aid deyil.",
+      "error": "Xəta",
+      "warning": "Xəbərdarlıq",
+      "progress": "Yükləmə gedişi",
+      "progressText": "{{percent}}% ({{total}} içindən {{loaded}})",
+      "submit": "Yüklə",
+      "uploading": "Yüklənir…",
+      "cancel": "Yükləməni ləğv et",
+      "cancelled": "Yükləmə ləğv edildi. Fayllarınız seçili qalır.",
+      "success": {
+        "title": "Şablon yükləndi",
+        "created": "{{version}} versiyası yaradıldı: {{reference}}.",
+        "warnings_one": "{{count}} xəbərdarlıq (yükləmə bloklanmadı)",
+        "warnings_other": "{{count}} xəbərdarlıq (yükləmə bloklanmadı)",
+        "noWarnings": "Xəbərdarlıq yoxdur.",
+        "open": "Şablonu aç"
+      }
     }
   }
 }

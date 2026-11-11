@@ -92,15 +92,12 @@ export default function TemplateDetailPage() {
           />
         </h1>
         <div className="flex flex-wrap gap-2">
-          {/* Upload form (#315) and preview (#326) are separate tasks: shown disabled until then. */}
-          <Button
-            variant="secondary"
-            disabled
-            title={t('templates.uploadSoon')}
-            aria-describedby="new-version-soon"
+          <Link
+            to={`/admin/templates/new?from=${encodeURIComponent(data.reference)}`}
+            className="inline-flex min-h-11 items-center justify-center rounded-control border border-line bg-surface px-4 py-2 text-base font-medium text-ink hover:bg-surface-muted"
           >
             {t('templates.detail.newVersion')}
-          </Button>
+          </Link>
           <Button variant="secondary" onClick={() => setCopying(true)}>
             {t('templates.detail.copy')}
           </Button>
@@ -114,9 +111,6 @@ export default function TemplateDetailPage() {
           </Button>
         </div>
       </div>
-      <p id="new-version-soon" className="sr-only">
-        {t('templates.uploadSoon')}
-      </p>
       <p id="preview-soon" className="sr-only">
         {t('templates.previewSoon')}
       </p>

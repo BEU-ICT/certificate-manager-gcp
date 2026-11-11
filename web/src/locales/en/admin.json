@@ -178,7 +178,6 @@
     "loading": "Loading templates…",
     "pageSize": "Rows per page",
     "upload": "Upload template",
-    "uploadSoon": "Template upload is coming soon.",
     "previewSoon": "Preview is coming soon.",
     "latest": "latest",
     "copy": {
@@ -248,6 +247,60 @@
       "newVersion": "New version",
       "copy": "Copy to another event",
       "preview": "Preview"
+    },
+    "uploadForm": {
+      "title": "Upload template",
+      "newVersionTitle": "Upload a new version",
+      "lockedIntro": "New version of {{reference}}. Organization, event and type stay the same.",
+      "typePlaceholder": "Choose a type",
+      "package": "Template package",
+      "packageHint": "Choose the template folder (config.json, background.svg, fonts/, assets/) or select its files. At most 30 files and 10 MB in total.",
+      "pickFailed": "The dropped items could not be read. Use the buttons to choose the folder or files.",
+      "picker": {
+        "prompt": "Drop the template folder here, or choose it:",
+        "folder": "Choose folder",
+        "files": "Choose files"
+      },
+      "selected_one": "{{count}} file selected ({{size}})",
+      "selected_other": "{{count}} files selected ({{size}})",
+      "clear": "Clear selection",
+      "tree": "Files in the package",
+      "checks": "Fix these problems before uploading",
+      "check": {
+        "configMissing": "config.json is missing.",
+        "configInvalid": "config.json is not valid JSON.",
+        "tooManyFiles": "The package has {{count}} files; at most {{max}} are allowed.",
+        "totalTooLarge": "The package is larger than 10 MB.",
+        "duplicate": "{{path}} appears more than once.",
+        "badName": "{{path}}: the file name is not allowed (use letters, digits, . _ - and / only, at most 100 characters).",
+        "fileTooLarge": "{{path}} is larger than {{max}} MB.",
+        "referencedMissing": "config.json refers to {{file}} ({{path}}), which is not in the package.",
+        "layout": "{{path}}: this file is not allowed here (use background.svg, fonts/<name>.ttf or assets/<name>.png, .jpg, .jpeg)."
+      },
+      "errors": {
+        "typeRequired": "Select a type",
+        "noFiles": "Choose the template folder or files first."
+      },
+      "rejected": "The server rejected the package. Nothing was saved; your files are still selected, so fix the problems and upload again.",
+      "findings_one": "{{count}} finding",
+      "findings_other": "{{count}} findings",
+      "mismatch": "The event does not belong to the selected organization.",
+      "error": "Error",
+      "warning": "Warning",
+      "progress": "Upload progress",
+      "progressText": "{{percent}}% ({{loaded}} of {{total}})",
+      "submit": "Upload",
+      "uploading": "Uploading…",
+      "cancel": "Cancel upload",
+      "cancelled": "Upload cancelled. Your files are still selected.",
+      "success": {
+        "title": "Template uploaded",
+        "created": "Version {{version}} was created: {{reference}}.",
+        "warnings_one": "{{count}} warning (the upload was not blocked)",
+        "warnings_other": "{{count}} warnings (the upload was not blocked)",
+        "noWarnings": "No warnings.",
+        "open": "Open template"
+      }
     }
   }
 }

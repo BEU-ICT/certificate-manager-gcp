@@ -16,6 +16,7 @@ const OrganizationsPage = lazy(() => import('./organizations/OrganizationsPage')
 const EventsPage = lazy(() => import('./events/EventsPage'));
 const TemplatesPage = lazy(() => import('./templates/TemplatesPage'));
 const TemplateDetailPage = lazy(() => import('./templates/TemplateDetailPage'));
+const TemplateUploadPage = lazy(() => import('./templates/TemplateUploadPage'));
 
 const sections = [
   { path: 'certificates', titleKey: 'layout.nav.certificates' },
@@ -75,6 +76,14 @@ export default function AdminRoutes() {
             element={
               <Suspense fallback={<Spinner />}>
                 <TemplatesPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="templates/new"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <TemplateUploadPage />
               </Suspense>
             }
           />
