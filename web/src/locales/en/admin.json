@@ -196,7 +196,7 @@
       }
     },
     "copied": "Copied to clipboard",
-    "copyLabel": "Copy to clipboard",
+    "copyLabel": "Copy",
     "copyFailed": "Could not copy to clipboard",
     "copyReference": "Copy reference {{reference}}",
     "immutable": "Templates cannot be edited. Upload a new version; existing certificates keep their version.",

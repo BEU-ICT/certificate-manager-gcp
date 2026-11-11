@@ -177,6 +177,25 @@ describe('DefaultPdfService', () => {
     expect(dummy.calls[0]?.input).toBe(sample);
   });
 
+  it('preview loads once, checks the fit first and renders nothing when it does not fit', async () => {
+    const { service, dummy, assets } = setup();
+    const sample: RenderInput = {
+      ownerName: 'A very long owner name',
+      subject: 'S',
+      skills: [],
+      issuedAt: new Date(0),
+      type: 'attendance',
+      publicUrl: 'https://x.test/c/PREVIEW000000000000000',
+    };
+    await expect(service.preview(REF, sample)).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'TEXT_DOES_NOT_FIT',
+      details: [{ path: 'ownerName', message: 'too long' }],
+    });
+    expect(dummy.calls).toEqual([]);
+    expect(assets.loads).toEqual([REF]);
+  });
+
   it.each([[{ engine: 'unknown' }], [{}], [{ engine: 5 }]])(
     'fails with RENDER_ENGINE_UNSUPPORTED for config %j',
     async (config) => {

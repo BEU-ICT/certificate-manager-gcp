@@ -1,6 +1,7 @@
 import multipart from '@fastify/multipart';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
 import { checkTemplateUpload } from '../../modules/templates/index.js';
 import type { Cursor } from '../../ports/common.js';
 import {
@@ -33,6 +34,7 @@ import {
   UPLOAD_LIMITS,
   readTemplateUpload,
 } from '../multipart/template-upload.js';
+import { buildPreviewInput, TemplatePreviewBodyDto } from '../dto/admin/template-preview.js';
 import { zodDetails } from '../error-handler.js';
 import { errorResponses, jsonResponse } from '../openapi/responses.js';
 
@@ -41,9 +43,21 @@ const SECURITY = [{ bearerAuth: [] }];
 /** Route timeout of the upload; Cloud Run's request timeout is 60 s. */
 const UPLOAD_TIMEOUT_MS = 55_000;
 
-/** `/api/v1/admin/templates`: upload (multipart), list and get. */
-export function adminTemplateRoutes(app: FastifyInstance, services: Services): void {
-  const { templates, organizations, events } = services;
+export interface TemplateRouteOptions {
+  /** `PUBLIC_BASE_URL`: the preview QR code encodes `<base>/c/PREVIEW000000000000000`. */
+  publicBaseUrl: string;
+  /** Source of "now" for the preview `issuedAt`; defaults to the system clock. */
+  clock?: { now(): Date };
+}
+
+/** `/api/v1/admin/templates`: upload (multipart), copy, preview, list and get. */
+export function adminTemplateRoutes(
+  app: FastifyInstance,
+  services: Services,
+  options: TemplateRouteOptions = { publicBaseUrl: 'http://localhost:5173' },
+): void {
+  const { templates, organizations, events, pdf } = services;
+  const now = (): Date => options.clock?.now() ?? new Date();
 
   adminRoutes(app, async (scope) => {
     // Scoped to the admin routes. `preservePath` keeps `fonts/x.ttf` as the file name.
@@ -217,6 +231,53 @@ export function adminTemplateRoutes(app: FastifyInstance, services: Services): v
         });
         audit(request, 'template.copied', copied.template.reference);
         return reply.status(201).send(toTemplateCopyResultDto(copied));
+      },
+    );
+
+    r.post(
+      '/templates/:reference/preview',
+      {
+        schema: {
+          operationId: 'previewTemplate',
+          summary: 'Render a sample PDF with a template (nothing is stored)',
+          description:
+            'Runs the production pipeline (load assets, fit check, render) with sample data: ' +
+            'preset `typical` or `longest` (maximum field lengths), overridden by the provided ' +
+            'fields. The QR code encodes `<PUBLIC_BASE_URL>/c/PREVIEW000000000000000`, which never ' +
+            'resolves. `422 TEXT_DOES_NOT_FIT` lists the misfitting fields in `error.details[]` ' +
+            'as `{ path, message }`. Nothing is written to storage or the database.',
+          security: SECURITY,
+          params: ReferenceParamsDto,
+          body: TemplatePreviewBodyDto.nullish(),
+          response: {
+            200: {
+              description:
+                'The sample PDF (`Content-Disposition: inline`, `Cache-Control: no-store`)',
+              content: {
+                'application/pdf': {
+                  schema: z.custom<Buffer>().meta({ type: 'string', format: 'binary' }),
+                },
+              },
+            },
+            ...errorResponses(400, 401, 403, 404, 422),
+          },
+        },
+      },
+      async (request, reply) => {
+        const template = await templates.get(request.params.reference);
+        const sample = buildPreviewInput(
+          request.body ?? {},
+          template.type,
+          now(),
+          options.publicBaseUrl,
+        );
+        const pdfBytes = await pdf.preview(template.reference, sample);
+        audit(request, 'template.previewed', template.reference);
+        return reply
+          .header('content-type', 'application/pdf')
+          .header('content-disposition', `inline; filename="preview-${template.reference}.pdf"`)
+          .header('cache-control', 'no-store')
+          .send(pdfBytes);
       },
     );
 

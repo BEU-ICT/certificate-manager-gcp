@@ -1,6 +1,10 @@
 /** Public interface of the certificates module; other modules import only this file. */
 export { emailInitialStatus, isRevoked } from './domain.js';
 export {
+  OWNER_NAME_MAX,
+  SKILLS_MAX_ITEMS,
+  SKILL_MAX,
+  SUBJECT_MAX,
   certificateContentShape,
   certificateTypeSchema,
   emailSchema,

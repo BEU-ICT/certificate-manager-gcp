@@ -5,6 +5,7 @@ import type { FormatterRegistry } from '../../formatters.js';
 import type { FitIssue, FitResult, RenderAssets, RenderInput } from '../../renderer.js';
 import type { DrawContext, DrawLayer } from './context.js';
 import { fieldFont } from './fonts.js';
+import { checkQrFit } from './qr.js';
 import { layoutField, type FieldFont, type FieldLayout } from './layout.js';
 
 export const TEXT_DOES_NOT_FIT = 'TEXT_DOES_NOT_FIT';
@@ -103,9 +104,11 @@ export function createFields(options: FieldsOptions = {}): FieldsPlugin {
   };
   const checkFit = (input: RenderInput, assets: RenderAssets): FitResult => {
     const { config } = assertTemplateConfig(assets.template.config);
-    const issues = layoutAll(config, input, assets, formatters)
+    const issues: FitIssue[] = layoutAll(config, input, assets, formatters)
       .filter((p) => !p.layout.fits)
       .map(issueFor);
+    // The QR code is part of the same layout verdict (BEU-ICT/certificate-manager#323).
+    issues.push(...checkQrFit(input, config));
     return { fits: issues.length === 0, issues };
   };
   return { fieldsLayer, checkFit };
