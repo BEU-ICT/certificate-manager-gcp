@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatNumber } from '@/lib/format';
+import { formatDate, formatDateLong, formatNumber } from '@/lib/format';
 
 describe('formatDate', () => {
   it('renders dd.MM.yyyy for az', () => {
@@ -18,5 +18,12 @@ describe('formatNumber', () => {
   it('uses the locale separators', () => {
     expect(formatNumber(1234567.5, 'az')).toBe('1.234.567,5');
     expect(formatNumber(1234567.5, 'en')).toBe('1,234,567.5');
+  });
+});
+
+describe('formatDateLong', () => {
+  it('renders the long style in the active language', () => {
+    expect(formatDateLong('2026-11-04T10:15:30.000Z', 'en')).toBe('November 4, 2026');
+    expect(formatDateLong('2026-11-04T10:15:30.000Z', 'az')).toContain('2026');
   });
 });

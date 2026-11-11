@@ -21,3 +21,8 @@ export function formatDate(value: DateInput, language: Language, timeZone = 'UTC
 export function formatNumber(value: number, language: Language): string {
   return new Intl.NumberFormat(language).format(value);
 }
+
+/** Long date (`4 noyabr 2026`, `November 4, 2026`), calendar day in UTC unless `timeZone` says otherwise. */
+export function formatDateLong(value: DateInput, language: Language, timeZone = 'UTC'): string {
+  return new Intl.DateTimeFormat(language, { dateStyle: 'long', timeZone }).format(toDate(value));
+}
