@@ -196,7 +196,7 @@
       }
     },
     "copied": "Mübadilə buferinə köçürüldü",
-    "copyLabel": "Panoya köçür",
+    "copyLabel": "Köçür",
     "copyFailed": "Mübadilə buferinə köçürmək mümkün olmadı",
     "copyReference": "{{reference}} istinadını köçür",
     "immutable": "Şablonlar redaktə edilə bilməz. Yeni versiya yükləyin; mövcud sertifikatlar öz versiyasını saxlayır.",
