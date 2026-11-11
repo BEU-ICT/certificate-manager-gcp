@@ -1,0 +1,84 @@
+{
+  "engine": "svg-pdf",
+  "page": {
+    "size": "A4",
+    "orientation": "portrait"
+  },
+  "locale": "en",
+  "background": "background.svg",
+  "images": [
+    {
+      "file": "assets/logo.png",
+      "x": 241.94,
+      "y": 68,
+      "width": 113.39
+    }
+  ],
+  "fonts": {
+    "body": "fonts/NotoSans-Regular.ttf",
+    "strong": "fonts/NotoSans-Bold.ttf",
+    "title": "fonts/NotoSerif-Bold.ttf"
+  },
+  "fields": {
+    "ownerName": {
+      "x": 70,
+      "y": 300,
+      "width": 455,
+      "font": "title",
+      "size": 34,
+      "color": "#1d3557",
+      "align": "center",
+      "maxLines": 2,
+      "format": "uppercase"
+    },
+    "subject": {
+      "x": 70,
+      "y": 400,
+      "width": 455,
+      "font": "body",
+      "size": 18,
+      "color": "#333333",
+      "align": "center",
+      "maxLines": 3,
+      "format": "text"
+    },
+    "skills": {
+      "x": 70,
+      "y": 500,
+      "width": 455,
+      "font": "body",
+      "size": 13,
+      "color": "#555555",
+      "align": "center",
+      "maxLines": 3,
+      "format": "list-comma"
+    },
+    "type": {
+      "x": 70,
+      "y": 590,
+      "width": 455,
+      "font": "strong",
+      "size": 12,
+      "color": "#b8902f",
+      "align": "center",
+      "maxLines": 1,
+      "format": "lowercase"
+    },
+    "issuedAt": {
+      "x": 70,
+      "y": 776,
+      "width": 200,
+      "font": "body",
+      "size": 13,
+      "color": "#333333",
+      "align": "left",
+      "maxLines": 1,
+      "format": "date-dmy"
+    }
+  },
+  "qr": {
+    "x": 400,
+    "y": 690,
+    "size": 90
+  }
+}

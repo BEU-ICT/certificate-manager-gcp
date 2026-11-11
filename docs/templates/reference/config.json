@@ -1,0 +1,89 @@
+{
+  "engine": "svg-pdf",
+  "page": {
+    "size": "A4",
+    "orientation": "landscape"
+  },
+  "locale": "az",
+  "background": "background.svg",
+  "images": [
+    {
+      "file": "assets/logo.png",
+      "x": 364.25,
+      "y": 48,
+      "width": 113.39
+    }
+  ],
+  "fonts": {
+    "body": "fonts/NotoSans-Regular.ttf",
+    "strong": "fonts/NotoSans-Bold.ttf",
+    "serif": "fonts/NotoSerif-Regular.ttf",
+    "title": "fonts/NotoSerif-Bold.ttf"
+  },
+  "fields": {
+    "ownerName": {
+      "x": 70.9,
+      "y": 270,
+      "width": 700,
+      "font": "title",
+      "size": 38,
+      "color": "#1d3557",
+      "align": "center",
+      "maxLines": 1,
+      "format": "text",
+      "minSize": 22,
+      "lineHeight": 1.2
+    },
+    "subject": {
+      "x": 160.95,
+      "y": 325,
+      "width": 520,
+      "font": "serif",
+      "size": 20,
+      "color": "#333333",
+      "align": "center",
+      "maxLines": 2,
+      "format": "titlecase",
+      "lineHeight": 1.25,
+      "allowOverlap": false
+    },
+    "skills": {
+      "x": 160.95,
+      "y": 385,
+      "width": 520,
+      "font": "body",
+      "size": 13,
+      "color": "#555555",
+      "align": "center",
+      "maxLines": 2,
+      "format": "list-comma"
+    },
+    "type": {
+      "x": 160.95,
+      "y": 435,
+      "width": 520,
+      "font": "strong",
+      "size": 12,
+      "color": "#b8902f",
+      "align": "center",
+      "maxLines": 1,
+      "format": "uppercase"
+    },
+    "issuedAt": {
+      "x": 70,
+      "y": 512,
+      "width": 230,
+      "font": "body",
+      "size": 13,
+      "color": "#333333",
+      "align": "left",
+      "maxLines": 1,
+      "format": "date-long"
+    }
+  },
+  "qr": {
+    "x": 640,
+    "y": 455,
+    "size": 90
+  }
+}
