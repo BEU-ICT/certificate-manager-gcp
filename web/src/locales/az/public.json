@@ -1,5 +1,40 @@
 {
   "landing": {
     "intro": "Sertifikatın həqiqiliyini ID ilə yoxlayın."
+  },
+  "certificate": {
+    "documentTitle": "Sertifikatın yoxlanılması — {{organization}}",
+    "documentTitleGeneric": "Sertifikatın yoxlanılması",
+    "loading": "Sertifikat yoxlanılır…",
+    "valid": "Sertifikat etibarlıdır",
+    "revoked": "Bu sertifikat ləğv edilib",
+    "revokedNote": "O artıq etibarlı deyil. Ətraflı məlumat üçün təşkilatçı ilə əlaqə saxlayın.",
+    "organization": "Təşkilat",
+    "event": "Tədbir",
+    "type": "Sertifikat növü",
+    "subject": "Mövzu",
+    "skills": "Bacarıqlar",
+    "issuedAt": "Verilmə tarixi",
+    "id": "Sertifikat ID",
+    "copyId": "ID-ni kopyala",
+    "copied": "Buferə kopyalandı",
+    "download": "PDF yüklə",
+    "opensInNewTab": "(yeni tabda açılır)",
+    "preparing": "Sertifikatınız hazırlanır… ilk dəfə bir neçə saniyə çəkə bilər",
+    "notFound": {
+      "title": "Sertifikat tapılmadı",
+      "message": "Bu sertifikatı tapa bilmədik. Linki və ya QR kodu yoxlayın."
+    },
+    "rateLimited": {
+      "title": "Çox sayda sorğu",
+      "message_one": "Çox sayda sorğu göndərildi, {{count}} saniyə sonra yenidən cəhd edin",
+      "message_other": "Çox sayda sorğu göndərildi, {{count}} saniyə sonra yenidən cəhd edin",
+      "retryNow": "İndi yenidən cəhd et"
+    },
+    "error": {
+      "title": "Xəta baş verdi",
+      "generic": "Sertifikatı hazırda yükləmək mümkün olmadı. Yenidən cəhd edin.",
+      "offline": "Serverə qoşulmaq mümkün olmadı. İnternet bağlantınızı yoxlayıb yenidən cəhd edin."
+    }
   }
 }
