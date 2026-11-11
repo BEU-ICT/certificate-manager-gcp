@@ -6,9 +6,7 @@ import { FakeEventRepository } from '../../testing/fakes/fake-event-repository.j
 import { FakeIdempotencyStore } from '../../testing/fakes/fake-idempotency-store.js';
 import { FakeMigrationStateStore } from '../../testing/fakes/fake-migration-state-store.js';
 import { FakeOrganizationRepository } from '../../testing/fakes/fake-organization-repository.js';
-import { FakeScheduler } from '../../testing/fakes/fake-scheduler.js';
 import { FakeStorageGateway } from '../../testing/fakes/fake-storage-gateway.js';
-import { FakeTaskQueue } from '../../testing/fakes/fake-task-queue.js';
 import { FakeAdminUserDirectory } from '../../testing/fakes/fake-admin-user-directory.js';
 import { FakeTaskRequestVerifier, FakeTokenVerifier } from '../../testing/fakes/fake-verifiers.js';
 import { FakeTemplateRepository } from '../../testing/fakes/fake-template-repository.js';
@@ -37,10 +35,9 @@ export function registerMemoryAdapters(r: Registries): void {
     idempotency: new FakeIdempotencyStore(new SystemClock()),
   }));
   r.storage.register('memory', () => new FakeStorageGateway());
-  r.queue.register('in-process', () => ({
-    taskQueue: new FakeTaskQueue(),
-    scheduler: new FakeScheduler(),
-  }));
+  r.queue.register('in-process', async (ctx) =>
+    (await import('../in-process/index.js')).createQueuePorts(ctx),
+  );
   // The local profile without an Auth emulator keeps the in-memory verifier so that
   // `npm run dev:lite` works offline; production and emulator runs get the real Firebase adapter.
   r.auth.register('firebase', async (ctx) => {

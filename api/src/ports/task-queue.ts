@@ -20,3 +20,12 @@ export interface TaskQueue {
    */
   enqueue(task: TaskRequest): Promise<{ created: boolean }>;
 }
+
+/**
+ * The queue could not accept the task for a reason that may go away (timeout, throttling, 5xx).
+ * Callers surface it so they can mark the work as failed or retry; it is never swallowed.
+ * The message never contains the payload.
+ */
+export class TransientQueueError extends Error {
+  override readonly name = 'TransientQueueError';
+}
