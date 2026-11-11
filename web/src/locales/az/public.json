@@ -1,6 +1,13 @@
 {
   "landing": {
-    "intro": "Sertifikatın həqiqiliyini ID ilə yoxlayın."
+    "intro": "Sertifikatı QR kodunu skan etməklə və ya ID-ni daxil etməklə yoxlayın.",
+    "title": "Sertifikatı yoxlayın",
+    "explain": "Sertifikatları yalnız ID ilə tapmaq olar, ad üzrə axtarış yoxdur.",
+    "idLabel": "Sertifikat ID-si",
+    "idHint": "Sertifikatdakı tam keçidi də yapışdıra bilərsiniz.",
+    "idError": "Bu, düzgün sertifikat ID-si deyil. Yoxlayıb yenidən cəhd edin.",
+    "verify": "Yoxla",
+    "adminSignIn": "Administrator girişi"
   },
   "certificate": {
     "documentTitle": "Sertifikatın yoxlanılması — {{organization}}",

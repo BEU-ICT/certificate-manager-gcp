@@ -1,6 +1,13 @@
 {
   "landing": {
-    "intro": "Verify a certificate by its ID."
+    "intro": "Verify a certificate by scanning its QR code or entering its ID.",
+    "title": "Verify a certificate",
+    "explain": "Certificates can only be looked up by their ID, there is no search by name.",
+    "idLabel": "Certificate ID",
+    "idHint": "You can also paste the full link from the certificate.",
+    "idError": "This is not a valid certificate ID. Check it and try again.",
+    "verify": "Verify",
+    "adminSignIn": "Administrator sign in"
   },
   "certificate": {
     "documentTitle": "Certificate verification — {{organization}}",
