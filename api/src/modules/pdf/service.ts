@@ -21,6 +21,7 @@ export function toRenderInput(certificate: Certificate, publicUrl: string): Rend
     subject: certificate.subject,
     skills: [...certificate.skills],
     issuedAt: certificate.issuedAt,
+    organizationName: certificate.organizationName,
     type: certificate.type,
     publicUrl,
   };

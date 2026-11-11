@@ -12,6 +12,7 @@ export {
   type ConfigIssue,
   type FieldConfig,
   type FieldName,
+  type PageDimensions,
   type ParseTemplateConfigOptions,
   type TemplateConfig,
   type TemplateConfigResult,
