@@ -226,7 +226,7 @@ describe('AdminApp', () => {
 
   it('shows the administrator email and signs out through the layout', async () => {
     fakeAuth.reset(SIGNED_IN);
-    const router = renderAdminApp('/admin/templates');
+    const router = renderAdminApp('/admin/certificates');
     expect(await screen.findByText('Signed in as admin@example.org')).toBeInTheDocument();
     expect(screen.getByRole('main')).toHaveTextContent('This section is coming soon.');
     expect(cachedData()).toHaveLength(1);

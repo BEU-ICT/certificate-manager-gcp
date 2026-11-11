@@ -172,5 +172,82 @@
       "updated": "Event \"{{name}}\" updated",
       "deleted": "Event \"{{name}}\" deleted"
     }
+  },
+  "templates": {
+    "title": "Templates",
+    "loading": "Loading templates…",
+    "pageSize": "Rows per page",
+    "upload": "Upload template",
+    "uploadSoon": "Template upload is coming soon.",
+    "previewSoon": "Preview is coming soon.",
+    "latest": "latest",
+    "copy": {
+      "title": "Copy to another event",
+      "intro": "Creates a new template from {{reference}} in the chosen event.",
+      "submit": "Copy template",
+      "sameType": "Same type ({{type}})",
+      "typeHint": "Leave as is to keep the type of the source template.",
+      "toast": "Template {{reference}} created",
+      "errors": {
+        "organizationRequired": "Select an organization",
+        "eventRequired": "Select an event",
+        "invalid": "This value is not valid for the copy",
+        "eventMismatch": "This event does not belong to the selected organization",
+        "rejected": "The template could not be copied. Check the selection."
+      }
+    },
+    "copied": "Copied to clipboard",
+    "copyLabel": "Copy to clipboard",
+    "copyFailed": "Could not copy to clipboard",
+    "copyReference": "Copy reference {{reference}}",
+    "immutable": "Templates cannot be edited. Upload a new version; existing certificates keep their version.",
+    "fields": {
+      "organization": "Organization",
+      "event": "Event",
+      "eventPlaceholder": "Select an event",
+      "type": "Type"
+    },
+    "filter": {
+      "allOrganizations": "All organizations",
+      "allEvents": "All events",
+      "allTypes": "All types"
+    },
+    "columns": {
+      "reference": "Reference",
+      "organization": "Organization",
+      "event": "Event",
+      "type": "Type",
+      "version": "Version",
+      "createdAt": "Created"
+    },
+    "empty": {
+      "title": "No templates yet",
+      "description": "Upload a template package to start issuing certificates.",
+      "filteredTitle": "No templates match",
+      "filteredDescription": "Change or clear the filters to see more templates."
+    },
+    "events": {
+      "failed": "Events could not be loaded.",
+      "loadMore": "Load more events"
+    },
+    "detail": {
+      "title": "Template",
+      "loading": "Loading template…",
+      "back": "Back to templates",
+      "notFoundTitle": "Template not found",
+      "notFoundBody": "No template has this reference. It may have been mistyped.",
+      "summary": "Summary",
+      "certificateCount": "Certificates issued",
+      "config": "Configuration",
+      "showConfig": "Show configuration",
+      "hideConfig": "Hide configuration",
+      "configLabel": "Template configuration (JSON)",
+      "copyConfig": "Copy configuration",
+      "files": "Files",
+      "noFiles": "This template has no files.",
+      "newVersion": "New version",
+      "copy": "Copy to another event",
+      "preview": "Preview"
+    }
   }
 }
