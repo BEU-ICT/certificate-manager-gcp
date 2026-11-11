@@ -178,7 +178,6 @@
     "loading": "Şablonlar yüklənir…",
     "pageSize": "Səhifədə sətir",
     "upload": "Şablon yüklə",
-    "previewSoon": "Önbaxış tezliklə əlavə olunacaq.",
     "latest": "ən son",
     "copy": {
       "title": "Başqa tədbirə köçür",
@@ -300,6 +299,56 @@
         "warnings_other": "{{count}} xəbərdarlıq (yükləmə bloklanmadı)",
         "noWarnings": "Xəbərdarlıq yoxdur.",
         "open": "Şablonu aç"
+      }
+    },
+    "preview": {
+      "title": "{{reference}} önbaxışı",
+      "intro": "Bu şablonla nümunə PDF hazırlayır. Heç nə saxlanmır, real sertifikat məlumatı istifadə olunmur.",
+      "preset": "Nümunə məlumatlar",
+      "presets": {
+        "typical": "Tipik",
+        "longest": "Ən uzun (maksimum uzunluq)"
+      },
+      "overridesHint": "İstəyə görə: ayrı-ayrı nümunə dəyərlərini dəyişin.",
+      "fields": {
+        "ownerName": "Ad",
+        "subject": "Mövzu",
+        "skills": "Bacarıqlar",
+        "issuedAt": "Verilmə tarixi"
+      },
+      "skillsHint": "Hər sətirdə bir bacarıq, ən çox {{count}} bacarıq, hər biri {{max}} simvola qədər.",
+      "render": "Hazırla",
+      "close": "Bağla",
+      "rendering": "Hazırlanır… {{seconds}} san",
+      "ready": "Önbaxış hazırdır.",
+      "download": "PDF yüklə",
+      "fullscreen": "Böyüt",
+      "exitFullscreen": "Kiçilt",
+      "frameTitle": "{{reference}} PDF önbaxışı",
+      "retry": "Yenidən cəhd et",
+      "retryIn": "{{seconds}} san sonra yenidən cəhd edin",
+      "fieldNames": {
+        "ownerName": "Ad",
+        "subject": "Mövzu",
+        "skills": "Bacarıqlar",
+        "qr": "QR kod",
+        "issuedAt": "Verilmə tarixi",
+        "type": "Növ",
+        "config.qr.size": "QR kodun ölçüsü"
+      },
+      "errors": {
+        "doesNotFit": "Mətn şablona sığmır.",
+        "qrTooSmall": "QR kod çap üçün çox kiçikdir.",
+        "overflow_one": "{{field}} {{count}} sətir artıqdır.",
+        "overflow_other": "{{field}} {{count}} sətir artıqdır.",
+        "fieldIssue": "{{field}} sığmır.",
+        "advice": "Mətni qısaldın və ya konfiqurasiyada maxLines/size dəyərlərini dəyişib yeni versiya yükləyin.",
+        "rateLimited": "Çox sayda önbaxış sorğusu. Bir az gözləyib yenidən cəhd edin.",
+        "unavailable": "Önbaxış çox çəkdi və ya xidmət əlçatan deyil. Yenidən cəhd edin.",
+        "ownerName": "Ən çox {{max}} simvol.",
+        "subject": "Ən çox {{max}} simvol.",
+        "skillsCount": "Ən çox {{count}} bacarıq.",
+        "skillLength": "Hər bacarıq ən çox {{max}} simvol ola bilər."
       }
     }
   },

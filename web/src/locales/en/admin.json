@@ -178,7 +178,6 @@
     "loading": "Loading templates…",
     "pageSize": "Rows per page",
     "upload": "Upload template",
-    "previewSoon": "Preview is coming soon.",
     "latest": "latest",
     "copy": {
       "title": "Copy to another event",
@@ -300,6 +299,56 @@
         "warnings_other": "{{count}} warnings (the upload was not blocked)",
         "noWarnings": "No warnings.",
         "open": "Open template"
+      }
+    },
+    "preview": {
+      "title": "Preview {{reference}}",
+      "intro": "Renders a sample PDF with this template. Nothing is stored and no real certificate data is used.",
+      "preset": "Sample data",
+      "presets": {
+        "typical": "Typical",
+        "longest": "Longest (maximum lengths)"
+      },
+      "overridesHint": "Optional: override single sample values.",
+      "fields": {
+        "ownerName": "Name",
+        "subject": "Subject",
+        "skills": "Skills",
+        "issuedAt": "Issue date"
+      },
+      "skillsHint": "One skill per line, at most {{count}} skills of {{max}} characters.",
+      "render": "Render",
+      "close": "Close",
+      "rendering": "Rendering… {{seconds}} s",
+      "ready": "Preview ready.",
+      "download": "Download PDF",
+      "fullscreen": "Enlarge",
+      "exitFullscreen": "Shrink",
+      "frameTitle": "PDF preview of {{reference}}",
+      "retry": "Retry",
+      "retryIn": "Retry in {{seconds}} s",
+      "fieldNames": {
+        "ownerName": "Name",
+        "subject": "Subject",
+        "skills": "Skills",
+        "qr": "QR code",
+        "issuedAt": "Issue date",
+        "type": "Type",
+        "config.qr.size": "QR code size"
+      },
+      "errors": {
+        "doesNotFit": "The text does not fit the template.",
+        "qrTooSmall": "The QR code is too small to print.",
+        "overflow_one": "{{field}} overflows by {{count}} line.",
+        "overflow_other": "{{field}} overflows by {{count}} lines.",
+        "fieldIssue": "{{field}} does not fit.",
+        "advice": "Shorten the text or adjust maxLines/size in the config and upload a new version.",
+        "rateLimited": "Too many preview requests. Wait a moment and retry.",
+        "unavailable": "The preview took too long or the service is unavailable. Retry.",
+        "ownerName": "At most {{max}} characters.",
+        "subject": "At most {{max}} characters.",
+        "skillsCount": "At most {{count}} skills.",
+        "skillLength": "Each skill has at most {{max}} characters."
       }
     }
   },

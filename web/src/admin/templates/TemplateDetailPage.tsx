@@ -11,6 +11,7 @@ import { useTemplate } from './api';
 import { CopyButton } from './CopyButton';
 import { CopyTemplateDialog } from './CopyTemplateDialog';
 import { formatBytes } from './format';
+import { PreviewDialog } from './PreviewDialog';
 
 const ConfigViewer = lazy(() => import('./ConfigViewer'));
 
@@ -21,6 +22,7 @@ export default function TemplateDetailPage() {
   const { reference = '' } = useParams();
   const query = useTemplate(reference);
   const [copying, setCopying] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const { data } = query;
 
@@ -101,19 +103,11 @@ export default function TemplateDetailPage() {
           <Button variant="secondary" onClick={() => setCopying(true)}>
             {t('templates.detail.copy')}
           </Button>
-          <Button
-            variant="secondary"
-            disabled
-            title={t('templates.previewSoon')}
-            aria-describedby="preview-soon"
-          >
+          <Button variant="secondary" onClick={() => setPreviewing(true)}>
             {t('templates.detail.preview')}
           </Button>
         </div>
       </div>
-      <p id="preview-soon" className="sr-only">
-        {t('templates.previewSoon')}
-      </p>
       <p className="rounded-control bg-surface-muted p-3 text-ink">{t('templates.immutable')}</p>
 
       <section aria-labelledby="summary-title">
@@ -171,6 +165,9 @@ export default function TemplateDetailPage() {
         )}
       </section>
 
+      {previewing ? (
+        <PreviewDialog reference={data.reference} onClose={() => setPreviewing(false)} />
+      ) : null}
       {copying ? <CopyTemplateDialog template={data} onClose={() => setCopying(false)} /> : null}
     </section>
   );

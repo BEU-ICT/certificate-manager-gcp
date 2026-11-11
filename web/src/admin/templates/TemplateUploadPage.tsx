@@ -20,6 +20,7 @@ import {
   type PackageIssue,
 } from './package';
 import { PackagePicker } from './PackagePicker';
+import { PreviewDialog } from './PreviewDialog';
 
 /** Codes the validator reports as advisory (`api/src/modules/templates/README.md`). */
 const WARNING_CODES = new Set([
@@ -98,6 +99,7 @@ function SuccessScreen({ result }: { result: TemplateUploadResult }) {
   const { t, i18n } = useTranslation(['admin', 'common']);
   const language = isLanguage(i18n.resolvedLanguage) ? i18n.resolvedLanguage : DEFAULT_LANGUAGE;
   const navigate = useNavigate();
+  const [previewing, setPreviewing] = useState(false);
   return (
     <section aria-labelledby="page-title" className="flex flex-col gap-4">
       <h1 id="page-title" className="text-2xl font-semibold">
@@ -128,12 +130,7 @@ function SuccessScreen({ result }: { result: TemplateUploadResult }) {
         <p>{t('admin:templates.uploadForm.success.noWarnings')}</p>
       )}
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant="secondary"
-          disabled
-          title={t('admin:templates.previewSoon')}
-          aria-describedby="preview-soon"
-        >
+        <Button variant="secondary" onClick={() => setPreviewing(true)}>
           {t('admin:templates.detail.preview')}
         </Button>
         <Button
@@ -142,9 +139,9 @@ function SuccessScreen({ result }: { result: TemplateUploadResult }) {
           {t('admin:templates.uploadForm.success.open')}
         </Button>
       </div>
-      <p id="preview-soon" className="sr-only">
-        {t('admin:templates.previewSoon')}
-      </p>
+      {previewing ? (
+        <PreviewDialog reference={result.reference} onClose={() => setPreviewing(false)} />
+      ) : null}
     </section>
   );
 }

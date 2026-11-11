@@ -119,7 +119,7 @@ describe('TemplateDetailPage', () => {
       'href',
       `/admin/templates/new?from=${REF}`,
     );
-    expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeEnabled();
     await expectNoA11yViolations(container);
   });
 
