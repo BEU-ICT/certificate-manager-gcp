@@ -481,6 +481,67 @@
       "qrFailed": "The QR code could not be generated.",
       "qrDownload": "Download QR code as PNG",
       "newTab": "opens in a new tab"
+    },
+    "issueForm": {
+      "title": "Issue a certificate",
+      "fields": {
+        "organization": "Organization",
+        "organizationPlaceholder": "Choose an organization",
+        "event": "Event",
+        "eventPlaceholder": "Choose an event",
+        "type": "Type",
+        "typePlaceholder": "Choose a type",
+        "template": "Template",
+        "ownerName": "Owner name",
+        "email": "Email address (optional)",
+        "subject": "Subject",
+        "skills": "Skills (optional)",
+        "issuedAt": "Issue date"
+      },
+      "template": {
+        "latest": "Latest ({{reference}})",
+        "version": "{{reference}} (version {{version}}, {{date}})",
+        "chooseFirst": "Choose organization, event and type first",
+        "loading": "Loading templates…",
+        "none": "No template available",
+        "noneHint": "No template exists for this organization, event and type yet. Upload one to issue certificates.",
+        "upload": "Upload a template",
+        "failed": "The templates could not be loaded."
+      },
+      "counter": "{{current}} / {{max}} characters",
+      "emailHint": "A link to the certificate will be emailed",
+      "skillsHint": "{{count}} of {{max}} skills. Press Enter or comma to add; up to {{limit}} characters each.",
+      "skillsList": "Added skills",
+      "skillAdd": "Add skill",
+      "skillRemove": "Remove skill {{skill}}",
+      "submit": "Issue certificate",
+      "submitting": "Issuing…",
+      "errors": {
+        "organizationRequired": "Choose an organization.",
+        "eventRequired": "Choose an event.",
+        "typeRequired": "Choose a type.",
+        "ownerRequired": "Enter the owner name.",
+        "ownerTooLong": "The name must have at most {{max}} characters.",
+        "emailInvalid": "Enter a valid email address.",
+        "subjectRequired": "Enter the subject.",
+        "subjectTooLong": "The subject must have at most {{max}} characters.",
+        "skillTooLong": "A skill must have at most {{max}} characters.",
+        "tooManySkills": "At most {{max}} skills are allowed.",
+        "dateRequired": "Enter the issue date.",
+        "dateFuture": "The issue date must not be in the future."
+      },
+      "failure": {
+        "fit": "Some texts do not fit the template. Shorten the marked fields and try again.",
+        "template": "Choose another template or upload a matching one, then try again.",
+        "retry": "Nothing was lost. Press “Issue certificate” again; retrying will not create a duplicate.",
+        "retryAfter": "Try again in {{seconds}} seconds. Retrying will not create a duplicate."
+      },
+      "success": {
+        "title": "Certificate issued",
+        "body": "The certificate for {{owner}} was issued.",
+        "another": "Issue another with same settings",
+        "view": "View certificate"
+      }
     }
   }
 }
