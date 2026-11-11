@@ -1,5 +1,40 @@
 {
   "landing": {
     "intro": "Verify a certificate by its ID."
+  },
+  "certificate": {
+    "documentTitle": "Certificate verification — {{organization}}",
+    "documentTitleGeneric": "Certificate verification",
+    "loading": "Checking the certificate…",
+    "valid": "Certificate is valid",
+    "revoked": "This certificate has been revoked",
+    "revokedNote": "It is no longer valid. Please contact the issuer for details.",
+    "organization": "Organization",
+    "event": "Event",
+    "type": "Certificate type",
+    "subject": "Subject",
+    "skills": "Skills",
+    "issuedAt": "Issue date",
+    "id": "Certificate ID",
+    "copyId": "Copy ID",
+    "copied": "Copied to clipboard",
+    "download": "Download PDF",
+    "opensInNewTab": "(opens in a new tab)",
+    "preparing": "Preparing your certificate… this can take a few seconds the first time",
+    "notFound": {
+      "title": "Certificate not found",
+      "message": "We could not find this certificate. Check the link or QR code."
+    },
+    "rateLimited": {
+      "title": "Too many requests",
+      "message_one": "Too many requests, please try again in {{count}} second",
+      "message_other": "Too many requests, please try again in {{count}} seconds",
+      "retryNow": "Try again now"
+    },
+    "error": {
+      "title": "Something went wrong",
+      "generic": "We could not load this certificate right now. Please try again.",
+      "offline": "We could not reach the server. Check your connection and try again."
+    }
   }
 }

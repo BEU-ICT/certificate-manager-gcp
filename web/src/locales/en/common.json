@@ -2,9 +2,6 @@
   "app": {
     "name": "Certificate Manager"
   },
-  "certificate": {
-    "title": "Certificate"
-  },
   "notFound": {
     "title": "Page not found",
     "body": "The page you are looking for does not exist.",

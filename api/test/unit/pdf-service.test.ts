@@ -148,6 +148,7 @@ describe('DefaultPdfService', () => {
       subject: 'DevFest 2026',
       skills: ['TypeScript'],
       issuedAt: new Date('2026-01-02T00:00:00Z'),
+      organizationName: 'Acme',
       type: 'attendance',
       publicUrl: 'https://x.test/v/AbCdEfGhIjKlMnOpQrStUv',
     });

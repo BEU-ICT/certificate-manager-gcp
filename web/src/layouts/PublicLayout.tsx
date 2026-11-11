@@ -18,7 +18,7 @@ export function PublicLayout({ languageSwitcher }: PublicLayoutProps) {
       >
         {t('layout.skipToContent')}
       </a>
-      <header className="border-b border-line">
+      <header className="border-b border-line print:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <Link to="/" className="flex items-center gap-2 rounded-control font-semibold">
             <span
@@ -35,7 +35,7 @@ export function PublicLayout({ languageSwitcher }: PublicLayoutProps) {
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
         <Outlet />
       </main>
-      <footer className="border-t border-line bg-surface-muted">
+      <footer className="border-t print:hidden border-line bg-surface-muted">
         <p className="mx-auto max-w-5xl px-4 py-4 text-sm text-ink-muted">
           {t('layout.footer.contact')}
         </p>

@@ -10,6 +10,8 @@ export interface RenderInput {
   subject: string;
   skills: string[];
   issuedAt: Date;
+  /** Organization name snapshot of the certificate; the PDF `Author`. Absent for admin previews. */
+  organizationName?: string;
   type: CertificateType;
   /** Public verification URL (printed as text / encoded in a QR code). */
   publicUrl: string;

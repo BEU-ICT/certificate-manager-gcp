@@ -17,3 +17,20 @@ export {
   type PdfService,
   type PublicUrlBuilder,
 } from './service.js';
+export {
+  SVG_PDF_ENGINE,
+  SvgPdfRenderer,
+  type DrawContext,
+  type DrawLayer,
+  type SvgPdfRendererOptions,
+} from './engines/svg-pdf/index.js';
+export {
+  FormatterError,
+  FormatterRegistry,
+  TEMPLATE_TIMEZONE,
+  type FormatContext,
+  type FormatFn,
+  type FormatInputByKind,
+  type RegisterOptions,
+} from './formatters.js';
+export { createFormatterRegistry, registerBuiltinFormatters } from './formatters-builtin.js';

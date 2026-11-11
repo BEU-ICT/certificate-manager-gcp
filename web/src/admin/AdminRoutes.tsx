@@ -14,9 +14,10 @@ const ComponentsShowcase = import.meta.env.DEV ? lazy(() => import('./Components
 
 const OrganizationsPage = lazy(() => import('./organizations/OrganizationsPage'));
 const EventsPage = lazy(() => import('./events/EventsPage'));
+const TemplatesPage = lazy(() => import('./templates/TemplatesPage'));
+const TemplateDetailPage = lazy(() => import('./templates/TemplateDetailPage'));
 
 const sections = [
-  { path: 'templates', titleKey: 'layout.nav.templates' },
   { path: 'certificates', titleKey: 'layout.nav.certificates' },
   { path: 'import', titleKey: 'layout.nav.import' },
 ] as const;
@@ -66,6 +67,22 @@ export default function AdminRoutes() {
             element={
               <Suspense fallback={<Spinner />}>
                 <EventsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="templates"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <TemplatesPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="templates/:reference"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <TemplateDetailPage />
               </Suspense>
             }
           />
