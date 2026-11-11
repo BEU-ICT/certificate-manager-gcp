@@ -17,6 +17,8 @@ export const ALLOW_DYNAMIC = [
   'common:certificateTypes.*',
   'common:layout.nav.*', // admin nav items are rendered from a list
   'admin:templates.uploadForm.check.*', // package pre-check messages are keyed by issue
+  'admin:certificates.status.*', // badges are keyed by the certificate status
+  'admin:certificates.emailStatus.*', // badges are keyed by the e-mail status
 ];
 
 function walk(dir, filter) {

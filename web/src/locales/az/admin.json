@@ -302,5 +302,58 @@
         "open": "Şablonu aç"
       }
     }
+  },
+  "certificates": {
+    "title": "Sertifikatlar",
+    "loading": "Sertifikatlar yüklənir…",
+    "pageSize": "Səhifədə sətir",
+    "issue": "Sertifikat ver",
+    "import": "Fayldan idxal et",
+    "clearFilters": "Filtrləri təmizlə",
+    "total": "Cəmi: {{total}}",
+    "totalUnavailable": "Cəmi: əlçatan deyil",
+    "rangeInvalid": "Bitmə tarixi başlanğıc tarixindən əvvəl ola bilməz.",
+    "copyId": "{{owner}} sertifikatının ID-sini kopyala",
+    "fields": {
+      "organization": "Təşkilat",
+      "event": "Tədbir",
+      "type": "Növ",
+      "status": "Status",
+      "issuedFrom": "Verilmə tarixi (başlanğıc)",
+      "issuedTo": "Verilmə tarixi (son)"
+    },
+    "filter": {
+      "allOrganizations": "Bütün təşkilatlar",
+      "allEvents": "Bütün tədbirlər",
+      "allTypes": "Bütün növlər",
+      "allStatuses": "Bütün statuslar"
+    },
+    "columns": {
+      "owner": "Sahib",
+      "event": "Tədbir",
+      "organization": "Təşkilat",
+      "type": "Növ",
+      "subject": "Mövzu",
+      "issuedAt": "Verilib",
+      "status": "Status",
+      "emailStatus": "E-poçt",
+      "id": "ID"
+    },
+    "status": {
+      "active": "Aktiv",
+      "revoked": "Ləğv edilib"
+    },
+    "emailStatus": {
+      "pending": "Gözləyir",
+      "sent": "Göndərilib",
+      "failed": "Uğursuz",
+      "skipped": "Atlanıb"
+    },
+    "empty": {
+      "title": "Hələ sertifikat yoxdur",
+      "description": "Başlamaq üçün sertifikat verin və ya fayl idxal edin.",
+      "filteredTitle": "Uyğun sertifikat tapılmadı",
+      "filteredDescription": "Daha çox nəticə üçün filtrləri dəyişin və ya təmizləyin."
+    }
   }
 }
