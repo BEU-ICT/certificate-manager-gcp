@@ -1,6 +1,36 @@
 {
   "dashboard": {
-    "intro": "Sertifikatlar, təşkilatlar və tədbirlər burada idarə olunacaq."
+    "loading": "Statistika yüklənir",
+    "updatedAt": "Yenilənib: {{time}}",
+    "refresh": "Yenilə",
+    "throttled": "Statistika bir az əvvəl yenilənib. Yenidən yeniləmək üçün təxminən 10 saniyə gözləyin.",
+    "viewList": "Siyahını göstər",
+    "certificates": {
+      "title": "Sertifikatlar",
+      "total": "Ümumi sertifikatlar",
+      "active": "Aktiv sertifikatlar",
+      "revoked": "Ləğv edilmiş sertifikatlar",
+      "issuedLast30Days": "Son 30 gündə verilib"
+    },
+    "email": {
+      "title": "E-poçt göndərişi",
+      "pending": "E-poçt gözləyir",
+      "sent": "E-poçt göndərilib",
+      "failed": "E-poçt göndərilməyib (xəta)",
+      "skipped": "E-poçt buraxılıb"
+    },
+    "data": {
+      "title": "Məlumat siyahıları",
+      "organizations": "Təşkilatlar",
+      "events": "Tədbirlər",
+      "templates": "Şablonlar"
+    },
+    "actions": {
+      "title": "Sürətli əməliyyatlar",
+      "issue": "Sertifikat ver",
+      "import": "İdxal",
+      "uploadTemplate": "Şablon yüklə"
+    }
   },
   "login": {
     "title": "Daxil ol",

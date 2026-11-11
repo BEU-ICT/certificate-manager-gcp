@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Route, Routes } from 'react-router-dom';
 import { Spinner, ToastProvider } from '@/components';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -12,6 +11,7 @@ import { useAdminSession } from './session-context';
 // the dynamic import (and the showcase chunk) is removed entirely from dist.
 const ComponentsShowcase = import.meta.env.DEV ? lazy(() => import('./ComponentsShowcase')) : null;
 
+const DashboardPage = lazy(() => import('./dashboard/DashboardPage'));
 const OrganizationsPage = lazy(() => import('./organizations/OrganizationsPage'));
 const EventsPage = lazy(() => import('./events/EventsPage'));
 const TemplatesPage = lazy(() => import('./templates/TemplatesPage'));
@@ -39,7 +39,6 @@ function AdminShell() {
  * confirmed the administrator, so nothing in here is fetched for anyone else.
  */
 export default function AdminRoutes() {
-  const { t } = useTranslation(['common', 'admin']);
   return (
     <ToastProvider>
       <Routes>
@@ -47,12 +46,9 @@ export default function AdminRoutes() {
           <Route
             index
             element={
-              <section aria-labelledby="page-title">
-                <h1 id="page-title" className="text-2xl font-semibold">
-                  {t('layout.nav.dashboard')}
-                </h1>
-                <p className="mt-2 text-ink-muted">{t('admin:dashboard.intro')}</p>
-              </section>
+              <Suspense fallback={<Spinner />}>
+                <DashboardPage />
+              </Suspense>
             }
           />
           <Route
