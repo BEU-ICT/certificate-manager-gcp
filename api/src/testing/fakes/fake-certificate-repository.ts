@@ -5,6 +5,7 @@ import type {
   MarkRevokedResult,
   Page,
   PageRequest,
+  ReserveEmailSendResult,
   SetPdfPathResult,
 } from '../../ports/index.js';
 import { decodeIssuedAtCursor, encodeIssuedAtCursor, pageLimit } from '../../shared/cursor.js';
@@ -141,6 +142,23 @@ export class FakeCertificateRepository implements CertificateRepository {
     else if (patch.emailLastError !== undefined) c.emailLastError = patch.emailLastError;
     c.updatedAt = new Date(patch.updatedAt);
     return Promise.resolve(true);
+  }
+
+  reserveEmailSend(
+    id: CertificateId,
+    options: { at: Date; firstSendOnly: boolean },
+  ): Promise<ReserveEmailSendResult> {
+    const c = this.byId.get(id);
+    if (!c) return Promise.resolve({ outcome: 'not_found' });
+    if (
+      options.firstSendOnly &&
+      (c.status !== 'active' || c.emailStatus !== 'pending' || c.emailAttempts > 0)
+    ) {
+      return Promise.resolve({ outcome: 'not_eligible' });
+    }
+    c.emailAttempts += 1;
+    c.updatedAt = new Date(options.at);
+    return Promise.resolve({ outcome: 'reserved', sequence: c.emailAttempts });
   }
 
   countByTemplate(ref: TemplateRef): Promise<number> {

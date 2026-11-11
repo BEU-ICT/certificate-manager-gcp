@@ -21,6 +21,7 @@ import { registerMemoryAdapters } from './adapters/memory/index.js';
 import { SystemClock } from './adapters/system/clock.js';
 import { buildServices } from './services.js';
 import type { FitChecker } from './modules/certificates/index.js';
+import { registerIssuedEmailSubscriber } from './modules/notifications/index.js';
 import { createLogger } from './http/logging/logger.js';
 import type { EmailSender, StorageGateway } from './ports/index.js';
 import type { AuthPorts, Ports, QueuePorts, RepositoryPorts, Services } from './wiring.js';
@@ -151,6 +152,11 @@ export async function compose(
     pdf: config.pdf,
     logger,
     fitChecker,
+  });
+  registerIssuedEmailSubscriber(eventBus, {
+    certificates: services.certificates,
+    taskQueue: ports.taskQueue,
+    logger,
   });
   return { config, ports, services };
 }

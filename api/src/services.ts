@@ -149,7 +149,7 @@ export function buildServices(
     eventReferences,
     templates,
     templateAssets,
-    certificates: new DefaultCertificateService(ports.certificates),
+    certificates: new DefaultCertificateService(ports.certificates, ports.clock),
     idempotency: ports.idempotency,
     certificateQueries,
     revocation,

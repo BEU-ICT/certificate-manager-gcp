@@ -129,6 +129,12 @@ export interface EmailStatePatch {
   updatedAt: Date;
 }
 
+/** Outcome of {@link CertificateRepository.reserveEmailSend}. */
+export type ReserveEmailSendResult =
+  | { outcome: 'reserved'; sequence: number }
+  | { outcome: 'not_eligible' }
+  | { outcome: 'not_found' };
+
 export interface CertificateRepository {
   /** Document ID = certificate ID. Fails with `ConflictError` when the ID exists. */
   create(certificate: Certificate): Promise<void>;
@@ -174,6 +180,16 @@ export interface CertificateRepository {
    * attempt guard. False if the certificate does not exist.
    */
   updateEmailState(id: CertificateId, patch: EmailStatePatch): Promise<boolean>;
+  /**
+   * Transaction (one read, one write): increments `emailAttempts` and sets `updatedAt`, returning
+   * the new value as `sequence` (first send: 1). With `firstSendOnly` the increment happens only
+   * for an `active` certificate with `emailStatus` `pending` and `emailAttempts` 0, otherwise the
+   * outcome is `not_eligible` and nothing changes (makes duplicate event delivery idempotent).
+   */
+  reserveEmailSend(
+    id: CertificateId,
+    options: { at: Date; firstSendOnly: boolean },
+  ): Promise<ReserveEmailSendResult>;
   /** Certificates rendered from the template reference (reference checks). */
   countByTemplate(ref: TemplateRef): Promise<number>;
   countByOrganization(organizationId: OrganizationId): Promise<number>;

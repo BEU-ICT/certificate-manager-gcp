@@ -459,6 +459,63 @@ export function describeCertificateRepositoryContract(
         .toBe(false);
     });
 
+    test('reserveEmailSend increments emailAttempts atomically', async (repo) => {
+      const cert = sampleCertificate({ email: 'a@example.com', emailStatus: 'pending' });
+      await repo.create(cert);
+      const at = new Date(BASE + 50_000);
+      clause(PORT, 'reserveEmailSend: first reservation returns 1', 'first')
+        .that(await repo.reserveEmailSend(cert.id, { at, firstSendOnly: true }))
+        .toEqual({ outcome: 'reserved', sequence: 1 });
+      clause(PORT, 'reserveEmailSend: only emailAttempts and updatedAt change', 'fields')
+        .that(await repo.getById(cert.id))
+        .toEqual({ ...cert, emailAttempts: 1, updatedAt: at });
+      clause(PORT, 'reserveEmailSend: firstSendOnly is not eligible twice', 'duplicate')
+        .that(await repo.reserveEmailSend(cert.id, { at, firstSendOnly: true }))
+        .toEqual({ outcome: 'not_eligible' });
+      clause(PORT, 'reserveEmailSend: without firstSendOnly keeps counting', 'resend')
+        .that(await repo.reserveEmailSend(cert.id, { at, firstSendOnly: false }))
+        .toEqual({ outcome: 'reserved', sequence: 2 });
+      clause(PORT, 'reserveEmailSend: not_found for an unknown id', 'unknown')
+        .that(
+          await repo.reserveEmailSend(asCertificateId('z'.repeat(22)), { at, firstSendOnly: true }),
+        )
+        .toEqual({ outcome: 'not_found' });
+    });
+
+    test('reserveEmailSend firstSendOnly refuses skipped and revoked certificates', async (repo) => {
+      const skipped = sampleCertificate({ emailStatus: 'skipped' });
+      const revoked = sampleCertificate({
+        email: 'a@example.com',
+        emailStatus: 'pending',
+        status: 'revoked',
+      });
+      await repo.createMany([skipped, revoked]);
+      const at = new Date(BASE + 50_000);
+      for (const c of [skipped, revoked]) {
+        clause(PORT, 'reserveEmailSend: firstSendOnly needs active + pending', c.status)
+          .that(await repo.reserveEmailSend(c.id, { at, firstSendOnly: true }))
+          .toEqual({ outcome: 'not_eligible' });
+      }
+      clause(PORT, 'reserveEmailSend: not_eligible changes nothing', 'unchanged')
+        .that(await repo.getById(skipped.id))
+        .toEqual(skipped);
+    });
+
+    test('reserveEmailSend is atomic under concurrency', async (repo) => {
+      const cert = sampleCertificate({ email: 'a@example.com', emailStatus: 'pending' });
+      await repo.create(cert);
+      const at = new Date(BASE + 50_000);
+      const results = await Promise.all(
+        Array.from({ length: 5 }, () =>
+          repo.reserveEmailSend(cert.id, { at, firstSendOnly: false }),
+        ),
+      );
+      const sequences = results.map((r) => (r.outcome === 'reserved' ? r.sequence : -1));
+      clause(PORT, 'reserveEmailSend: concurrent calls get distinct sequences', 'concurrent')
+        .that([...sequences].sort((a, b) => a - b))
+        .toEqual([1, 2, 3, 4, 5]);
+    });
+
     test('countByTemplate / countByOrganization / countByEvent', async (repo) => {
       await repo.createMany([
         sampleCertificate(),
