@@ -1,6 +1,6 @@
 # <module name>
 
-Copy this file to `api/src/modules/<name>/README.md` and fill in every section. CI (`npm run check:module-readmes -w api`) fails when a module directory has no non-empty `README.md`. Keep it current when the public interface changes (Definition of Done, issue #16 §9.4).
+Copy this file to `api/src/modules/<name>/README.md` and fill in every section. CI (`npm run check:module-readmes -w api`) fails when a module directory has no non-empty `README.md`. Keep it current when the public interface changes (Definition of Done, issue BEU-ICT/certificate-manager#236 §9.4).
 
 ## Responsibility
 

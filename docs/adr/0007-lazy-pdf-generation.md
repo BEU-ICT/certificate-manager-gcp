@@ -1,6 +1,6 @@
 # 0007 Lazy PDF generation with caching and deletion on revocation
 
-Status: accepted · Spec §2 · Issue #16 §4, §7, §11
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §4, §7, §11
 
 ## Context
 

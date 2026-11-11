@@ -1,6 +1,6 @@
 # 0002 Modular monolith on Cloud Run
 
-Status: accepted · Spec §2 · Issue #16 §1, §3
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §1, §3
 
 ## Context
 

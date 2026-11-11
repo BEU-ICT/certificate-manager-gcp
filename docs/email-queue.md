@@ -14,7 +14,7 @@ Queue `email-queue` in `us-east1`, created by `infra/08-queue.sh` (idempotent, u
 
 Tasks carry an OIDC token of `tasks-invoker` with audience `SERVICE_URL`. Cost: five thousand emails per month is far below the 1 M operations/month free tier (`docs/cost-model.md`).
 
-Caveat: Cloud Tasks does not accept a task name used within roughly the last hour, which affects resends (naming scheme in #147).
+Caveat: Cloud Tasks does not accept a task name used within roughly the last hour, which affects resends (naming scheme in BEU-ICT/certificate-manager#366).
 
 ## Incident procedures
 
@@ -29,4 +29,4 @@ Pause first when a provider is down or a bad template is sending; purge only aft
 
 ## Not yet verified (needs the live project)
 
-`gcloud tasks queues describe` shows the exact settings, and a test task to the protected test endpoint (#149) is delivered with an OIDC token whose audience equals `SERVICE_URL`.
+`gcloud tasks queues describe` shows the exact settings, and a test task to the protected test endpoint (BEU-ICT/certificate-manager#368) is delivered with an OIDC token whose audience equals `SERVICE_URL`.

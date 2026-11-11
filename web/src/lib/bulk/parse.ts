@@ -169,7 +169,7 @@ function validateRow(
  * API requires (`subject`, `issuedAt`) as missing data and not submit such rows as valid.
  *
  * A digits-only date text such as "2024" is read as an Excel serial (day 2024 since 1899-12-30),
- * not as a year, as specified in issue #124.
+ * not as a year, as specified in issue BEU-ICT/certificate-manager#343.
  */
 export function processGrid(
   grid: readonly (readonly Cell[])[],

@@ -1,6 +1,6 @@
 # api
 
-Node.js + TypeScript + Fastify backend, deployed to Cloud Run. See BEU-ICT/certificate-manager#27.
+Node.js + TypeScript + Fastify backend, deployed to Cloud Run. See BEU-ICT/certificate-manager#239.
 
 ## Configuration
 
@@ -15,13 +15,13 @@ Feature flags are documented in [Feature flags](#feature-flags).
 
 The registry in `src/flags.ts` is the single source of truth: each flag has an environment variable, default and description. `config.ts` only passes the environment in and exposes the result as the typed, frozen `config.flags` object (e.g. `config.flags.openApiEndpoint`). Values are `true|false|1|0`; invalid values and unknown `FEATURE_*` variables fail boot, so typos are caught. Removing a flag is a change to `flags.ts` plus its usages.
 
-| Variable                        | Key                   | Default                         | Purpose                                              |
-| ------------------------------- | --------------------- | ------------------------------- | ---------------------------------------------------- |
-| `FEATURE_OPENAPI_ENDPOINT`      | `openApiEndpoint`     | off in production, on elsewhere | Serve the OpenAPI document                           |
-| `FEATURE_BOUNCE_JOB`            | `bounceJob`           | off (until #161 is verified)    | Bounce-processing job                                |
-| `FEATURE_EMAIL_FALLBACK`        | `emailFallback`       | on                              | Use `EMAIL_FALLBACK_PROVIDER` when the primary fails |
-| `FEATURE_BULK_ISSUANCE`         | `bulkIssuance`        | on                              | Bulk certificate issuance                            |
-| `FEATURE_PUBLIC_PDF_GENERATION` | `publicPdfGeneration` | on                              | On-demand public PDF generation (kill switch)        |
+| Variable                        | Key                   | Default                                                 | Purpose                                              |
+| ------------------------------- | --------------------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| `FEATURE_OPENAPI_ENDPOINT`      | `openApiEndpoint`     | off in production, on elsewhere                         | Serve the OpenAPI document                           |
+| `FEATURE_BOUNCE_JOB`            | `bounceJob`           | off (until BEU-ICT/certificate-manager#380 is verified) | Bounce-processing job                                |
+| `FEATURE_EMAIL_FALLBACK`        | `emailFallback`       | on                                                      | Use `EMAIL_FALLBACK_PROVIDER` when the primary fails |
+| `FEATURE_BULK_ISSUANCE`         | `bulkIssuance`        | on                                                      | Bulk certificate issuance                            |
+| `FEATURE_PUBLIC_PDF_GENERATION` | `publicPdfGeneration` | on                                                      | On-demand public PDF generation (kill switch)        |
 
 Usage: `createFeatureFlags(config.flags)` gives a `FeatureFlags` (`isEnabled(name)`), passed to `buildApp({ flags })` and to modules as a dependency. Guard a route with `requireFlag(flags, 'bulkIssuance')` from `src/http/flag-guard.ts` (`onRequest` hook) or call `assertFlagEnabled` in a handler: when the flag is off the route answers `404 NOT_FOUND` (hidden), except kill-switch flags (`killSwitch: true` in the registry, currently `publicPdfGeneration`), which answer `503 UNAVAILABLE`.
 

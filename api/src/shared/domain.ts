@@ -77,7 +77,7 @@ export interface Certificate {
   revokedAt?: Date;
   revokeReason?: string;
   emailStatus: EmailStatus;
-  /** Additive field (#16): delivery attempts so far, default 0. */
+  /** Additive field (BEU-ICT/certificate-manager#236): delivery attempts so far, default 0. */
   emailAttempts: number;
   emailSentAt?: Date;
   emailLastError?: string;
@@ -85,7 +85,7 @@ export interface Certificate {
   pdfPath?: string;
   /** When the PDF was stored. */
   pdfGeneratedAt?: Date;
-  /** Additive field (#16): set for certificates imported from the legacy system (#192). */
+  /** Additive field (BEU-ICT/certificate-manager#236): set for certificates imported from the legacy system (BEU-ICT/certificate-manager#411). */
   legacy?: { id: string; certificateType?: string; template?: string };
   /** Admin user ID that issued the certificate; never exposed publicly. */
   createdBy: string;

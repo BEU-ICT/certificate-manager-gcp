@@ -1,6 +1,6 @@
 # Configuration matrix
 
-Every variable validated at boot (issue #16 §6, `api/.env.example`). Non-secret values are Cloud Run environment variables set by `infra/deploy-api.sh` from `infra/.env`; secrets come from Secret Manager (`--set-secrets`). **Any change creates a new Cloud Run revision** (deploy again). Who can change: project owners and the operator running the deployment script; secrets only principals with Secret Manager admin (owners).
+Every variable validated at boot (issue BEU-ICT/certificate-manager#236 §6, `api/.env.example`). Non-secret values are Cloud Run environment variables set by `infra/deploy-api.sh` from `infra/.env`; secrets come from Secret Manager (`--set-secrets`). **Any change creates a new Cloud Run revision** (deploy again). Who can change: project owners and the operator running the deployment script; secrets only principals with Secret Manager admin (owners).
 
 | Variable                                                          | Kind       | Production value source                                                               |
 | ----------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |
@@ -17,7 +17,7 @@ Every variable validated at boot (issue #16 §6, `api/.env.example`). Non-secret
 | `TASKS_LOCATION`                                                  | env        | `us-east1`                                                                            |
 | `TASKS_INVOKER_SA`                                                | env        | `tasks-invoker@<project>.iam.gserviceaccount.com`                                     |
 | `BOOTSTRAP_ADMIN_EMAIL`                                           | env        | owner's email, placeholder in `infra/.env` (consumed once by the bootstrap migration) |
-| `EMAIL_PROVIDER` / `EMAIL_FALLBACK_PROVIDER`                      | env        | `gmail` / `brevo` (#145)                                                              |
+| `EMAIL_PROVIDER` / `EMAIL_FALLBACK_PROVIDER`                      | env        | `gmail` / `brevo` (BEU-ICT/certificate-manager#364)                                   |
 | `EMAIL_API_KEY`                                                   | **secret** | Secret Manager `EMAIL_API_KEY` (Brevo API key)                                        |
 | `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`         | env        | sender identity of the Workspace domain, chosen by the owner                          |
 | `EMAIL_DAILY_CAP`                                                 | env        | `300` (below the provider daily limit)                                                |

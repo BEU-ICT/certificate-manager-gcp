@@ -12,9 +12,9 @@ const GENERIC_SERVER_MESSAGE = 'The server could not complete the request.';
 export type GetToken = (forceRefresh: boolean) => Promise<string | null>;
 
 export interface ApiClientDeps {
-  /** Injected by the auth module (#73); the SDK is never imported here. Admin calls only. */
+  /** Injected by the auth module (BEU-ICT/certificate-manager#292); the SDK is never imported here. Admin calls only. */
   getToken?: GetToken;
-  /** Called after a second consecutive 401 on an admin call (sign-out hook, #73). */
+  /** Called after a second consecutive 401 on an admin call (sign-out hook, BEU-ICT/certificate-manager#292). */
   onUnauthorized?: () => void;
   baseUrl?: string;
 }

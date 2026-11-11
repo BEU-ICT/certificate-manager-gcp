@@ -1,5 +1,5 @@
 /**
- * Closed registry of certificate types (#16 section 5). Each type is a single lowercase token
+ * Closed registry of certificate types (BEU-ICT/certificate-manager#236 section 5). Each type is a single lowercase token
  * without hyphens so template references stay readable. Adding a type means adding one entry
  * here and the i18n labels in the frontend.
  */

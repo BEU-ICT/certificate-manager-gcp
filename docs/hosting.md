@@ -9,9 +9,9 @@
 | `/internal/**`  | **not rewritten**: falls through to the SPA, so it is never exposed through the public domain; OIDC-protected on the Cloud Run URL only |
 | `/api/v2/**`    | not configured; added when v2 exists (spec §8)                                                                                          |
 
-Cache: `assets/**` (hashed files) `public, max-age=31536000, immutable`; `/` and `index.html` `no-cache`. Hosting does not cache rewrites to Cloud Run unless the response is cacheable, so **the API must send `Cache-Control: no-store` (or `no-cache`) explicitly** on its responses. Security headers come with #166 and the legacy redirect with #200.
+Cache: `assets/**` (hashed files) `public, max-age=31536000, immutable`; `/` and `index.html` `no-cache`. Hosting does not cache rewrites to Cloud Run unless the response is cacheable, so **the API must send `Cache-Control: no-store` (or `no-cache`) explicitly** on its responses. Security headers come with BEU-ICT/certificate-manager#385 and the legacy redirect with BEU-ICT/certificate-manager#419.
 
-Deploy: `firebase deploy --only hosting --project <project>` after `npm run build -w web` (script in #60).
+Deploy: `firebase deploy --only hosting --project <project>` after `npm run build -w web` (script in BEU-ICT/certificate-manager#279).
 
 `infra/test-dry-run.sh` asserts the rewrite order, the absence of `/internal` and `/api/v2` rewrites and the cache headers.
 

@@ -1,6 +1,6 @@
 # 0003 Firestore with the repository pattern
 
-Status: accepted · Spec §2, §5 · Issue #16 §5
+Status: accepted · Spec §2, §5 · Issue BEU-ICT/certificate-manager#236 §5
 
 ## Context
 
@@ -13,5 +13,5 @@ Entities are persisted through the repository ports in `api/src/ports/repositori
 ## Consequences
 
 - Domain code and tests run on in-memory fakes; each adapter must pass the shared port contract tests.
-- Extra composite indexes are required (listed in issue #16 §5) and live in `infra/`.
+- Extra composite indexes are required (listed in issue BEU-ICT/certificate-manager#236 §5) and live in `infra/`.
 - Queries are limited to what Firestore indexes support; the port interface is designed around that.

@@ -1,6 +1,6 @@
 # events
 
-Events (conferences, courses) of an organisation. Status: domain, repository and service implemented; the admin API follows (#81).
+Events (conferences, courses) of an organisation. Status: domain, repository and service implemented; the admin API follows (BEU-ICT/certificate-manager#300).
 
 ## Responsibility
 

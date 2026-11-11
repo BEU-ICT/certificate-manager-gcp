@@ -37,4 +37,4 @@ gcloud firestore import gs://<project>-backups/restore-YYYYMMDD --database='(def
 
 ## Monitoring
 
-Task #172 must add an alert "no successful backup within 36 h". Requirement recorded here; the metric to use is chosen there once a live project shows which backup metric/log entry exists.
+Task BEU-ICT/certificate-manager#391 must add an alert "no successful backup within 36 h". Requirement recorded here; the metric to use is chosen there once a live project shows which backup metric/log entry exists.

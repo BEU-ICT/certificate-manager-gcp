@@ -48,7 +48,7 @@ export function adminCertificateRevocationRoutes(app: FastifyInstance, services:
         );
         if (newlyRevoked) audit(request, 'certificate.revoked', certificate.id);
         if (warnings.length > 0) {
-          // Alert-worthy (#172): the object may still be reachable by whoever knows its URL.
+          // Alert-worthy (BEU-ICT/certificate-manager#391): the object may still be reachable by whoever knows its URL.
           request.log.error(
             { certificateId: certificate.id, warnings },
             'PDF deletion failed after revocation',

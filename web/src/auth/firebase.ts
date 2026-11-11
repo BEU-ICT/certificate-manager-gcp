@@ -5,7 +5,7 @@ import type { Auth } from 'firebase/auth';
  * is fetched when an `/admin/*` or `/login` route first needs it and lands in its own chunk.
  *
  * Persistence is the SDK default (IndexedDB, falling back to localStorage): the session survives
- * reloads and is shared between tabs. Trade-off: an XSS bug could read it, which the CSP (#166)
+ * reloads and is shared between tabs. Trade-off: an XSS bug could read it, which the CSP (BEU-ICT/certificate-manager#385)
  * mitigates. Our code never copies the token anywhere else.
  */
 let pending: Promise<Auth> | undefined;

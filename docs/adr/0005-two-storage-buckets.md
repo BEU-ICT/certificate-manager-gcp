@@ -1,6 +1,6 @@
 # 0005 Two buckets: private templates, public PDFs
 
-Status: accepted · Spec §2 · Issue #16 §6
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §6
 
 ## Context
 

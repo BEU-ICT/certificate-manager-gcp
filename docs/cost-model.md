@@ -1,6 +1,6 @@
 # Cost model
 
-Checked on **2026-11-04**. Goal (spec §12, issue #16 §7): stay inside the free tiers, about $0 per month, and know exactly which usage would cost money. Limits can change with 30 days' notice, so repeat the check before go-live and every six months.
+Checked on **2026-11-04**. Goal (spec §12, issue BEU-ICT/certificate-manager#236 §7): stay inside the free tiers, about $0 per month, and know exactly which usage would cost money. Limits can change with 30 days' notice, so repeat the check before go-live and every six months.
 
 ## Sources
 
@@ -69,7 +69,7 @@ Writes: issuing a certificate is about 3 writes (certificate, uniqueness reserva
 
 ## Hosting bundle size
 
-Targets: public route <= 150 KB gzipped JS (issue #16 §7). 360 MB/day allows about 2,400 uncached first visits of that route per day; returning visitors hit the browser cache. The admin bundle is larger but used by a handful of people. Hosting storage (10 GB) is far above the SPA size (a few MB). Re-measure with the real build in the deployment story.
+Targets: public route <= 150 KB gzipped JS (issue BEU-ICT/certificate-manager#236 §7). 360 MB/day allows about 2,400 uncached first visits of that route per day; returning visitors hit the browser cache. The admin bundle is larger but used by a handful of people. Hosting storage (10 GB) is far above the SPA size (a few MB). Re-measure with the real build in the deployment story.
 
 ## If a quota is exceeded
 

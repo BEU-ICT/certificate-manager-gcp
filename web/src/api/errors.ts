@@ -22,7 +22,7 @@ export const TIMEOUT = 'TIMEOUT';
 export const INVALID_RESPONSE = 'INVALID_RESPONSE';
 
 /**
- * Normalised API failure (#16 section 4). `message` is a developer-facing summary; UI code maps
+ * Normalised API failure (BEU-ICT/certificate-manager#236 section 4). `message` is a developer-facing summary; UI code maps
  * `code` to translated text. For 5xx responses it is a fixed string, never raw server text.
  */
 export class ApiError extends Error {

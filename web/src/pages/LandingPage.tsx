@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-/** Placeholder, the real landing page is built in #144. */
+/** Placeholder, the real landing page is built in BEU-ICT/certificate-manager#363. */
 export default function LandingPage() {
   const { t } = useTranslation(['public', 'common']);
   return (

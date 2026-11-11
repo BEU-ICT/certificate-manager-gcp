@@ -4,7 +4,7 @@ import { FORMAT_NAMES, KNOWN_FORMATS, type FormatKind, type FormatName } from '.
 import { MAX_PATH_LENGTH, packagePathProblem } from './paths.js';
 
 /**
- * Template `config` (spec §7 "Config keys", BEU-ICT/certificate-manager-gcp#85).
+ * Template `config` (spec §7 "Config keys", BEU-ICT/certificate-manager#304).
  *
  * Coordinates and sizes are PDF points with the origin at the top-left corner and y growing
  * downwards (like PDFKit). The schema is strict: unknown properties are rejected at every level.

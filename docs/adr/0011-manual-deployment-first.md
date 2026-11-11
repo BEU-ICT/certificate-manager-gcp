@@ -1,6 +1,6 @@
 # 0011 Manual deployment first
 
-Status: accepted · Spec §2 · Issue #16 §10
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §10
 
 ## Context
 

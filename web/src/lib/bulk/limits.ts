@@ -1,4 +1,4 @@
-/** Import limits, enforced before parsing where possible (issue #124). */
+/** Import limits, enforced before parsing where possible (issue BEU-ICT/certificate-manager#343). */
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const MAX_DATA_ROWS = 5_000;
 export const MAX_COLUMNS = 20;

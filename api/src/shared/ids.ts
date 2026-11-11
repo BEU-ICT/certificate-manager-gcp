@@ -11,7 +11,7 @@ export type TemplateRef = Brand<'TemplateRef'>;
 
 /** 22-char base64url (new IDs) or 32 lowercase hex (legacy MD5 hashes). */
 export const CERTIFICATE_ID_PATTERN = /^(?:[A-Za-z0-9_-]{22}|[0-9a-f]{32})$/;
-/** `<name>-v<version>`; the reference is never parsed (see BEU-ICT/certificate-manager#23). */
+/** `<name>-v<version>`; the reference is never parsed (see BEU-ICT/certificate-manager#236). */
 export const TEMPLATE_REF_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*-v(0|[1-9][0-9]*)$/;
 /** Firestore-style auto IDs and slugs-based IDs are opaque; only shape and length are checked. */
 export const ENTITY_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;

@@ -1,6 +1,6 @@
 # 0001 Ports and adapters
 
-Status: accepted · Task: BEU-ICT/certificate-manager#32 · Spec §5, §5.1
+Status: accepted · Task: BEU-ICT/certificate-manager#244 · Spec §5, §5.1
 
 Domain and application code depends only on the interfaces in `api/src/ports/`. Vendor SDKs live under `api/src/adapters/**`; adapters are selected by configuration. Port files import only other ports and `src/shared`. Ports are named after the capability, never after a vendor.
 

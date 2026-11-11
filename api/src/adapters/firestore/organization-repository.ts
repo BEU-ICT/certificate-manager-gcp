@@ -11,7 +11,7 @@ export const UNIQUES_COLLECTION = 'uniques';
 /** Firestore `getAll` and transaction reads are cheap in batches; the limit keeps them bounded. */
 const GET_MANY_LIMIT = 100;
 
-/** Reservation document id (`organization-slug:<slug>`), see "Unique keys" in issue #16 §5. */
+/** Reservation document id (`organization-slug:<slug>`), see "Unique keys" in issue BEU-ICT/certificate-manager#236 §5. */
 export const organizationSlugKey = (slug: string): string => `organization-slug:${slug}`;
 
 interface OrganizationDocument {

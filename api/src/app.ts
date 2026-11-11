@@ -55,7 +55,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     // Fastify answers 414 above 100 characters; long path parameters must reach validation (404).
     maxParamLength: 512,
     // Cloud Run terminates TLS behind a single Google front end hop.
-    // Final value is decided in BEU-ICT/certificate-manager#176.
+    // Final value is decided in BEU-ICT/certificate-manager#388.
     trustProxy: (_address, hop) => hop < TRUSTED_PROXY_HOPS,
   };
   const app = Fastify(options);

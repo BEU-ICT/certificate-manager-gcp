@@ -13,7 +13,7 @@ import { UNIQUES_COLLECTION } from './organization-repository.js';
 
 export const EVENTS_COLLECTION = 'events';
 
-/** Reservation document id (`event-slug:<orgId>:<slug>`), see "Unique keys" in issue #16 §5. */
+/** Reservation document id (`event-slug:<orgId>:<slug>`), see "Unique keys" in issue BEU-ICT/certificate-manager#236 §5. */
 export const eventSlugKey = (organizationId: string, slug: string): string =>
   `event-slug:${organizationId}:${slug}`;
 

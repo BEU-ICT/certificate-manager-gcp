@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Field schemas for one imported row. They mirror `api/src/modules/certificates/schemas.ts`
- * (issue #16 section 5): a shared package is out of scope, so keep both files in sync (like
+ * (issue BEU-ICT/certificate-manager#236 section 5): a shared package is out of scope, so keep both files in sync (like
  * `certificateTypes.ts`). Messages are machine codes, the UI translates them.
  */
 export const OWNER_NAME_MAX = 120;

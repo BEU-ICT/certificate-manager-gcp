@@ -1,5 +1,5 @@
 // @vitest-environment node
-// Negative fixtures for the rule that keeps the Firebase SDK inside src/auth (#71): the real
+// Negative fixtures for the rule that keeps the Firebase SDK inside src/auth (BEU-ICT/certificate-manager#290): the real
 // project config is resolved per file path, then only its `no-restricted-imports` setting is run
 // against inline fixtures (no type information needed).
 import { fileURLToPath } from 'node:url';

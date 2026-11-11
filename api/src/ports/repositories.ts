@@ -15,7 +15,7 @@ import type { Page, PageRequest } from './common.js';
  * Contract shared by every repository:
  * - Reads of a missing entity return `null` (never throw).
  * - `create` fails with `ConflictError` (src/shared/errors.ts) when a unique key
- *   already exists (see "Unique keys" in BEU-ICT/certificate-manager#23); nothing is written.
+ *   already exists (see "Unique keys" in BEU-ICT/certificate-manager#236); nothing is written.
  * - `list` is ordered newest first and cursor-paginated; the cursor is opaque.
  * - `count` never reads whole collections; adapters use native aggregate counts.
  * Method lists are finalised by the epics that own each entity; changing a

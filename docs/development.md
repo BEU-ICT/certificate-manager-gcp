@@ -38,4 +38,4 @@ Run the API with `LOG_LEVEL=debug`. Emulator data lives only in memory: stop and
 
 ## Not done yet
 
-The dev seed script (`scripts/seed-dev.ts`: test admin, organization, event, template package, certificates) needs the repository adapters and data model of the later epics; it is tracked in #61.
+The dev seed script (`scripts/seed-dev.ts`: test admin, organization, event, template package, certificates) needs the repository adapters and data model of the later epics; it is tracked in BEU-ICT/certificate-manager#280.

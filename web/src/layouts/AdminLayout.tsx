@@ -6,10 +6,10 @@ import { cx } from '@/components/cx';
 import { ADMIN_NAV } from './admin-nav';
 
 export interface AdminLayoutProps {
-  /** Signed-in user's email; provided by the auth layer (#73). */
+  /** Signed-in user's email; provided by the auth layer (BEU-ICT/certificate-manager#292). */
   userEmail?: string | undefined;
   onSignOut?: () => void;
-  /** Slot for the language switcher component supplied by the i18n task (#39). */
+  /** Slot for the language switcher component supplied by the i18n task (BEU-ICT/certificate-manager#258). */
   languageSwitcher?: ReactNode;
 }
 

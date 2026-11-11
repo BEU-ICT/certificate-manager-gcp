@@ -485,7 +485,7 @@ describe('assertTemplateConfig', () => {
 });
 
 describe('formats', () => {
-  it('lists the names of the formatter registry (#102)', () => {
+  it('lists the names of the formatter registry (BEU-ICT/certificate-manager#321)', () => {
     expect([...FORMAT_NAMES].sort()).toEqual(
       [
         'date-dmy',

@@ -1,6 +1,6 @@
 # 0016 Disable sign-up through the Identity Platform configuration
 
-Status: proposed (to be confirmed on the live project) · Spec §10 · Issue/PR: #69
+Status: proposed (to be confirmed on the live project) · Spec §10 · Issue/PR: BEU-ICT/certificate-manager#288
 
 ## Context
 
@@ -13,5 +13,5 @@ We will apply the lockdown with `infra/10-auth.sh` (Identity Toolkit admin API).
 ## Consequences
 
 - With a handful of administrators the Identity Platform cost stays at zero; check the pricing page when upgrading.
-- Until the live run, the "sign-up is blocked" acceptance criterion of #69 is open; the backend still refuses non-admin users.
+- Until the live run, the "sign-up is blocked" acceptance criterion of BEU-ICT/certificate-manager#288 is open; the backend still refuses non-admin users.
 - The web API key is public by design, so its restrictions (HTTP referrers = Hosting domains, API restriction = Identity Toolkit) are part of the checklist in `docs/auth-config.md`; review date is recorded there.

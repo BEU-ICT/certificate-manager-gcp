@@ -1,6 +1,6 @@
 # Firebase Auth configuration (administrators only)
 
-Status: written offline; **not yet applied to a live project** (#69 stays open until the steps below ran and `verify-auth-lockdown.sh` passed). Decision record: ADR 0016.
+Status: written offline; **not yet applied to a live project** (BEU-ICT/certificate-manager#288 stays open until the steps below ran and `verify-auth-lockdown.sh` passed). Decision record: ADR 0016.
 
 ## Apply
 

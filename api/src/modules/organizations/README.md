@@ -1,6 +1,6 @@
 # organizations
 
-Organisations that issue certificates (slug, name). Status: domain, repository and service implemented; the admin API follows (#77).
+Organisations that issue certificates (slug, name). Status: domain, repository and service implemented; the admin API follows (BEU-ICT/certificate-manager#296).
 
 ## Responsibility
 

@@ -6,7 +6,7 @@ Closes BEU-ICT/certificate-manager#<n>
 
 ## Definition of Done
 
-See [BEU-ICT/certificate-manager#23](https://github.com/BEU-ICT/certificate-manager/issues/23), section 9.
+See [BEU-ICT/certificate-manager#236](https://github.com/BEU-ICT/certificate-manager/issues/236), section 9.
 
 - [ ] All acceptance criteria of the task are ticked and demonstrable
 - [ ] CI is green (lint, typecheck, dependency-cruiser, tests, build)

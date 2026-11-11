@@ -10,7 +10,7 @@ A person with _Billing Account Administrator_ on the university billing account 
 
 ## Verifying that alerts arrive
 
-Acceptance of #47 requires evidence that both recipients get mail:
+Acceptance of BEU-ICT/certificate-manager#266 requires evidence that both recipients get mail:
 
 1. In the console, Billing -> Budgets & alerts -> the budget -> _Manage notifications_, or temporarily edit the budget to `$0.01`; spend of fractions of a cent triggers the alert within about a day.
 2. In Monitoring -> Alerting -> Notification channels, press _Send test notification_ on each channel (this checks channel delivery immediately).

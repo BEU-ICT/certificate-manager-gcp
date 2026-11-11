@@ -15,7 +15,7 @@ import { FakeTemplateRepository } from '../../testing/fakes/fake-template-reposi
 
 /**
  * Local-profile adapters: the in-memory fakes double as the `memory` / `in-process` adapters
- * (BEU-ICT/certificate-manager#33). Vendor names that are only stand-ins here are refused in
+ * (BEU-ICT/certificate-manager#245). Vendor names that are only stand-ins here are refused in
  * production so a fake verifier or sender can never serve real traffic.
  */
 function devOnly<P>(selector: string, name: string, factory: AdapterFactory<P>): AdapterFactory<P> {

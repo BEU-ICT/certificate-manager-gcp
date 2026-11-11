@@ -16,7 +16,7 @@ export interface ErrorDetail {
  * Base class for every error that is safe to show to API clients. The message
  * of an `AppError` is sent to the caller verbatim, so it must never contain
  * secrets, SDK/SQL messages, internal paths or personal data.
- * Mapping to HTTP follows BEU-ICT/certificate-manager#23 section 4.
+ * Mapping to HTTP follows BEU-ICT/certificate-manager#236 section 4.
  */
 export abstract class AppError extends Error {
   abstract readonly statusCode: number;

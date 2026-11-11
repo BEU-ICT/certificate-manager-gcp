@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { CERTIFICATE_TYPES } from '../../shared/certificate-types.js';
 
 /**
- * Field schemas shared by single and bulk issuance (limits: #16 section 5). Text fields are
+ * Field schemas shared by single and bulk issuance (limits: BEU-ICT/certificate-manager#236 section 5). Text fields are
  * normalised (NFC, invisible and bidi characters removed, control characters turned into
  * spaces, whitespace collapsed and trimmed) before the length check, so the limits apply to
  * what is stored and rendered. Lengths are counted in code points.

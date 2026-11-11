@@ -1,6 +1,6 @@
 # pdf
 
-Lazy PDF generation and caching (ADR 0007). Status: engine registry and `PdfService` are in place (#99); engines, caching and the HTTP endpoints follow in the PDF epic. The lazy-generation parts below are still the intended contract.
+Lazy PDF generation and caching (ADR 0007). Status: engine registry and `PdfService` are in place (BEU-ICT/certificate-manager#318); engines, caching and the HTTP endpoints follow in the PDF epic. The lazy-generation parts below are still the intended contract.
 
 ## Responsibility
 
@@ -13,7 +13,7 @@ Render a certificate PDF on first request from its template, store it in the pub
 - Events consumed: `certificate.revoked` (delete the cached PDF, idempotent).
 - Ports used: `StorageGateway` (area `pdfs`, and `templates` for reading), `Clock`.
 
-### Engine registry (#99)
+### Engine registry (BEU-ICT/certificate-manager#318)
 
 - `RenderInput { ownerName, subject, skills, issuedAt, type, publicUrl }` is all an engine sees. There is deliberately no e-mail address: PDFs are public.
 - `TemplateRenderer { engine, render(input, assets): Promise<Buffer>, checkFit(input, assets): FitResult }`. `assets` is the templates module's `LoadedTemplate` (`TemplateAssets.load`).

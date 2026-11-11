@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 
-/** API error codes (#16 section 4) plus client-side `NETWORK`. */
+/** API error codes (BEU-ICT/certificate-manager#236 section 4) plus client-side `NETWORK`. */
 export const ERROR_CODES = [
   'VALIDATION_FAILED',
   'UNAUTHENTICATED',
