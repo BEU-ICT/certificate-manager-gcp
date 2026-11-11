@@ -14,6 +14,7 @@ import {
   ConflictError,
   InUseError,
   NotFoundError,
+  UnavailableError,
   ValidationError,
 } from '../../src/shared/errors.js';
 import { createFakes } from '../../src/testing/fakes/create-fakes.js';
@@ -225,5 +226,166 @@ describe('TemplateService.publish', () => {
     expect(await ctx.services.templates.countByEvent('!!')).toBe(0);
     expect(await ctx.services.templates.countByOrganization('!!')).toBe(0);
     expect(await ctx.services.templates.getLatest('!!', ctx.event.id, 'attendance')).toBeNull();
+  });
+});
+
+describe('TemplateService.copy', () => {
+  it('copies every object server side, keeps the source and claims config.json first', async () => {
+    const { services, input, storage, org } = await setup();
+    const source = await services.templates.publish(input);
+    const event2 = await services.events.create({
+      organizationId: org.id,
+      name: 'Summit',
+      slug: 'summit',
+    });
+    const copied = await services.templates.copy({
+      sourceReference: source.reference,
+      target: {
+        organizationId: org.id,
+        eventId: event2.id,
+        organizationSlug: 'acme',
+        eventSlug: 'summit',
+        type: 'thanks',
+      },
+      createdBy: 'admin-2',
+    });
+    expect(copied.copiedFrom).toBe('acme-devfest-attendance-v0');
+    expect(copied.template).toMatchObject({
+      reference: 'acme-summit-thanks-v0',
+      type: 'thanks',
+      version: 0,
+      config: source.config,
+      createdBy: 'admin-2',
+    });
+    expect(copied.files.map((f) => f.path)).toEqual([
+      'assets/logo.png',
+      'background.svg',
+      'config.json',
+      'fonts/main.ttf',
+    ]);
+    expect(
+      await storage.get('templates', templateFontKey('acme-summit-thanks-v0', 'main.ttf')),
+    ).toEqual(Buffer.from('ttf'));
+    expect(await services.templates.get(source.reference)).toEqual(source);
+  });
+
+  it('skips a taken version number and gives up with ConflictError after the retries', async () => {
+    const { services, input, storage, org, event } = await setup();
+    const source = await services.templates.publish(input);
+    // A foreign claim on v1 without a document: the copy takes v2.
+    await storage.put(
+      'templates',
+      templateConfigKey('acme-devfest-attendance-v1'),
+      Buffer.from('{}'),
+      {
+        contentType: 'application/json',
+      },
+    );
+    const copied = await services.templates.copy({
+      sourceReference: source.reference,
+      target: { ...input, organizationId: org.id, eventId: event.id },
+      createdBy: 'a',
+    });
+    expect(copied.template.reference).toBe('acme-devfest-attendance-v2');
+    await expect(
+      services.templates.copy({ sourceReference: 'nope', target: input, createdBy: 'a' }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  async function copySetup() {
+    const ctx = await setup();
+    const source = await ctx.services.templates.publish(ctx.input);
+    const errors: Record<string, unknown>[] = [];
+    const services = buildServices(ctx.fakes, undefined, {
+      logger: { info: () => undefined, error: (obj) => void errors.push(obj) },
+    });
+    const copyInput = {
+      sourceReference: source.reference,
+      target: { ...ctx.input },
+      createdBy: 'a',
+    };
+    const keys = () => [...ctx.fakes.storage.objects.keys()].sort();
+    return { ...ctx, services, source, errors, copyInput, keys };
+  }
+
+  it('keeps the published copy when the file listing fails after the document is written', async () => {
+    const { services, fakes, copyInput, errors } = await copySetup();
+    const original = fakes.storage.list.bind(fakes.storage);
+    let calls = 0;
+    fakes.storage.list = (...args: Parameters<typeof original>) =>
+      ++calls === 2 ? Promise.reject(new Error('boom')) : original(...args);
+    const copied = await services.templates.copy(copyInput);
+    expect(copied.files).toEqual([]);
+    expect(await services.templates.get(copied.template.reference)).toBeDefined();
+    expect(
+      fakes.storage.objects.has(`templates:${templateConfigKey(copied.template.reference)}`),
+    ).toBe(true);
+    expect(errors).toEqual([expect.objectContaining({ reference: copied.template.reference })]);
+  });
+
+  it('copies only package files and maps a vanished source object to UnavailableError with cleanup', async () => {
+    const { services, fakes, source, copyInput, keys } = await copySetup();
+    await fakes.storage.put(
+      'templates',
+      `templates/${source.reference}/stray.txt`,
+      Buffer.from('x'),
+      {
+        contentType: 'text/plain',
+      },
+    );
+    const copied = await services.templates.copy(copyInput);
+    expect(copied.files.map((f) => f.path)).not.toContain('stray.txt');
+    const before = keys();
+    const original = fakes.storage.copy.bind(fakes.storage);
+    fakes.storage.copy = () => Promise.reject(new NotFoundError('Object not found'));
+    await expect(services.templates.copy(copyInput)).rejects.toBeInstanceOf(UnavailableError);
+    expect(keys()).toEqual(before);
+    fakes.storage.copy = original;
+  });
+
+  it('cleans up and rethrows when the document cannot be written', async () => {
+    const { services, fakes, copyInput, keys, errors } = await copySetup();
+    const before = keys();
+    const original = fakes.templates.create.bind(fakes.templates);
+    fakes.templates.create = () => Promise.reject(new Error('db down'));
+    await expect(services.templates.copy(copyInput)).rejects.toThrow('db down');
+    expect(keys()).toEqual(before);
+    expect(errors).toEqual([expect.objectContaining({ leakedObjects: 0 })]);
+    fakes.templates.create = original;
+  });
+
+  it('keeps the files of a concurrent winner and moves on to the next number', async () => {
+    const { services, fakes, copyInput, keys } = await copySetup();
+    const original = fakes.templates.create.bind(fakes.templates);
+    let first = true;
+    fakes.templates.create = async (t) => {
+      if (first) {
+        first = false;
+        await original({ ...t, createdBy: 'winner' });
+        return original(t);
+      }
+      return original(t);
+    };
+    const copied = await services.templates.copy(copyInput);
+    expect(copied.template.reference).toBe('acme-devfest-attendance-v2');
+    expect(await services.templates.get('acme-devfest-attendance-v1')).toMatchObject({
+      createdBy: 'winner',
+    });
+    expect(keys()).toContain(`templates:${templateConfigKey('acme-devfest-attendance-v1')}`);
+  });
+
+  it('gives up with ConflictError when every version number is taken', async () => {
+    const { services, fakes, copyInput } = await copySetup();
+    for (let v = 1; v <= 5; v++) {
+      await fakes.storage.put(
+        'templates',
+        templateConfigKey(`acme-devfest-attendance-v${String(v)}`),
+        Buffer.from('{}'),
+        {
+          contentType: 'application/json',
+        },
+      );
+    }
+    await expect(services.templates.copy(copyInput)).rejects.toBeInstanceOf(ConflictError);
   });
 });

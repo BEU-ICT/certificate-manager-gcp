@@ -40,6 +40,8 @@ export {
   DefaultTemplateService,
   MAX_REFERENCE_RETRIES,
   packageLayoutProblem,
+  type CopiedTemplate,
+  type CopyTemplateInput,
   type NextReference,
   type PublishTemplateInput,
   type TemplateFile,
