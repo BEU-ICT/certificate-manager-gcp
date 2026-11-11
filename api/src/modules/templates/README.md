@@ -78,4 +78,6 @@ Limits: at most 30 files, 10 MB in total, `background.svg` 5 MB, images 2 MB and
 
 CLI (offline, reads a directory, no symlinks): `npm run template:validate -w api -- <dir> [--json]`; exit code 0 accepted, 1 rejected, 2 usage. Test corpus: `test/fixtures/templates/` (`good/` package and `malicious/` files); `npm run template-fixtures:generate -w api` rebuilds the binary fixtures deterministically from `test/fixtures/templates/build.ts`.
 
+Author guide (BEU-ICT/certificate-manager#331): `docs/template-authoring.md` (and `.az.md`). Its config, formatter and limit tables are generated from the zod schema, the formatter registry and `PACKAGE_LIMITS` (`npm run template-authoring:generate -w api`); a unit test fails when they are stale or when a validator, layout or render code (any `'UPPER_SNAKE'` literal in this module and the svg-pdf engine) is missing from the troubleshooting table. Add a row to both guides when you add a code.
+
 `POST /api/v1/admin/templates/{reference}/preview` renders a sample PDF with a stored template; see the pdf module README (BEU-ICT/certificate-manager#325).
