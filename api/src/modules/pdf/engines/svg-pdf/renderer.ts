@@ -33,7 +33,12 @@ export class SvgPdfRenderer implements TemplateRenderer {
     this.fitChecker = options.fitChecker ?? (() => ({ fits: true, issues: [] }));
   }
 
-  async render(input: RenderInput, assets: RenderAssets): Promise<Buffer> {
+  async render(
+    input: RenderInput,
+    assets: RenderAssets,
+    options: { signal?: AbortSignal } = {},
+  ): Promise<Buffer> {
+    const { signal } = options;
     const { config } = assertTemplateConfig(assets.template.config);
     const page = pageDimensions(config.page);
     const doc = createDocument(page, {
@@ -49,12 +54,16 @@ export class SvgPdfRenderer implements TemplateRenderer {
       fontName: (key) => `template:${key}`,
     };
     try {
+      signal?.throwIfAborted();
       for (const [key, file] of Object.entries(config.fonts)) {
         const data = assets.fonts.get(key);
         if (data === undefined) throw new Error(`Template font "${key}" (${file}) is not loaded`);
         doc.registerFont(ctx.fontName(key), data);
       }
-      for (const layer of this.layers) layer(ctx);
+      for (const layer of this.layers) {
+        layer(ctx);
+        signal?.throwIfAborted(); // between stages: background, images, fields, QR
+      }
     } catch (error) {
       doc.destroy(); // Release the stream; nothing else holds the half-built document.
       throw error;
