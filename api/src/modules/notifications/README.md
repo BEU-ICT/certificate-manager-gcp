@@ -42,17 +42,27 @@ The module depends on certificates only through the structural interface `EmailC
 
 Verifier: `GoogleTaskRequestVerifier` (`src/adapters/google/task-request-verifier.ts`, wired by `AUTH_PROVIDER=firebase`) accepts only `Authorization: Bearer <JWT>` verified by `google-auth-library` for audience `SERVICE_URL`, Google issuer, `email_verified` and `email == TASKS_INVOKER_SA`; anything else (including an unset `TASKS_INVOKER_SA`) is 401 with no details, the reason code only goes to the log.
 
-Handler decisions, in order: certificate missing/malformed ID, not `active`, no e-mail, `sequence < emailAttempts` (superseded by a resend) or `emailStatus != pending` (sent, failed, skipped): 200, nothing happens. Otherwise the daily cap (optional `DailyCap` seam) and the message (`MessageComposer` seam) are applied and `EmailSender.send` is called with Message-ID `<cm-<id>-<sequence>@<from domain>>` (stable per task, so a repeated send is deduplicable).
+Handler decisions, in order: certificate missing/malformed ID, not `active`, no e-mail, `sequence < emailAttempts` (superseded by a resend) or `emailStatus != pending` (sent, failed, skipped): 200, nothing happens. Otherwise the daily quota (below) and the message (`MessageComposer` seam) are applied and `EmailSender.send` is called with Message-ID `<cm-<id>-<sequence>@<from domain>>` (stable per task, so a repeated send is deduplicable).
 
-| Result                                                   | Status change                                                                                                   | HTTP                 |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------- |
-| sent                                                     | `sent`, `emailSentAt`, `emailLastError` cleared                                                                 | 200                  |
-| `PermanentEmailError`                                    | `failed`, `REJECTED: <CODE>` (the error message if it is an upper-case code, else `PERMANENT`; never free text) | 200                  |
-| `TransientEmailError`, `QuotaExceededError`, cap reached | none; with `X-CloudTasks-TaskRetryCount >= 4` (5th attempt) `failed` / `RETRIES_EXHAUSTED`                      | 500 (200 on the 5th) |
-| `ConfigurationError`                                     | none (CRITICAL log, `fatal`)                                                                                    | 500                  |
+| Result                                      | Status change                                                                                                   | HTTP                 |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------- |
+| sent                                        | `sent`, `emailSentAt`, `emailLastError` cleared                                                                 | 200                  |
+| `PermanentEmailError`                       | `failed`, `REJECTED: <CODE>` (the error message if it is an upper-case code, else `PERMANENT`; never free text) | 200                  |
+| `TransientEmailError`, `QuotaExceededError` | none; with `X-CloudTasks-TaskRetryCount >= 4` (5th attempt) `failed` / `RETRIES_EXHAUSTED`                      | 500 (200 on the 5th) |
+| `ConfigurationError`                        | none (CRITICAL log, `fatal`)                                                                                    | 500                  |
 
 Statuses only move `pending -> sent|failed`; `failed -> pending` is a resend. Delivery is at-least-once: a crash after the provider accepted the message but before `markEmailSent` repeats the send, which the stable Message-ID makes harmless for providers and mailboxes that deduplicate. A concurrent resend between the check and the update is not guarded by a transaction (accepted; the admin sees the final state).
 
 In-process queue (`QUEUE_ADAPTER=in-process`): `compose.ts` builds one handler and registers `createInProcessSendEmailTask(handler)` under `SEND_EMAIL_HANDLER` in `inProcessTaskHandlers`; `server.ts` passes the same handler to the route. The in-process queue retries on a thrown error and has no retry-count header, so the adapter keeps a per-task retry counter (lost on restart) and throws `SendEmailRetryError` for `retry`/`misconfigured` outcomes; on the 5th attempt the shared logic marks `RETRIES_EXHAUSTED`. Invalid payloads are dropped.
 
-Left for the other tasks: the daily cap (BEU-ICT/certificate-manager#374) is only the `DailyCap` interface and is not wired (no cap applies), the localised template (BEU-ICT/certificate-manager#376) is only `PlainMessageComposer` (plain az/en text and escaped HTML), and the provider fallback (`Ports.emailFallback`) is not used by the handler yet.
+## Daily cap (BEU-ICT/certificate-manager#374)
+
+`quota` (`DailyQuotaDeps`) is wired by `compose.ts` from the `EmailQuotaStore` port (Firestore `email_counters/<provider>:<YYYY-MM-DD UTC>`, memory fake in tests; both pass the shared contract suite, including 100 parallel reservations with cap 50 granting exactly 50). Before sending, the handler reserves one slot of today's (UTC) counter of the primary provider (`EMAIL_DAILY_CAP`, default 300; the issue text says 400, 300 is kept for consistency with `docs/config-matrix.md`). When the cap is reached:
+
+1. `Ports.emailFallback` exists (`EMAIL_FALLBACK_PROVIDER` set and `FEATURE_EMAIL_FALLBACK` on): reserve against the fallback's own counter (`EMAIL_FALLBACK_DAILY_CAP`, default 300) and send through it.
+2. Otherwise (or when the fallback cap is reached too) the task is rescheduled: a new task `email-<id>-<n>-r<k>` (`k` = 1..3, `dedupe: true`) with payload `{ certificateId, sequence, reschedule: k }` is enqueued for next UTC midnight + 5 min + random jitter in [0, 30 min), and the current task gets 200. The counter `k` travels in the payload (`reschedule`, optional, identifiers only).
+3. After the third reschedule (`reschedule >= 3`) the certificate is marked `failed` with `DAILY_CAP_EXHAUSTED` (200).
+
+A reserved slot that is not delivered (permanent or transient provider error, misconfiguration) is released, so retries do not count twice; a crash between reserve and send can leak one slot (accepted). Cost: one read plus one write per e-mail. Counter documents carry `expiresAt` (end of the day + 2 days) for the TTL policy in `infra/firestore.indexes.json`. Provider fallback on provider errors (not on the cap) and the Brevo adapter are BEU-ICT/certificate-manager#373.
+
+Left for the other tasks: the localised template (BEU-ICT/certificate-manager#376) is only `PlainMessageComposer` (plain az/en text and escaped HTML).

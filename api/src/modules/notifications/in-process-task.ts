@@ -24,10 +24,10 @@ export function createInProcessSendEmailTask(
   return async (payload) => {
     const parsed = sendEmailTaskSchema.safeParse(payload);
     if (!parsed.success) return;
-    const { certificateId, sequence } = parsed.data;
-    const key = `${certificateId}:${sequence}`;
+    const { certificateId, sequence, reschedule } = parsed.data;
+    const key = `${certificateId}:${sequence}:${reschedule ?? 0}`;
     const retryCount = retries.get(key) ?? 0;
-    const outcome = await handle({ certificateId, sequence, retryCount });
+    const outcome = await handle({ certificateId, sequence, retryCount, reschedule });
     if (outcome === 'done') {
       retries.delete(key);
       return;

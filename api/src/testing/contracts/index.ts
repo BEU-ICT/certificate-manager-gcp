@@ -56,3 +56,7 @@ export {
   sampleCertificate,
   type CertificateRepositoryContractFactory,
 } from './certificate-repository.js';
+export {
+  describeEmailQuotaStoreContract,
+  type EmailQuotaStoreContractFactory,
+} from './email-quota-store.js';

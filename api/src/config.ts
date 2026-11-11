@@ -48,6 +48,8 @@ export interface Config {
     readonly fromName: string;
     readonly replyTo: string | undefined;
     readonly dailyCap: number;
+    /** Daily cap of the fallback provider (`EMAIL_FALLBACK_DAILY_CAP`). */
+    readonly fallbackDailyCap: number;
   };
   readonly rateLimit: {
     readonly publicPerMin: number;
@@ -115,6 +117,7 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   AUTH_CHECK_REVOKED: 'false',
   EMAIL_FROM_NAME: 'Certificate Manager',
   EMAIL_DAILY_CAP: '300',
+  EMAIL_FALLBACK_DAILY_CAP: '300',
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
   RATE_LIMIT_ADMIN_PER_MIN: '60',
   TEMPLATE_CACHE_MB: '40',
@@ -167,6 +170,7 @@ const schema = z.object({
   EMAIL_FROM_NAME: text(120),
   EMAIL_REPLY_TO: email.optional(),
   EMAIL_DAILY_CAP: int(1, 1_000_000),
+  EMAIL_FALLBACK_DAILY_CAP: int(1, 1_000_000),
   RATE_LIMIT_PUBLIC_PER_MIN: int(1, 10_000),
   RATE_LIMIT_ADMIN_PER_MIN: int(30, 100),
   TEMPLATE_CACHE_MB: int(1, 256),
@@ -300,6 +304,7 @@ export function loadConfig(env: Env): Config {
       fromName: e.EMAIL_FROM_NAME,
       replyTo: e.EMAIL_REPLY_TO,
       dailyCap: e.EMAIL_DAILY_CAP,
+      fallbackDailyCap: e.EMAIL_FALLBACK_DAILY_CAP,
     },
     rateLimit: {
       publicPerMin: e.RATE_LIMIT_PUBLIC_PER_MIN,

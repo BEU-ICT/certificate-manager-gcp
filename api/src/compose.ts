@@ -173,6 +173,21 @@ export async function compose(
     logger,
     publicBaseUrl: config.publicBaseUrl,
     from: { address: config.email.fromAddress, replyTo: config.email.replyTo },
+    quota: {
+      store: ports.emailQuota,
+      taskQueue: ports.taskQueue,
+      clock,
+      primary: { provider: config.email.provider, dailyCap: config.email.dailyCap },
+      ...(ports.emailFallback && config.email.fallbackProvider
+        ? {
+            fallback: {
+              sender: ports.emailFallback,
+              provider: config.email.fallbackProvider,
+              dailyCap: config.email.fallbackDailyCap,
+            },
+          }
+        : {}),
+    },
   });
   inProcessTaskHandlers.set(SEND_EMAIL_HANDLER, createInProcessSendEmailTask(sendEmail));
   return { config, ports, services, sendEmail };
