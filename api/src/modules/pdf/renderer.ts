@@ -21,6 +21,12 @@ export interface RenderInput {
 export interface FitIssue {
   field: string;
   message: string;
+  /** Machine-readable reason, e.g. `TEXT_DOES_NOT_FIT` (BEU-ICT/certificate-manager#320). */
+  reason?: string;
+  /** Lines the text needs at the smallest allowed size (`TEXT_DOES_NOT_FIT`). */
+  requiredLines?: number;
+  maxLines?: number;
+  minSize?: number;
 }
 
 export interface FitResult {

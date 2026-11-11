@@ -61,3 +61,19 @@ export const sampleTextLayer: DrawLayer = (ctx) => {
     .fontSize(20)
     .text(input.subject, 100, 330, { width: 640, align: 'center' });
 };
+
+/** Sample package whose `fields` get `patch` merged per field (adding, e.g., `skills`). */
+export function sampleAssetsWithFields(
+  patch: Record<string, Record<string, unknown> | undefined>,
+): LoadedTemplate {
+  return loadSampleAssets({
+    config: (c) => {
+      const fields = { ...(c['fields'] as Record<string, Record<string, unknown>>) };
+      for (const [name, value] of Object.entries(patch)) {
+        if (value === undefined) delete fields[name];
+        else fields[name] = { ...fields[name], ...value };
+      }
+      return { ...c, fields };
+    },
+  });
+}

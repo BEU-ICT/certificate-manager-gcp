@@ -12,6 +12,8 @@ export interface SvgPdfRendererOptions {
   fieldsLayer?: DrawLayer;
   /** Paints the QR code (BEU-ICT/certificate-manager#323); runs last, on top of everything. */
   qrLayer?: DrawLayer;
+  /** Text-fit check matching `fieldsLayer` (BEU-ICT/certificate-manager#320); default: everything fits. */
+  fitChecker?: (input: RenderInput, assets: RenderAssets) => FitResult;
 }
 
 /**
@@ -22,11 +24,13 @@ export interface SvgPdfRendererOptions {
 export class SvgPdfRenderer implements TemplateRenderer {
   readonly engine = SVG_PDF_ENGINE;
   private readonly layers: DrawLayer[];
+  private readonly fitChecker: (input: RenderInput, assets: RenderAssets) => FitResult;
 
   constructor(options: SvgPdfRendererOptions = {}) {
     this.layers = [drawBackground, drawImages];
     if (options.fieldsLayer) this.layers.push(options.fieldsLayer);
     if (options.qrLayer) this.layers.push(options.qrLayer);
+    this.fitChecker = options.fitChecker ?? (() => ({ fits: true, issues: [] }));
   }
 
   async render(input: RenderInput, assets: RenderAssets): Promise<Buffer> {
@@ -58,8 +62,8 @@ export class SvgPdfRenderer implements TemplateRenderer {
     return collectBuffer(doc);
   }
 
-  /** Text fitting arrives with the fields layer (BEU-ICT/certificate-manager#320). */
-  checkFit(): FitResult {
-    return { fits: true, issues: [] };
+  /** Delegates to `fitChecker` (see `createFields`); reports "fits" when none is plugged in. */
+  checkFit(input: RenderInput, assets: RenderAssets): FitResult {
+    return this.fitChecker(input, assets);
   }
 }

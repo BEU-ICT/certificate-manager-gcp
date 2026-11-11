@@ -202,8 +202,8 @@ describe('SvgPdfRenderer', () => {
     await expect(renderer.render(SAMPLE_INPUT, assets)).rejects.toBeInstanceOf(UnprocessableError);
   });
 
-  it('checkFit is a no-op until the fields layer lands', () => {
-    expect(renderer.checkFit()).toEqual({ fits: true, issues: [] });
+  it('checkFit reports everything fits when no fit checker is plugged in', () => {
+    expect(renderer.checkFit(SAMPLE_INPUT, loadSampleAssets())).toEqual({ fits: true, issues: [] });
   });
 
   it('matches the golden raster within 0.1% differing pixels', async () => {
