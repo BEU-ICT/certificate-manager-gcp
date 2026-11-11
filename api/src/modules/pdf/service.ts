@@ -77,20 +77,23 @@ export class DefaultPdfService implements PdfService {
 
   async preview(templateRef: string, sample: RenderInput): Promise<Buffer> {
     // Same pipeline as production: load assets -> checkFit -> render (one asset load).
-    const loaded = await this.assets.load(templateRef);
-    const renderer = this.registry.get(engineOf(loaded.template));
-    assertFits(renderer.checkFit(sample, loaded));
-    return renderer.render(sample, loaded);
+    return this.renderWith(templateRef, sample, true);
   }
 
   /** Renders under the limiter (permit, timeout), enforces the size cap and logs `pdf_rendered`. */
-  private async renderWith(reference: string, input: RenderInput): Promise<Buffer> {
+  private async renderWith(
+    reference: string,
+    input: RenderInput,
+    requireFit = false,
+  ): Promise<Buffer> {
     const started = performance.now();
     let aborted: AbortSignal | undefined;
     const { value: pdf, queuedMs } = await this.limiter.run(async (signal) => {
       aborted = signal;
       const loaded = await this.assets.load(reference);
-      return this.registry.get(engineOf(loaded.template)).render(input, loaded, { signal });
+      const renderer = this.registry.get(engineOf(loaded.template));
+      if (requireFit) assertFits(renderer.checkFit(input, loaded));
+      return renderer.render(input, loaded, { signal });
     });
     aborted?.throwIfAborted();
     if (pdf.length > this.maxPdfBytes) {
