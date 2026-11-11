@@ -1093,6 +1093,134 @@
         },
         "security": [{ "bearerAuth": [] }],
         "summary": "List certificates (newest first, cursor pagination, filters)"
+      },
+      "post": {
+        "description": "Validates the references, checks that the texts fit the template, stores the certificate (`status: active`; `emailStatus` is `pending` with an e-mail address, `skipped` without) and publishes `certificate.issued`. Without `templateId` the latest template version for the organization, event and type is used. Errors: 422 `EVENT_ORG_MISMATCH`, `TEMPLATE_MISMATCH` (details name the fields), `TEMPLATE_NOT_FOUND`, `TEXT_DOES_NOT_FIT` (details list every failing field); nothing is stored in these cases.",
+        "operationId": "issueCertificate",
+        "parameters": [
+          {
+            "description": "Optional retry key, scoped to the calling administrator and kept for 24 hours. Repeating a completed request with the same key returns the stored response with `Idempotent-Replayed: true`; the same key with another body yields 422 `IDEMPOTENCY_KEY_REUSED`; a concurrent duplicate yields 409 `REQUEST_IN_PROGRESS`.",
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": { "pattern": "^[A-Za-z0-9_-]{1,128}$", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "email": { "maxLength": 2000, "type": "string" },
+                  "eventId": { "maxLength": 128, "type": "string" },
+                  "issuedAt": {
+                    "anyOf": [
+                      {
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "organizationId": { "maxLength": 128, "type": "string" },
+                  "ownerName": { "maxLength": 2000, "type": "string" },
+                  "skills": {
+                    "items": { "maxLength": 2000, "type": "string" },
+                    "maxItems": 100,
+                    "type": "array"
+                  },
+                  "subject": { "maxLength": 2000, "type": "string" },
+                  "templateId": {
+                    "description": "Template reference (`<name>-v<n>`). Omit to use the latest version for the organization, event and type.",
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "attendance",
+                      "appreciation",
+                      "thanks",
+                      "distinction",
+                      "instructor",
+                      "student",
+                      "team",
+                      "other"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": ["organizationId", "eventId", "type", "ownerName", "subject"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/AdminCertificate" } }
+            },
+            "description": "The issued certificate"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "422": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "Well-formed request that violates a business rule (domain specific code)"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Issue one certificate"
       }
     },
     "/api/v1/admin/certificates/count": {

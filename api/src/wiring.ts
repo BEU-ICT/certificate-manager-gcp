@@ -1,4 +1,5 @@
 import type {
+  CertificateIssuanceService,
   CertificateQueryService,
   CertificateService,
   RevocationService,
@@ -100,4 +101,6 @@ export interface Services {
   readonly revocation: RevocationService;
   /** Cached dashboard counts (stats module). */
   readonly stats: StatsService;
+  /** Single issuance; present only when `buildServices` got a `fitChecker` (see certificates README). */
+  readonly issuance?: CertificateIssuanceService;
 }

@@ -5,12 +5,16 @@ import { fileURLToPath } from 'node:url';
 import prettier from 'prettier';
 import { buildApp } from '../src/app.js';
 import { openApiDocument } from '../src/http/openapi/plugin.js';
+import { buildServices } from '../src/services.js';
 import { createFakes } from '../src/testing/fakes/index.js';
 
 const target = fileURLToPath(new URL('../openapi.json', import.meta.url));
 
 // In-memory fakes so that the routes that need services (organizations, events, templates) are in the document.
-const app = buildApp({ ports: createFakes() });
+// Issuance is registered only when a FitChecker exists (the composition root passes the PdfService), so a stub makes it appear in the document.
+const fakes = createFakes();
+const fitChecker = { checkFit: () => Promise.resolve({ fits: true, issues: [] }) };
+const app = buildApp({ ports: fakes, services: buildServices(fakes, undefined, { fitChecker }) });
 await app.ready();
 const document = openApiDocument(app);
 await app.close();
