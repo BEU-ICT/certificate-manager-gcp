@@ -39,3 +39,7 @@ Without a JDK use `npm run dev:lite` (API with in-memory adapters + web). The AP
 - Default branch: `dev`. Work branches: `feature/<issue-number>-<short-slug>`.
 - Commit style: Conventional Commits.
 - Every PR needs one approval and a description ending with `Closes #<n>`.
+
+## License
+
+Proprietary. All rights reserved; see [LICENSE](LICENSE). No use of this code is permitted without the explicit permission of the copyright holder.
