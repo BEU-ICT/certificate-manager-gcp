@@ -30,3 +30,15 @@ Pause first when a provider is down or a bad template is sending; purge only aft
 ## Not yet verified (needs the live project)
 
 `gcloud tasks queues describe` shows the exact settings, and a test task to the protected test endpoint (BEU-ICT/certificate-manager#368) is delivered with an OIDC token whose audience equals `SERVICE_URL`.
+
+## Manual verification of the Cloud Tasks adapter (BEU-ICT/certificate-manager#366)
+
+The adapter is covered by unit tests with a mock client; the checks below need the live project and are run once after the first deployment (`QUEUE_ADAPTER=cloud-tasks`, `TASKS_QUEUE=email-queue`, `TASKS_LOCATION=us-east1`):
+
+1. Enqueue a test task named `email-<testId>-1` (admin resend or the test endpoint of BEU-ICT/certificate-manager#368).
+2. `gcloud tasks describe email-<testId>-1 --queue=email-queue --location=us-east1` shows `httpRequest.url` = `${SERVICE_URL}/internal/tasks/send-email`, `httpMethod: POST`, `oidcToken.serviceAccountEmail` = `TASKS_INVOKER_SA`, `oidcToken.audience` = `SERVICE_URL` (no trailing slash), `dispatchDeadline: 55s`.
+3. The request reaches Cloud Run with a valid OIDC token (the task request verifier accepts it; the task ends in status 2xx in the logs).
+4. Enqueue the same name again while the task is pending or within about one hour after it ran: `enqueue` returns `{ created: false }` and no second task or delivery appears (`gcloud tasks list`).
+5. Enqueue `email-<testId>-2`: a second task is created (resend naming).
+6. A task with `scheduleAt` 2 minutes ahead shows the matching `scheduleTime` and is dispatched not earlier.
+7. Payload check: the task body contains only `certificateId` and `sequence` (no address or name).

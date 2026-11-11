@@ -41,6 +41,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
     r.db.register('firestore', async (ctx) =>
       (await import('./adapters/firestore/index.js')).createRepositories(ctx),
     ),
+  (r) =>
+    r.queue.register('cloud-tasks', async (ctx) =>
+      (await import('./adapters/cloud-tasks/index.js')).createQueuePorts(ctx),
+    ),
 ];
 
 /** Registries with the names defined by the configuration plus the built-in registrations. */
