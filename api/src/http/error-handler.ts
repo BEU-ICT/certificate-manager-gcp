@@ -58,7 +58,9 @@ export function errorHandler(
   reply: FastifyReply,
 ): FastifyReply {
   if (error instanceof AppError) {
-    request.log.warn({ code: error.code, status: error.statusCode }, 'request rejected');
+    // Unknown IDs are routine (and attacker-controlled): INFO, code and status only, never the ID.
+    const level = error.statusCode === 404 ? 'info' : 'warn';
+    request.log[level]({ code: error.code, status: error.statusCode }, 'request rejected');
     return send(
       request,
       reply,

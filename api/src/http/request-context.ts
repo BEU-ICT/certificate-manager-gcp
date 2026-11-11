@@ -12,7 +12,10 @@ export interface RequestContextOptions {
   gcpProject?: string | undefined;
 }
 
-/** X-Request-Id header, trace-correlated child logger and the one-line access log. */
+/**
+ * X-Request-Id header, trace-correlated child logger and the one-line access log. The request
+ * logger already carries `requestId` (`requestIdLogLabel` in app.ts): never add it again.
+ */
 export function installRequestContext(app: FastifyInstance, options: RequestContextOptions): void {
   app.decorateRequest('adminUid');
 
@@ -30,7 +33,6 @@ export function installRequestContext(app: FastifyInstance, options: RequestCont
   app.addHook('onResponse', (request, reply, done) => {
     request.log.info(
       {
-        requestId: request.id,
         method: request.method,
         route: request.routeOptions.url ?? '(unmatched)',
         status: reply.statusCode,
