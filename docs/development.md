@@ -36,6 +36,16 @@ Run the API with `LOG_LEVEL=debug`. Emulator data lives only in memory: stop and
 
 `api/.env` and `web/.env` are git-ignored. Never put real project ids or secrets into local env files.
 
-## Not done yet
+## Seed data
 
-The dev seed script (`scripts/seed-dev.ts`: test admin, organization, event, template package, certificates) needs the repository adapters and data model of the later epics; it is tracked in BEU-ICT/certificate-manager#280.
+With the emulators running (`npm run dev:emulators`, or `npm run dev`), fill them with demo data:
+
+```bash
+npm run seed:dev
+```
+
+It creates the administrator `admin@example.test` (password `local-admin-password`, valid only in the Auth emulator; override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`), one organization, one event, one template and three certificates (two active, one revoked, one without e-mail). It is idempotent and refuses to run unless `GCP_PROJECT` starts with `demo-` and both emulator hosts are local.
+
+To see the data in the SPA, run the API against the Firestore emulator (`DB_ADAPTER=firestore` in `api/.env`, or leave it unset and export `FIRESTORE_EMULATOR_HOST=127.0.0.1:8081`), set `VITE_USE_AUTH_EMULATOR=true` in `web/.env` and sign in with the seeded administrator. Limitation: no persistent storage adapter exists yet (`STORAGE_ADAPTER=memory`), so the template document is seeded but its package files vanish when the script exits; previews and PDFs of the seeded template work once a storage adapter lands.
+
+`npm run test:e2e:auth` starts the emulators, seeds and runs the Playwright suite including the sign-in tests (needs Java 21).

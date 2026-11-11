@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-// The tests that sign in need the Firebase Auth emulator and a seeded administrator (BEU-ICT/certificate-manager#280, not
-// available yet); see web/README.md (Testing). The signed-out test runs everywhere.
+// The tests that sign in need the Firebase Auth emulator and a seeded administrator (`npm run seed:dev`); see web/README.md (Testing). The signed-out test runs everywhere.
 const emulator = process.env['E2E_AUTH_EMULATOR'] === 'true';
 const adminEmail = process.env['E2E_ADMIN_EMAIL'] ?? '';
 const adminPassword = process.env['E2E_ADMIN_PASSWORD'] ?? '';
@@ -24,7 +23,7 @@ test('a signed-out visitor is redirected to /login and nothing of the admin area
 test.describe('with the Auth emulator and a seeded administrator', () => {
   test.skip(
     !emulator || !adminEmail || !adminPassword,
-    'needs the Auth emulator, the seeded admin (BEU-ICT/certificate-manager#280) and VITE_USE_AUTH_EMULATOR=true; see web/README.md (Testing)',
+    'needs the Auth emulator, the seeded admin (npm run seed:dev) and VITE_USE_AUTH_EMULATOR=true; see web/README.md (Testing)',
   );
 
   async function signIn(page: import('@playwright/test').Page) {
