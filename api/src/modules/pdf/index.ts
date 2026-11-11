@@ -20,8 +20,12 @@ export {
 export {
   SVG_PDF_ENGINE,
   SvgPdfRenderer,
+  TEXT_DOES_NOT_FIT,
+  createFields,
   type DrawContext,
   type DrawLayer,
+  type FieldsOptions,
+  type FieldsPlugin,
   type SvgPdfRendererOptions,
 } from './engines/svg-pdf/index.js';
 export {
