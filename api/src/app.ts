@@ -78,7 +78,10 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   if (services) {
     adminOrganizationRoutes(app, services);
     adminEventRoutes(app, services);
-    adminTemplateRoutes(app, services);
+    adminTemplateRoutes(app, services, {
+      publicBaseUrl: (deps.publicUrls ?? DEFAULT_PUBLIC_URLS).publicBaseUrl,
+      ...(deps.ports && { clock: deps.ports.clock }),
+    });
     publicCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
     adminCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
     adminCertificateRevocationRoutes(app, services);

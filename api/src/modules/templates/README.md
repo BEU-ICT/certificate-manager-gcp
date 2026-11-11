@@ -77,3 +77,5 @@ Limits: at most 30 files, 10 MB in total, `background.svg` 5 MB, images 2 MB and
 | `FONT_NO_CYRILLIC`                                                           | warning | such a font lacks basic Cyrillic                                                                            |
 
 CLI (offline, reads a directory, no symlinks): `npm run template:validate -w api -- <dir> [--json]`; exit code 0 accepted, 1 rejected, 2 usage. Test corpus: `test/fixtures/templates/` (`good/` package and `malicious/` files); `npm run template-fixtures:generate -w api` rebuilds the binary fixtures deterministically from `test/fixtures/templates/build.ts`.
+
+`POST /api/v1/admin/templates/{reference}/preview` renders a sample PDF with a stored template; see the pdf module README (BEU-ICT/certificate-manager#325).

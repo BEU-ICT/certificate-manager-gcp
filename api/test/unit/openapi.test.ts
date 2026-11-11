@@ -50,6 +50,7 @@ describe('OpenAPI document', () => {
       '/api/v1/admin/templates',
       '/api/v1/admin/templates/{reference}',
       '/api/v1/admin/templates/{reference}/copy',
+      '/api/v1/admin/templates/{reference}/preview',
       '/api/v1/public/certificates/{id}',
       '/internal/healthz',
     ]);

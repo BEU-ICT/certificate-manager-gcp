@@ -14,6 +14,14 @@ import {
   type AssetsLogger,
   type TemplateCertificateCounter,
 } from './modules/templates/index.js';
+import {
+  DefaultPdfService,
+  InMemoryRendererRegistry,
+  SvgPdfRenderer,
+  createFields,
+  createFormatterRegistry,
+  drawQr,
+} from './modules/pdf/index.js';
 import { DefaultStatsService } from './modules/stats/index.js';
 import { ReferenceCheckRegistry } from './shared/references.js';
 import type { EventId, OrganizationId } from './shared/ids.js';
@@ -26,6 +34,8 @@ export interface ServiceOptions {
   logger?: AssetsLogger;
   /** `STATS_CACHE_SECONDS`: per-instance cache of the admin statistics (default 60). */
   statsCacheSeconds?: number;
+  /** `PUBLIC_BASE_URL`: the verification page of a certificate is `<base>/c/<id>`. */
+  publicBaseUrl?: string;
   /** Text-fit dry run (the `PdfService`); issuance (`Services.issuance`) is built only when given. */
   fitChecker?: FitChecker;
 }
@@ -98,7 +108,18 @@ export function buildServices(
     ports.clock,
     ports.eventBus,
   );
+  const formatters = createFormatterRegistry();
+  const { fieldsLayer, checkFit: fitChecker } = createFields({ formatters });
+  const renderers = new InMemoryRendererRegistry();
+  renderers.register(new SvgPdfRenderer({ fieldsLayer, qrLayer: drawQr, fitChecker }));
+  const publicBase = (options.publicBaseUrl ?? 'http://localhost:5173').replace(/\/+$/, '');
+  const pdf = new DefaultPdfService(
+    renderers,
+    templateAssets,
+    (certificate) => `${publicBase}/c/${certificate.id}`,
+  );
   return {
+    pdf,
     organizations,
     organizationReferences,
     events,

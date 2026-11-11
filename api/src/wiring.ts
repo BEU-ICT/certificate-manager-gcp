@@ -4,6 +4,7 @@ import type {
   CertificateService,
   RevocationService,
 } from './modules/certificates/index.js';
+import type { PdfService } from './modules/pdf/index.js';
 import type { StatsService } from './modules/stats/index.js';
 import type { EventService } from './modules/events/index.js';
 import type { TemplateAssets, TemplateService } from './modules/templates/index.js';
@@ -101,6 +102,8 @@ export interface Services {
   readonly revocation: RevocationService;
   /** Cached dashboard counts (stats module). */
   readonly stats: StatsService;
+  /** PDF rendering and admin previews (pdf module). */
+  readonly pdf: PdfService;
   /** Single issuance; present only when `buildServices` got a `fitChecker` (see certificates README). */
   readonly issuance?: CertificateIssuanceService;
 }
