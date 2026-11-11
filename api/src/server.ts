@@ -29,6 +29,7 @@ const app = buildApp({
   log: { level: config.logLevel, gcpProject: config.gcpProject },
   ports: composition.ports,
   services: composition.services,
+  sendEmail: composition.sendEmail,
   openApiEndpoint: config.flags.openApiEndpoint,
   flags: createFeatureFlags(config.flags),
   adminRateLimitPerMin: config.rateLimit.adminPerMin,

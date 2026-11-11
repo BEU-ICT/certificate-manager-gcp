@@ -18,8 +18,10 @@ import { publicCertificateRoutes } from './http/routes/public-certificates.js';
 import { publicCertificatePdfRoutes } from './http/routes/public-certificate-pdf.js';
 import type { PublicUrls } from './http/dto/public/certificate.js';
 import { adminCertificateRoutes } from './http/routes/admin-certificates.js';
+import { internalSendEmailRoutes } from './http/routes/internal-send-email.js';
 import { adminStatsRoutes } from './http/routes/admin-stats.js';
 import { buildServices } from './services.js';
+import { createSendEmailHandler } from './modules/notifications/index.js';
 import type { Ports, Services } from './wiring.js';
 
 export interface AppDeps {
@@ -36,7 +38,14 @@ export interface AppDeps {
   adminRateLimitPerMin?: number;
   /** Bases for public PDF links (config.publicBaseUrl / pdfPublicBaseUrl); defaults to the local-dev values. */
   publicUrls?: PublicUrls;
+  /**
+   * Send-email task handler shared with the in-process queue (built by compose.ts). Without it a
+   * default handler (placeholder sender address) is built from `ports`; used by tests.
+   */
+  sendEmail?: SendEmailHandler;
 }
+
+export type SendEmailHandler = ReturnType<typeof createSendEmailHandler>;
 
 const BODY_LIMIT_BYTES = 1024 * 1024;
 const TRUSTED_PROXY_HOPS = 1;
@@ -93,6 +102,22 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
       adminCertificateBulkIssuanceRoutes(app, services, deps.flags);
     }
     adminStatsRoutes(app, services);
+    if (deps.ports) {
+      internalSendEmailRoutes(app, {
+        verifier: deps.ports.taskRequestVerifier,
+        rateLimiter: deps.ports.rateLimiter,
+        handle:
+          deps.sendEmail ??
+          createSendEmailHandler({
+            certificates: services.certificates,
+            emailSender: deps.ports.emailSender,
+            logger: app.log,
+            publicBaseUrl: (deps.publicUrls ?? DEFAULT_PUBLIC_URLS).publicBaseUrl,
+            from: { address: 'certificates@example.com' },
+          }),
+        now: () => deps.ports!.clock.now().getTime(),
+      });
+    }
   }
   if (deps.openApiEndpoint === true) registerOpenApiEndpoint(app);
 
