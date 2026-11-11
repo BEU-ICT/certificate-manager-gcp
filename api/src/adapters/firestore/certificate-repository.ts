@@ -12,6 +12,7 @@ import type {
   MarkRevokedResult,
   Page,
   PageRequest,
+  ReserveEmailSendResult,
   SetPdfPathResult,
 } from '../../ports/index.js';
 import type { CertificateType } from '../../shared/certificate-types.js';
@@ -285,6 +286,28 @@ export class FirestoreCertificateRepository implements CertificateRepository {
       if ((error as { code?: unknown }).code === 5) return false; // NOT_FOUND
       throw error;
     }
+  }
+
+  reserveEmailSend(
+    id: CertificateId,
+    options: { at: Date; firstSendOnly: boolean },
+  ): Promise<ReserveEmailSendResult> {
+    const ref = this.collection.doc(id);
+    return this.db.runTransaction(async (tx): Promise<ReserveEmailSendResult> => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return { outcome: 'not_found' };
+      const data = snap.data() as CertificateDocument;
+      const attempts = data.emailAttempts ?? 0;
+      if (
+        options.firstSendOnly &&
+        (data.status !== 'active' || data.emailStatus !== 'pending' || attempts > 0)
+      ) {
+        return { outcome: 'not_eligible' };
+      }
+      const sequence = attempts + 1;
+      tx.update(ref, { emailAttempts: sequence, updatedAt: ts(options.at) });
+      return { outcome: 'reserved', sequence };
+    });
   }
 
   async countByTemplate(ref: TemplateRef): Promise<number> {
