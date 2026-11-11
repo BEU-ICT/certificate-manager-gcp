@@ -151,6 +151,39 @@ export function describeCertificateRepositoryContract(
         .toBe(500);
     });
 
+    test('getMany returns the existing certificates once each, in the order of the ids', async (repo) => {
+      const [a, b, c] = [sampleCertificate(), sampleCertificate(), sampleCertificate()] as [
+        Certificate,
+        Certificate,
+        Certificate,
+      ];
+      await repo.createMany([a, b, c]);
+      const missing = asCertificateId('z'.repeat(22));
+      const found = await repo.getMany([c.id, missing, a.id, c.id]);
+      clause(PORT, 'getMany: existing only, request order, no repeats', 'order')
+        .that(found.map((x) => x.id))
+        .toEqual([c.id, a.id]);
+      clause(PORT, 'getMany: equals getById', 'content')
+        .that(found[1])
+        .toEqual(await repo.getById(a.id));
+      clause(PORT, 'getMany: empty input gives empty output', 'empty')
+        .that(await repo.getMany([]))
+        .toEqual([]);
+    });
+
+    test('getMany reads 500 ids across chunks and rejects 501', async (repo) => {
+      const many = Array.from({ length: 500 }, () => sampleCertificate());
+      await repo.createMany(many);
+      const found = await repo.getMany(many.map((x) => x.id));
+      clause(PORT, 'getMany: 500 ids, request order', '500')
+        .that(found.map((x) => x.id))
+        .toEqual(many.map((x) => x.id));
+      await clause(PORT, 'getMany: at most 500 ids', '501').rejectedWith(
+        repo.getMany([...many.map((x) => x.id), asCertificateId('y'.repeat(22))]),
+        ValidationError,
+      );
+    });
+
     test('list is ordered issuedAt desc then id desc, stable with identical issuedAt', async (repo) => {
       const same = new Date(BASE + 1_000_000);
       const ties = Array.from({ length: 7 }, () => sampleCertificate({ issuedAt: same }));

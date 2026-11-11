@@ -348,6 +348,11 @@
               "requestId": {
                 "description": "Request correlation ID; equals the X-Request-Id header.",
                 "type": "string"
+              },
+              "truncated": {
+                "const": true,
+                "description": "BULK_INVALID: present and true when more problems exist than the (at most 200) listed in details.",
+                "type": "boolean"
               }
             },
             "required": ["code", "message", "requestId"],
@@ -1249,6 +1254,168 @@
         },
         "security": [{ "bearerAuth": [] }],
         "summary": "Issue one certificate"
+      }
+    },
+    "/api/v1/admin/certificates/bulk": {
+      "post": {
+        "description": "All or nothing. Resolves the template once, validates (strict per-item schema, same normalisation as single issuance) and fit-checks every item, then stores all certificates in one atomic batch and publishes `certificate.issued` per certificate in request order. `1 <= items.length <= 500`, otherwise 400 `VALIDATION_FAILED`. A per-item `subject` overrides the common `subject`; every item needs one. 422 `BULK_INVALID` lists all item problems as `details[{ path: \"items[17].ownerName\", message, code }]`, at most 200; `error.truncated: true` marks that more exist; nothing is stored. Reference errors (`EVENT_ORG_MISMATCH`, `TEMPLATE_MISMATCH`, `TEMPLATE_NOT_FOUND`) are 422 as in single issuance. Counts as one request for rate limiting. Body limit 1 MB, timeout 55 s. 404 while the `bulkIssuance` feature is off. Supports `Idempotency-Key`: a replay returns the same `items` with `Idempotent-Replayed: true`. The response contains no e-mail addresses.",
+        "operationId": "issueCertificatesBulk",
+        "parameters": [
+          {
+            "description": "Optional retry key, scoped to the calling administrator and kept for 24 hours. Repeating a completed request with the same key returns the stored response with `Idempotent-Replayed: true`; the same key with another body yields 422 `IDEMPOTENCY_KEY_REUSED`; a concurrent duplicate yields 409 `REQUEST_IN_PROGRESS`.",
+            "in": "header",
+            "name": "idempotency-key",
+            "required": false,
+            "schema": { "pattern": "^[A-Za-z0-9_-]{1,128}$", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "eventId": { "maxLength": 128, "type": "string" },
+                  "items": {
+                    "description": "Items `{ ownerName, email?, subject?, skills?, issuedAt? }` (strict; same rules as single issuance), validated individually; see 422 BULK_INVALID.",
+                    "items": {},
+                    "maxItems": 500,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "organizationId": { "maxLength": 128, "type": "string" },
+                  "subject": {
+                    "description": "Default subject; an item `subject` overrides it. Every item needs one of the two.",
+                    "maxLength": 2000,
+                    "type": "string"
+                  },
+                  "templateId": {
+                    "description": "Template reference (`<name>-v<n>`). Omit to use the latest version for the organization, event and type.",
+                    "maxLength": 120,
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "attendance",
+                      "appreciation",
+                      "thanks",
+                      "distinction",
+                      "instructor",
+                      "student",
+                      "team",
+                      "other"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": ["organizationId", "eventId", "type", "items"],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "created": {
+                      "description": "Number of certificates created.",
+                      "maximum": 9007199254740991,
+                      "minimum": -9007199254740991,
+                      "type": "integer"
+                    },
+                    "items": {
+                      "description": "In request order.",
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "hasEmail": {
+                            "description": "Whether an e-mail address is stored; the address is never returned.",
+                            "type": "boolean"
+                          },
+                          "id": { "type": "string" },
+                          "ownerName": { "type": "string" }
+                        },
+                        "required": ["id", "ownerName", "hasEmail"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": ["created", "items"],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "The created certificates, in request order"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "413": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "PAYLOAD_TOO_LARGE"
+          },
+          "422": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "Well-formed request that violates a business rule (domain specific code)"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Issue up to 500 certificates at once"
       }
     },
     "/api/v1/admin/certificates/count": {

@@ -1,10 +1,17 @@
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
-import { AppError, type ErrorDetail } from '../shared/errors.js';
+import { AppError, BulkInvalidError, type ErrorDetail } from '../shared/errors.js';
 
 export interface ErrorBody {
-  error: { code: string; message: string; details?: ErrorDetail[]; requestId: string };
+  error: {
+    code: string;
+    message: string;
+    details?: ErrorDetail[];
+    /** `BULK_INVALID` only: true when more problems exist than `details` lists. */
+    truncated?: true;
+    requestId: string;
+  };
 }
 
 function send(
@@ -15,9 +22,11 @@ function send(
   message: string,
   details?: ErrorDetail[],
   headers: Readonly<Record<string, string>> = {},
+  truncated = false,
 ): FastifyReply {
   const error: ErrorBody['error'] = { code, message, requestId: request.id };
   if (details !== undefined) error.details = details;
+  if (truncated) error.truncated = true;
   return reply
     .headers(headers)
     .status(status)
@@ -58,6 +67,7 @@ export function errorHandler(
       error.message,
       error.details,
       error.headers,
+      error instanceof BulkInvalidError && error.truncated,
     );
   }
   if (error instanceof ZodError) {

@@ -25,6 +25,12 @@ export const ErrorBodyDto = z
       code: z.string().meta({ example: 'VALIDATION_FAILED' }),
       message: z.string(),
       details: z.array(ErrorDetailDto).optional(),
+      truncated: z
+        .literal(true)
+        .optional()
+        .describe(
+          'BULK_INVALID: present and true when more problems exist than the (at most 200) listed in details.',
+        ),
       requestId: z.string().describe('Request correlation ID; equals the X-Request-Id header.'),
     }),
   })

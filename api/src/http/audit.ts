@@ -9,7 +9,7 @@ export function audit(
   action: string,
   entityId: string,
   /** Further identifiers (never names, e-mail addresses or other personal data). */
-  context: Record<string, string> = {},
+  context: Record<string, string | number> = {},
 ): void {
   request.log.info(
     { audit: true, action, entityId, ...context, adminUid: request.admin?.uid },

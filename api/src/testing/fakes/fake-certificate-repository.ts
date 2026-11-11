@@ -64,6 +64,20 @@ export class FakeCertificateRepository implements CertificateRepository {
     return Promise.resolve(found ? structuredClone(found) : null);
   }
 
+  getMany(ids: readonly CertificateId[]): Promise<Certificate[]> {
+    if (ids.length > MAX_CREATE_MANY) {
+      return Promise.reject(
+        new ValidationError(`At most ${String(MAX_CREATE_MANY)} certificates per read`),
+      );
+    }
+    const found: Certificate[] = [];
+    for (const id of new Set(ids)) {
+      const c = this.byId.get(id);
+      if (c) found.push(structuredClone(c));
+    }
+    return Promise.resolve(found);
+  }
+
   list(filter: CertificateFilter, page?: PageRequest): Promise<Page<Certificate>> {
     try {
       const limit = pageLimit(page);

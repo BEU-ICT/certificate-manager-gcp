@@ -6,7 +6,7 @@ import type {
 } from '../../ports/index.js';
 import type { Certificate } from '../../shared/domain.js';
 import { NotFoundError } from '../../shared/errors.js';
-import { parseCertificateId } from '../../shared/ids.js';
+import { isCertificateId, parseCertificateId } from '../../shared/ids.js';
 
 /** Read side of the certificates module used by the admin API (list, count, detail). */
 export interface CertificateQueryService {
@@ -16,6 +16,8 @@ export interface CertificateQueryService {
   count(filter: CertificateFilter): Promise<number>;
   /** `NotFoundError` for malformed and unknown ids alike (one document read). */
   get(id: string): Promise<Certificate>;
+  /** Existing certificates among `ids` (at most 500) in the order of `ids`; malformed and unknown ids are skipped. */
+  getMany(ids: readonly string[]): Promise<Certificate[]>;
 }
 
 export class DefaultCertificateQueryService implements CertificateQueryService {
@@ -27,6 +29,10 @@ export class DefaultCertificateQueryService implements CertificateQueryService {
 
   count(filter: CertificateFilter): Promise<number> {
     return this.certificates.count(filter);
+  }
+
+  getMany(ids: readonly string[]): Promise<Certificate[]> {
+    return this.certificates.getMany(ids.filter(isCertificateId));
   }
 
   async get(id: string): Promise<Certificate> {
