@@ -15,6 +15,7 @@
     "dev:lite": "concurrently -k -n api,web -c cyan,magenta \"npm run dev -w @certificate-manager/api\" \"npm run dev -w @certificate-manager/web\"",
     "dev:emulators": "firebase emulators:start --only firestore,auth --project demo-certificate-manager",
     "seed:dev": "tsx scripts/seed-dev.ts",
+    "verify:pdf-lifecycle": "tsx scripts/verify-pdf-lifecycle.ts",
     "test:e2e:auth": "firebase emulators:exec --only firestore,auth --project demo-certificate-manager \"npm run seed:dev && E2E_AUTH_EMULATOR=true E2E_ADMIN_EMAIL=admin@example.test E2E_ADMIN_PASSWORD=local-admin-password VITE_USE_AUTH_EMULATOR=true npm run test:e2e -w @certificate-manager/web\""
   },
   "devDependencies": {
