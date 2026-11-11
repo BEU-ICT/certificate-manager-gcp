@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, STALE_TIME, type ApiError } from '@/api';
 import type { components, operations } from '@/api/schema';
 
@@ -72,5 +72,17 @@ export function useCertificate(id: string, enabled = true) {
       api().get<CertificateDetail>(`${BASE}/${encodeURIComponent(id)}`, { signal }),
     staleTime: STALE_TIME.detail,
     enabled,
+  });
+}
+
+export type RevokedCertificate = components['schemas']['RevokedCertificate'];
+
+/** Revokes a certificate (idempotent; repeating the call retries the PDF cleanup). */
+export function useRevokeCertificate(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation<RevokedCertificate, ApiError, { reason: string }>({
+    mutationFn: ({ reason }) =>
+      api().post<RevokedCertificate>(`${BASE}/${encodeURIComponent(id)}/revoke`, { reason }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: CERTIFICATES_KEY }),
   });
 }

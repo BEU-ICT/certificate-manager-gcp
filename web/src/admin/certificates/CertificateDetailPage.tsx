@@ -9,6 +9,7 @@ import { certificateTypeLabel } from '@/lib/certificateTypes';
 import { isCertificateId } from '@/lib/certificateId';
 import { formatDate, formatNumber } from '@/lib/format';
 import { useCertificate, type CertificateDetail } from './api';
+import { RevokeCertificate } from './RevokeCertificate';
 import { PublicLinkCard } from './PublicLinkCard';
 
 const STATUS_TONE: Record<CertificateDetail['status'], BadgeTone> = {
@@ -111,7 +112,7 @@ export default function CertificateDetailPage() {
     <section aria-labelledby="page-title" className="flex flex-col gap-6">
       <div>{back}</div>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 id="page-title" className="text-2xl font-semibold">
+        <h1 id="page-title" tabIndex={-1} className="text-2xl font-semibold">
           {data.ownerName}
         </h1>
         <div className="flex flex-wrap gap-2">
@@ -119,17 +120,7 @@ export default function CertificateDetailPage() {
             {t('certificates.detail.openPublic')}
             <span className="sr-only"> ({t('certificates.detail.newTab')})</span>
           </a>
-          {/* HOOK BEU-ICT/certificate-manager#351: replace this placeholder with the revoke dialog. */}
-          {!revoked ? (
-            <Button
-              variant="secondary"
-              disabled
-              title={t('certificates.detail.actionSoon')}
-              aria-describedby="action-soon"
-            >
-              {t('certificates.detail.revoke')}
-            </Button>
-          ) : null}
+          <RevokeCertificate id={data.id} showButton={!revoked} />
           {/* HOOK BEU-ICT/certificate-manager#378: replace this placeholder with the resend action. */}
           {data.email && !revoked ? (
             <Button
