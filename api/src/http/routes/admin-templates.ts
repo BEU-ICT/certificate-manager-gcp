@@ -15,12 +15,15 @@ import { audit } from '../audit.js';
 import { adminRoutes } from '../auth/admin-guard.js';
 import {
   ReferenceParamsDto,
+  TemplateCopyBodyDto,
+  TemplateCopyResultDto,
   TemplateDetailDto,
   TemplateListQueryDto,
   TemplatePageDto,
   TemplateUploadBodyDto,
   TemplateUploadFieldsDto,
   TemplateUploadResultDto,
+  toTemplateCopyResultDto,
   toTemplateDetailDto,
   toTemplateDto,
   toTemplateUploadResultDto,
@@ -149,6 +152,71 @@ export function adminTemplateRoutes(app: FastifyInstance, services: Services): v
           ...[...form.files].map(([path, body]) => ({ path, size: body.length })),
         ];
         return reply.status(201).send(toTemplateUploadResultDto(template, files, checked.warnings));
+      },
+    );
+
+    r.post(
+      '/templates/:reference/copy',
+      {
+        schema: {
+          operationId: 'copyTemplate',
+          summary: 'Copy a template version to an organization, event and type',
+          description:
+            'Creates the next version for the target organization, event and type (`type` ' +
+            "defaults to the source's) with the same files and config; objects are copied " +
+            'server side. Copying to the same organization, event and type creates the next ' +
+            'version. The source and its certificates are untouched. `422 EVENT_ORG_MISMATCH` ' +
+            'means the event belongs to another organization.',
+          security: SECURITY,
+          params: ReferenceParamsDto,
+          body: TemplateCopyBodyDto,
+          response: {
+            201: jsonResponse('The created template version', TemplateCopyResultDto),
+            ...errorResponses(400, 401, 403, 404, 409, 422),
+          },
+        },
+      },
+      async (request, reply) => {
+        const body = request.body;
+        const source = await templates.get(request.params.reference);
+        const organization = await organizations
+          .get(body.organizationId)
+          .catch((error: unknown) => {
+            if (error instanceof NotFoundError) {
+              throw new NotFoundError('Organization not found', [
+                { path: 'organizationId', message: 'Unknown organization' },
+              ]);
+            }
+            throw error;
+          });
+        const event = await events.get(body.eventId).catch((error: unknown) => {
+          if (error instanceof NotFoundError) {
+            throw new NotFoundError('Event not found', [
+              { path: 'eventId', message: 'Unknown event' },
+            ]);
+          }
+          throw error;
+        });
+        if (event.organizationId !== organization.id) {
+          throw new UnprocessableError(
+            'EVENT_ORG_MISMATCH',
+            'The event does not belong to the organization',
+            [{ path: 'eventId', message: 'This event belongs to a different organization' }],
+          );
+        }
+        const copied = await templates.copy({
+          sourceReference: source.reference,
+          target: {
+            organizationId: organization.id,
+            eventId: event.id,
+            organizationSlug: organization.slug,
+            eventSlug: event.slug,
+            type: body.type ?? source.type,
+          },
+          createdBy: request.admin?.uid ?? 'unknown',
+        });
+        audit(request, 'template.copied', copied.template.reference);
+        return reply.status(201).send(toTemplateCopyResultDto(copied));
       },
     );
 
