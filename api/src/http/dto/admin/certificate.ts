@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { CertificateFilter } from '../../../ports/index.js';
 import { CERTIFICATE_TYPES } from '../../../shared/certificate-types.js';
 import type { Certificate } from '../../../shared/domain.js';
+import { emailSchema } from '../../../modules/certificates/index.js';
 import { asEventId, asOrganizationId, isEventId, isOrganizationId } from '../../../shared/ids.js';
 import { pageOf } from './page.js';
 
@@ -232,3 +233,24 @@ export function toAdminCertificateDto(
     updatedAt: c.updatedAt.toISOString(),
   };
 }
+
+/**
+ * Body of `POST /api/v1/admin/certificates/:id/resend-email`. Strict; the optional corrected
+ * address is validated and lowercased like at issuance (`emailSchema`: trimmed, max 254).
+ */
+export const ResendEmailBodyDto = z
+  .strictObject({
+    email: emailSchema
+      .optional()
+      .describe(
+        'Corrected address; replaces the stored one. Omit to resend to the stored address.',
+      ),
+  })
+  .meta({ id: 'ResendEmailBody' });
+
+export const ResendEmailResultDto = z
+  .object({
+    emailStatus: z.literal('pending'),
+    emailAttempts: z.number().int().describe('Sequence of the queued send (names the task).'),
+  })
+  .meta({ id: 'ResendEmailResult' });

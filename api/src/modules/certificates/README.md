@@ -54,3 +54,8 @@ The route uses `withIdempotency` (optional `Idempotency-Key`): the stored/replay
 - Response `201 { created, items: [{ id, ownerName, hasEmail }] }` in request order; no e-mail addresses. `withIdempotency` stores only the ordered certificate IDs; a replay rebuilds `items` with `CertificateRepository.getMany` (chunked batch reads, at most 500 IDs) through `CertificateQueryService.getMany`.
 - Audit: one line `certificate.bulk_issued` with `count`, `organizationId`, `eventId`, `template`, `adminUid` (no names or e-mail addresses).
 - `npm run bench:bulk -w @certificate-manager/api` times 500 items on in-memory fakes with a no-op fit check. The 10 s target on the 512 MiB / 1 vCPU container (real `PdfService` fit check, Firestore) is **not** measured by it and still has to be recorded in `docs/performance.md`.
+
+## Admin e-mail resend and `emailStatus` filter (BEU-ICT/certificate-manager#377)
+
+- `CertificateRepository.prepareEmailResend` / `CertificateService.prepareEmailResend`: transactional state change for the admin resend (see the notifications README). Pending e-mails older than `EMAIL_STUCK_AFTER_MS` (2 h, by `updatedAt`) count as stuck.
+- `GET /api/v1/admin/certificates` and `/count` accept `emailStatus=pending|sent|failed|skipped`; the filter, the `(emailStatus, issuedAt desc)` composite index (`infra/firestore.indexes.json`) and the 63-combination verification were already in place, #377 added the tests only.

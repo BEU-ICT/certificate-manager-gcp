@@ -129,6 +129,23 @@ export interface EmailStatePatch {
   updatedAt: Date;
 }
 
+/** Input of {@link CertificateRepository.prepareEmailResend}. */
+export interface PrepareEmailResendInput {
+  at: Date;
+  /** Corrected (already validated, lowercased) address; replaces the stored one. */
+  email?: string;
+  /** A `pending` certificate whose `updatedAt` is before this instant counts as stuck and may be resent. */
+  stuckBefore: Date;
+}
+
+/** Outcome of {@link CertificateRepository.prepareEmailResend}; only `reserved` changes anything. */
+export type PrepareEmailResendResult =
+  | { outcome: 'reserved'; sequence: number; emailChanged: boolean }
+  | { outcome: 'not_found' }
+  | { outcome: 'revoked' }
+  | { outcome: 'email_required' }
+  | { outcome: 'in_progress' };
+
 /** Outcome of {@link CertificateRepository.reserveEmailSend}. */
 export type ReserveEmailSendResult =
   | { outcome: 'reserved'; sequence: number }
@@ -195,6 +212,19 @@ export interface CertificateRepository {
     id: CertificateId,
     options: { at: Date; firstSendOnly: boolean },
   ): Promise<ReserveEmailSendResult>;
+  /**
+   * Transaction (one read, one write) for an admin resend. Checks, in this order: unknown ->
+   * `not_found`; not `active` -> `revoked`; no stored and no supplied address -> `email_required`;
+   * `pending` and `updatedAt` not before `stuckBefore` -> `in_progress`. Otherwise stores `email`
+   * (when supplied), sets `emailStatus=pending`, clears `emailLastError`, increments
+   * `emailAttempts` (the new value is the task sequence) and sets `updatedAt`; `emailChanged`
+   * says whether the stored address differs from the supplied one. A `skipped` certificate that
+   * had no attempts therefore gets sequence 1 (a first send).
+   */
+  prepareEmailResend(
+    id: CertificateId,
+    input: PrepareEmailResendInput,
+  ): Promise<PrepareEmailResendResult>;
   /** Certificates rendered from the template reference (reference checks). */
   countByTemplate(ref: TemplateRef): Promise<number>;
   countByOrganization(organizationId: OrganizationId): Promise<number>;

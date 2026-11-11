@@ -56,3 +56,16 @@ Statuses only move `pending -> sent|failed`; `failed -> pending` is a resend. De
 In-process queue (`QUEUE_ADAPTER=in-process`): `compose.ts` builds one handler and registers `createInProcessSendEmailTask(handler)` under `SEND_EMAIL_HANDLER` in `inProcessTaskHandlers`; `server.ts` passes the same handler to the route. The in-process queue retries on a thrown error and has no retry-count header, so the adapter keeps a per-task retry counter (lost on restart) and throws `SendEmailRetryError` for `retry`/`misconfigured` outcomes; on the 5th attempt the shared logic marks `RETRIES_EXHAUSTED`. Invalid payloads are dropped.
 
 Left for the other tasks: the daily cap (BEU-ICT/certificate-manager#374) is only the `DailyCap` interface and is not wired (no cap applies), the localised template (BEU-ICT/certificate-manager#376) is only `PlainMessageComposer` (plain az/en text and escaped HTML), and the provider fallback (`Ports.emailFallback`) is not used by the handler yet.
+
+## Admin resend (BEU-ICT/certificate-manager#377)
+
+`POST /api/v1/admin/certificates/{id}/resend-email` (`src/http/routes/admin-certificate-resend-email.ts`, service `DefaultEmailResendService` in `resend.ts`, exposed as `Services.emailResend`). Body `{ email? }`, strict; the address is validated and lowercased with the issuance `emailSchema`. Response `202 { emailStatus: "pending", emailAttempts }`.
+
+Order of work:
+
+1. Throttle: `RateLimiter.consume("email-resend:<certificateId>", 5 per 24 h)`, else `429 RATE_LIMITED` with `Retry-After`. Every attempt that passes ID validation counts, including attempts later refused with 409/422 (keeps the check to the limiter and avoids a second read). With the in-process limiter the counter is per instance and lost on restart (effective limit 5 x instances); a shared `RateLimiter` adapter would make it exact.
+2. `certificates.prepareEmailResend` = `CertificateRepository.prepareEmailResend`, one transaction (one read, one write), so concurrent resends cannot both pass: unknown ID `404`; not `active` `409 CONFLICT` (detail `CERTIFICATE_REVOKED`); no stored or supplied address `422 EMAIL_REQUIRED`; `pending` with `updatedAt` newer than 2 hours `409 CONFLICT` (detail `EMAIL_IN_PROGRESS`). Otherwise it stores the address, sets `pending`, clears `emailLastError` and increments `emailAttempts`. Allowed for `failed`, `sent`, `skipped` and a `pending` older than 2 hours.
+3. Enqueue `email-<id>-<emailAttempts>` (`dedupe: true`). A resend always gets a new number, so it never collides with Cloud Tasks' roughly one hour name reuse block. A `skipped` certificate (0 attempts) therefore gets sequence 1, exactly like a first send. If the queue refuses the task: the certificate is marked `failed` / `ENQUEUE_FAILED` and the route answers `503 UNAVAILABLE` (the address change is kept; the admin retries).
+4. A changed address is logged as `audit` action `certificate.email_changed` (entity ID and admin UID only, never addresses).
+
+The send worker ignores superseded tasks (`sequence < emailAttempts`), so an older queued task cannot send after a resend.

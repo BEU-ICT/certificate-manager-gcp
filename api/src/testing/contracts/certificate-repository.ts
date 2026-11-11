@@ -549,6 +549,120 @@ export function describeCertificateRepositoryContract(
         .toEqual([1, 2, 3, 4, 5]);
     });
 
+    test('prepareEmailResend reserves, replaces the address and clears the error', async (repo) => {
+      const cert = sampleCertificate({
+        email: 'old@example.com',
+        emailStatus: 'failed',
+        emailAttempts: 2,
+        emailLastError: 'REJECTED: BOUNCE',
+      });
+      await repo.create(cert);
+      const at = new Date(BASE + 9_000_000);
+      const stuckBefore = new Date(at.getTime() - 7_200_000);
+      clause(PORT, 'prepareEmailResend: failed -> pending with the next sequence', 'failed')
+        .that(await repo.prepareEmailResend(cert.id, { at, stuckBefore, email: 'new@example.com' }))
+        .toEqual({ outcome: 'reserved', sequence: 3, emailChanged: true });
+      const stored = await repo.getById(cert.id);
+      const rest: Partial<Certificate> = { ...cert };
+      delete rest.emailLastError;
+      clause(PORT, 'prepareEmailResend: stores address/status, clears the error', 'stored')
+        .that(stored)
+        .toEqual({
+          ...rest,
+          email: 'new@example.com',
+          emailStatus: 'pending',
+          emailAttempts: 3,
+          updatedAt: at,
+        });
+      clause(PORT, 'prepareEmailResend: stored error field is removed', 'error')
+        .that(stored?.emailLastError)
+        .toBeUndefined();
+    });
+
+    test('prepareEmailResend keeps the stored address and reports no change', async (repo) => {
+      const cert = sampleCertificate({ email: 'a@example.com', emailStatus: 'sent' });
+      await repo.create(cert);
+      const at = new Date(BASE + 9_000_000);
+      const stuckBefore = new Date(at.getTime() - 7_200_000);
+      clause(PORT, 'prepareEmailResend: same address is not a change', 'same')
+        .that(await repo.prepareEmailResend(cert.id, { at, stuckBefore, email: 'a@example.com' }))
+        .toEqual({ outcome: 'reserved', sequence: 1, emailChanged: false });
+      await repo.updateEmailState(cert.id, { emailStatus: 'sent', updatedAt: at });
+      clause(PORT, 'prepareEmailResend: no address supplied keeps the stored one', 'kept')
+        .that(await repo.prepareEmailResend(cert.id, { at, stuckBefore }))
+        .toEqual({ outcome: 'reserved', sequence: 2, emailChanged: false });
+      clause(PORT, 'prepareEmailResend: address kept', 'address')
+        .that((await repo.getById(cert.id))?.email)
+        .toBe('a@example.com');
+    });
+
+    test('prepareEmailResend refuses with a precise outcome and changes nothing', async (repo) => {
+      const at = new Date(BASE + 9_000_000);
+      const stuckBefore = new Date(at.getTime() - 7_200_000);
+      const revoked = sampleCertificate({
+        email: 'a@example.com',
+        emailStatus: 'failed',
+        status: 'revoked',
+      });
+      const noAddress = sampleCertificate({ emailStatus: 'skipped' });
+      const fresh = sampleCertificate({
+        email: 'a@example.com',
+        emailStatus: 'pending',
+        updatedAt: new Date(at.getTime() - 60_000),
+      });
+      await repo.createMany([revoked, noAddress, fresh]);
+      const cases: [string, Certificate, string][] = [
+        ['revoked', revoked, 'revoked'],
+        ['no address', noAddress, 'email_required'],
+        ['pending and recent', fresh, 'in_progress'],
+      ];
+      for (const [label, c, outcome] of cases) {
+        clause(PORT, 'prepareEmailResend: refusals', label)
+          .that(await repo.prepareEmailResend(c.id, { at, stuckBefore }))
+          .toEqual({ outcome });
+        clause(PORT, 'prepareEmailResend: a refusal changes nothing', label)
+          .that(await repo.getById(c.id))
+          .toEqual(c);
+      }
+      clause(PORT, 'prepareEmailResend: not_found for an unknown id', 'unknown')
+        .that(await repo.prepareEmailResend(asCertificateId('z'.repeat(22)), { at, stuckBefore }))
+        .toEqual({ outcome: 'not_found' });
+    });
+
+    test('prepareEmailResend allows a stuck pending and a skipped certificate with an address', async (repo) => {
+      const at = new Date(BASE + 9_000_000);
+      const stuckBefore = new Date(at.getTime() - 7_200_000);
+      const stuck = sampleCertificate({
+        email: 'a@example.com',
+        emailStatus: 'pending',
+        emailAttempts: 1,
+        updatedAt: new Date(stuckBefore.getTime() - 1),
+      });
+      const skipped = sampleCertificate({ emailStatus: 'skipped' });
+      await repo.createMany([stuck, skipped]);
+      clause(PORT, 'prepareEmailResend: pending older than stuckBefore may be resent', 'stuck')
+        .that(await repo.prepareEmailResend(stuck.id, { at, stuckBefore }))
+        .toEqual({ outcome: 'reserved', sequence: 2, emailChanged: false });
+      clause(PORT, 'prepareEmailResend: skipped + address is a first send (sequence 1)', 'skipped')
+        .that(
+          await repo.prepareEmailResend(skipped.id, { at, stuckBefore, email: 'n@example.com' }),
+        )
+        .toEqual({ outcome: 'reserved', sequence: 1, emailChanged: true });
+    });
+
+    test('prepareEmailResend is atomic: concurrent calls get one reservation', async (repo) => {
+      const cert = sampleCertificate({ email: 'a@example.com', emailStatus: 'failed' });
+      await repo.create(cert);
+      const at = new Date(BASE + 9_000_000);
+      const stuckBefore = new Date(at.getTime() - 7_200_000);
+      const results = await Promise.all(
+        Array.from({ length: 4 }, () => repo.prepareEmailResend(cert.id, { at, stuckBefore })),
+      );
+      clause(PORT, 'prepareEmailResend: only one concurrent call wins', 'concurrent')
+        .that(results.map((r) => r.outcome).sort())
+        .toEqual(['in_progress', 'in_progress', 'in_progress', 'reserved']);
+    });
+
     test('countByTemplate / countByOrganization / countByEvent', async (repo) => {
       await repo.createMany([
         sampleCertificate(),
