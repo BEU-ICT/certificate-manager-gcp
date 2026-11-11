@@ -1,4 +1,5 @@
 import type { FastifyError, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { logUnexpectedError } from './logging/error-reporting.js';
 import { hasZodFastifySchemaValidationErrors } from 'fastify-type-provider-zod';
 import { ZodError } from 'zod';
 import { AppError, BulkInvalidError, type ErrorDetail } from '../shared/errors.js';
@@ -115,7 +116,7 @@ export function errorHandler(
     return send(request, reply, 400, 'VALIDATION_FAILED', 'Request could not be parsed');
   }
   // Unknown error: full detail (including stack) goes to the log only.
-  request.log.error({ err: error }, 'unhandled error');
+  logUnexpectedError(request.log, error);
   return send(request, reply, 500, 'INTERNAL', 'Internal server error');
 }
 

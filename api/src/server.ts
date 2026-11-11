@@ -4,6 +4,12 @@ import { AdapterError, compose, type Composition } from './compose.js';
 import { ConfigError, loadConfig, type Config } from './config.js';
 import { createFeatureFlags } from './flags.js';
 import { migrationSettings, runMigrationsWithPorts } from './migrations/index.js';
+import {
+  SERVICE_NAME,
+  logUnexpectedError,
+  serviceVersion,
+} from './http/logging/error-reporting.js';
+import { installProcessSafety } from './process-safety.js';
 import { shutdown } from './shutdown.js';
 
 // Composition root: the only module that reads process.env.
@@ -25,8 +31,14 @@ try {
   process.exit(1);
 }
 
+const version = serviceVersion(process.env);
+
 const app = buildApp({
-  log: { level: config.logLevel, gcpProject: config.gcpProject },
+  log: {
+    level: config.logLevel,
+    gcpProject: config.gcpProject,
+    serviceContext: { service: SERVICE_NAME, version },
+  },
   ports: composition.ports,
   services: composition.services,
   sendEmail: composition.sendEmail,
@@ -35,6 +47,8 @@ const app = buildApp({
   adminRateLimitPerMin: config.rateLimit.adminPerMin,
   publicUrls: { publicBaseUrl: config.publicBaseUrl, pdfPublicBaseUrl: config.pdfPublicBaseUrl },
 });
+
+installProcessSafety(process, app.log, { revision: process.env['K_REVISION'] ?? version });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.once(signal, () => {
@@ -54,13 +68,13 @@ try {
   const instanceId = `${process.env['K_REVISION'] ?? 'local'}-${randomUUID()}`;
   await runMigrationsWithPorts(composition.ports, app.log, instanceId, migrationSettings(config));
 } catch (err) {
-  app.log.error(err, 'migrations failed');
+  logUnexpectedError(app.log, err, { revision: version, failure: 'migrations failed' });
   process.exit(1);
 }
 
 try {
   await app.listen({ host: '0.0.0.0', port: config.port });
 } catch (err) {
-  app.log.error(err, 'failed to start');
+  logUnexpectedError(app.log, err, { revision: version, failure: 'failed to start' });
   process.exit(1);
 }

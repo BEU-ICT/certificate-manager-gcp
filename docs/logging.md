@@ -48,3 +48,10 @@ Per request: one access line (about 350 bytes) plus one authentication line on a
 
 - `test/unit/log-privacy.test.ts` runs the log-emitting flows at `debug` level and fails when any line contains an e-mail-shaped string, a JWT-shaped string or a seeded owner name, subject or skill (helpers in `test/helpers/log-capture.ts`; reuse `captureLogs` and `privacyViolations` in other suites).
 - `test/unit/logging.test.ts` covers the line format, `requestId` appearing once and trace correlation.
+
+## Error reporting and crash behaviour
+
+- Unexpected errors (HTTP 500s, failed migrations, failed startup) are logged by `logUnexpectedError` (`api/src/http/logging/error-reporting.ts`) in the Cloud Error Reporting format: `@type: type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent`, the stack trace as `message`, and `serviceContext { service: "certificates-api", version }` (added by the logger to every ERROR and CRITICAL line). Stacks appear only in logs, never in responses.
+- `version` is the git SHA from the Docker build argument (`docker build --build-arg GIT_SHA=$(git rev-parse HEAD) api`; baked into the image as `GIT_SHA`), falling back to the Cloud Run revision (`K_REVISION`), then `unknown`.
+- `unhandledRejection` and `uncaughtException` (`api/src/process-safety.ts`) log one CRITICAL entry including `origin` and `revision`, then `exit(1)`; Cloud Run starts a new instance. The `revision` field makes a crash loop attributable to a deployment (filter `severity=CRITICAL` and group by `revision`).
+- Not verified offline (needs a live project, left open on the issue): grouped errors in the Error Reporting console, and a forced rejection restarting an instance in a test deployment.
