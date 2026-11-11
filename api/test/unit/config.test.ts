@@ -132,6 +132,20 @@ describe('loadConfig', () => {
       expect(vars({ ...prod, STATS_CACHE_SECONDS: '3601' })).toEqual(['STATS_CACHE_SECONDS']);
     });
 
+    it('defaults and validates the PDF render guard', () => {
+      expect(loadConfig(prod).pdf).toEqual({ maxConcurrentRenders: 3, renderTimeoutMs: 30000 });
+      const custom = loadConfig({
+        ...prod,
+        PDF_MAX_CONCURRENT_RENDERS: '2',
+        PDF_RENDER_TIMEOUT_MS: '5000',
+      });
+      expect(custom.pdf).toEqual({ maxConcurrentRenders: 2, renderTimeoutMs: 5000 });
+      expect(vars({ ...prod, PDF_MAX_CONCURRENT_RENDERS: '0' })).toEqual([
+        'PDF_MAX_CONCURRENT_RENDERS',
+      ]);
+      expect(vars({ ...prod, PDF_RENDER_TIMEOUT_MS: '10' })).toEqual(['PDF_RENDER_TIMEOUT_MS']);
+    });
+
     it('defaults TEMPLATE_CACHE_MB to 40 and validates the range', () => {
       expect(loadConfig(prod).templateCacheMb).toBe(40);
       expect(loadConfig({ ...prod, TEMPLATE_CACHE_MB: '64' }).templateCacheMb).toBe(64);

@@ -1,7 +1,9 @@
 import {
+  DefaultCertificateIssuanceService,
   DefaultCertificateQueryService,
   DefaultCertificateService,
   DefaultRevocationService,
+  type FitChecker,
 } from './modules/certificates/index.js';
 import { DefaultEventService } from './modules/events/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
@@ -34,6 +36,8 @@ export interface ServiceOptions {
   statsCacheSeconds?: number;
   /** `PUBLIC_BASE_URL`: the verification page of a certificate is `<base>/c/<id>`. */
   publicBaseUrl?: string;
+  /** Text-fit dry run (the `PdfService`); issuance (`Services.issuance`) is built only when given. */
+  fitChecker?: FitChecker;
 }
 
 /**
@@ -137,5 +141,17 @@ export function buildServices(
       ports.rateLimiter,
       options.statsCacheSeconds ?? 60,
     ),
+    ...(options.fitChecker && {
+      issuance: new DefaultCertificateIssuanceService({
+        certificates: ports.certificates,
+        organizations,
+        events,
+        templates,
+        fitChecker: options.fitChecker,
+        clock: ports.clock,
+        ids: ports.ids,
+        eventBus: ports.eventBus,
+      }),
+    }),
   };
 }

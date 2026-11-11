@@ -1,4 +1,5 @@
 import type {
+  CertificateIssuanceService,
   CertificateQueryService,
   CertificateService,
   RevocationService,
@@ -103,4 +104,6 @@ export interface Services {
   readonly stats: StatsService;
   /** PDF rendering and admin previews (pdf module). */
   readonly pdf: PdfService;
+  /** Single issuance; present only when `buildServices` got a `fitChecker` (see certificates README). */
+  readonly issuance?: CertificateIssuanceService;
 }

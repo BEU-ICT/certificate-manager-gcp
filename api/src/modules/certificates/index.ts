@@ -24,3 +24,13 @@ export {
   type RevocationService,
   type RevokeResult,
 } from './revocation.js';
+export {
+  DefaultCertificateIssuanceService,
+  EVENT_ORG_MISMATCH,
+  TEMPLATE_MISMATCH,
+  TEMPLATE_NOT_FOUND,
+  TEXT_DOES_NOT_FIT,
+  type CertificateIssuanceService,
+  type FitChecker,
+  type IssueCertificateInput,
+} from './issuance.js';

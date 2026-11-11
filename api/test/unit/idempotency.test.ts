@@ -253,6 +253,7 @@ describe('idempotencyDocumentId', () => {
 describe('request hashing', () => {
   it('is independent of key order and sensitive to content', () => {
     expect(canonicalJson({ b: [1, { y: 1, x: 2 }], a: undefined })).toBe('{"b":[1,{"x":2,"y":1}]}');
+    expect(canonicalJson({ d: new Date(1) })).not.toBe(canonicalJson({ d: new Date(2) }));
     expect(requestHash('POST', '/x', { a: 1, b: 2 })).toBe(
       requestHash('POST', '/x', { b: 2, a: 1 }),
     );

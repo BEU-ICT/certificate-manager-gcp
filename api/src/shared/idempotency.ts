@@ -14,6 +14,7 @@ export function idempotencyDocumentId(scope: IdempotencyScope): string {
 
 /** JSON with object keys sorted at every level, so equal bodies hash equally whatever their key order. */
 export function canonicalJson(value: unknown): string {
+  if (value instanceof Date) return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map((v) => canonicalJson(v ?? null)).join(',')}]`;
   if (value !== null && typeof value === 'object') {
     const entries = Object.entries(value as Record<string, unknown>)

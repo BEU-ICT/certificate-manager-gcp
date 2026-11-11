@@ -57,6 +57,11 @@ export interface Config {
   readonly templateCacheMb: number;
   /** Per-instance cache lifetime (seconds) of `GET /api/v1/admin/stats`; 0 disables it. */
   readonly statsCacheSeconds: number;
+  /** PDF render guard (BEU-ICT/certificate-manager#328). */
+  readonly pdf: {
+    readonly maxConcurrentRenders: number;
+    readonly renderTimeoutMs: number;
+  };
   readonly adapters: {
     readonly db: (typeof DB_ADAPTERS)[number];
     readonly storage: (typeof STORAGE_ADAPTERS)[number];
@@ -114,6 +119,8 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   RATE_LIMIT_ADMIN_PER_MIN: '60',
   TEMPLATE_CACHE_MB: '40',
   STATS_CACHE_SECONDS: '60',
+  PDF_MAX_CONCURRENT_RENDERS: '3',
+  PDF_RENDER_TIMEOUT_MS: '30000',
 };
 
 const MAX_URL_LENGTH = 2048;
@@ -164,6 +171,8 @@ const schema = z.object({
   RATE_LIMIT_ADMIN_PER_MIN: int(30, 100),
   TEMPLATE_CACHE_MB: int(1, 256),
   STATS_CACHE_SECONDS: int(0, 3600),
+  PDF_MAX_CONCURRENT_RENDERS: int(1, 16),
+  PDF_RENDER_TIMEOUT_MS: int(1000, 120_000),
   DB_ADAPTER: oneOf(DB_ADAPTERS),
   STORAGE_ADAPTER: oneOf(STORAGE_ADAPTERS),
   QUEUE_ADAPTER: oneOf(QUEUE_ADAPTERS),
@@ -298,6 +307,10 @@ export function loadConfig(env: Env): Config {
     },
     templateCacheMb: e.TEMPLATE_CACHE_MB,
     statsCacheSeconds: e.STATS_CACHE_SECONDS,
+    pdf: {
+      maxConcurrentRenders: e.PDF_MAX_CONCURRENT_RENDERS,
+      renderTimeoutMs: e.PDF_RENDER_TIMEOUT_MS,
+    },
     adapters: {
       db: e.DB_ADAPTER,
       storage: e.STORAGE_ADAPTER,

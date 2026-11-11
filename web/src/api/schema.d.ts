@@ -17,7 +17,11 @@ export interface paths {
      */
     get: operations['listCertificates'];
     put?: never;
-    post?: never;
+    /**
+     * Issue one certificate
+     * @description Validates the references, checks that the texts fit the template, stores the certificate (`status: active`; `emailStatus` is `pending` with an e-mail address, `skipped` without) and publishes `certificate.issued`. Without `templateId` the latest template version for the organization, event and type is used. Errors: 422 `EVENT_ORG_MISMATCH`, `TEMPLATE_MISMATCH` (details name the fields), `TEMPLATE_NOT_FOUND`, `TEXT_DOES_NOT_FIT` (details list every failing field); nothing is stored in these cases.
+     */
+    post: operations['issueCertificate'];
     delete?: never;
     options?: never;
     head?: never;
@@ -817,6 +821,134 @@ export interface operations {
       };
       /** @description FORBIDDEN: not allowed to perform this action */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  issueCertificate: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description Optional retry key, scoped to the calling administrator and kept for 24 hours. Repeating a completed request with the same key returns the stored response with `Idempotent-Replayed: true`; the same key with another body yields 422 `IDEMPOTENCY_KEY_REUSED`; a concurrent duplicate yields 409 `REQUEST_IN_PROGRESS`. */
+        'idempotency-key'?: string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          email?: string;
+          eventId: string;
+          issuedAt?: string;
+          organizationId: string;
+          ownerName: string;
+          skills?: string[];
+          subject: string;
+          /** @description Template reference (`<name>-v<n>`). Omit to use the latest version for the organization, event and type. */
+          templateId?: string;
+          /** @enum {string} */
+          type:
+            | 'attendance'
+            | 'appreciation'
+            | 'thanks'
+            | 'distinction'
+            | 'instructor'
+            | 'student'
+            | 'team'
+            | 'other';
+        };
+      };
+    };
+    responses: {
+      /** @description The issued certificate */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminCertificate'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description Well-formed request that violates a business rule (domain specific code) */
+      422: {
         headers: {
           [name: string]: unknown;
         };

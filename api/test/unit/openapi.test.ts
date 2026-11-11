@@ -7,12 +7,16 @@ import { z } from 'zod';
 import { buildApp } from '../../src/app.js';
 import { openApiDocument } from '../../src/http/openapi/plugin.js';
 import { errorResponses, jsonResponse } from '../../src/http/openapi/responses.js';
+import { buildServices } from '../../src/services.js';
 import { createFakes } from '../../src/testing/fakes/index.js';
 
 const committedPath = fileURLToPath(new URL('../../openapi.json', import.meta.url));
 
 async function liveSpec(): Promise<ReturnType<typeof openApiDocument>> {
-  const app = buildApp({ ports: createFakes() });
+  const fakes = createFakes();
+  // Issuance is registered only with a FitChecker; a stub puts it into the document.
+  const fitChecker = { checkFit: () => Promise.resolve({ fits: true, issues: [] }) };
+  const app = buildApp({ ports: fakes, services: buildServices(fakes, undefined, { fitChecker }) });
   await app.ready();
   const doc = openApiDocument(app);
   await app.close();
@@ -95,7 +99,13 @@ describe('OpenAPI document', () => {
 
 describe('GET /internal/openapi.json', () => {
   it('serves the live document when the endpoint is enabled', async () => {
-    const app = buildApp({ openApiEndpoint: true, ports: createFakes() });
+    const fakes = createFakes();
+    const fitChecker = { checkFit: () => Promise.resolve({ fits: true, issues: [] }) };
+    const app = buildApp({
+      openApiEndpoint: true,
+      ports: fakes,
+      services: buildServices(fakes, undefined, { fitChecker }),
+    });
     const res = await app.inject({ method: 'GET', url: '/internal/openapi.json' });
     expect(res.statusCode).toBe(200);
     expect(res.headers['content-type']).toContain('application/json');

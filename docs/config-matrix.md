@@ -25,6 +25,8 @@ Every variable validated at boot (issue BEU-ICT/certificate-manager#236 §6, `ap
 | `RATE_LIMIT_ADMIN_PER_MIN`                                        | env        | `60` (allowed 30-100)                                                                 |
 | `TEMPLATE_CACHE_MB`                                               | env        | `40` (default; template asset cache budget, 1-256)                                    |
 | `STATS_CACHE_SECONDS`                                             | env        | `60` (default; per-instance cache of `GET /api/v1/admin/stats`, 0-3600, 0 = off)      |
+| `PDF_MAX_CONCURRENT_RENDERS`                                      | env        | `3` (default; concurrent PDF renders per instance, 1-16)                              |
+| `PDF_RENDER_TIMEOUT_MS`                                           | env        | `30000` (default; per-render timeout, 1000-120000)                                    |
 | `DB_ADAPTER`, `STORAGE_ADAPTER`, `QUEUE_ADAPTER`, `AUTH_PROVIDER` | env        | `firestore`, `gcs`, `cloud-tasks`, `firebase`                                         |
 | `FEATURE_*`                                                       | env        | flags per `api/src/flags.ts`; unknown flags fail boot                                 |
 

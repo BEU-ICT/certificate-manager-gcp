@@ -41,6 +41,11 @@ export type RenderAssets = LoadedTemplate;
 export interface TemplateRenderer {
   /** Engine name matched against `config.engine`. */
   readonly engine: string;
-  render(input: RenderInput, assets: RenderAssets): Promise<Buffer>;
+  /** `options.signal` aborts at the render timeout (BEU-ICT/certificate-manager#328); engines may honour it. */
+  render(
+    input: RenderInput,
+    assets: RenderAssets,
+    options?: { signal?: AbortSignal },
+  ): Promise<Buffer>;
   checkFit(input: RenderInput, assets: RenderAssets): FitResult;
 }

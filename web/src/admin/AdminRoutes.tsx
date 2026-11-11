@@ -17,11 +17,9 @@ const EventsPage = lazy(() => import('./events/EventsPage'));
 const TemplatesPage = lazy(() => import('./templates/TemplatesPage'));
 const TemplateDetailPage = lazy(() => import('./templates/TemplateDetailPage'));
 const TemplateUploadPage = lazy(() => import('./templates/TemplateUploadPage'));
+const CertificatesPage = lazy(() => import('./certificates/CertificatesPage'));
 
-const sections = [
-  { path: 'certificates', titleKey: 'layout.nav.certificates' },
-  { path: 'import', titleKey: 'layout.nav.import' },
-] as const;
+const sections = [{ path: 'import', titleKey: 'layout.nav.import' }] as const;
 
 function AdminShell() {
   const session = useAdminSession();
@@ -92,6 +90,14 @@ export default function AdminRoutes() {
             element={
               <Suspense fallback={<Spinner />}>
                 <TemplateDetailPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="certificates"
+            element={
+              <Suspense fallback={<Spinner />}>
+                <CertificatesPage />
               </Suspense>
             }
           />
