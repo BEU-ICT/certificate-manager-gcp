@@ -14,6 +14,7 @@ import { adminCertificateIssuanceRoutes } from './http/routes/admin-certificate-
 import { adminCertificateRevocationRoutes } from './http/routes/admin-certificate-revocation.js';
 import { adminMeRoutes } from './http/routes/admin-me.js';
 import { publicCertificateRoutes } from './http/routes/public-certificates.js';
+import { publicCertificatePdfRoutes } from './http/routes/public-certificate-pdf.js';
 import type { PublicUrls } from './http/dto/public/certificate.js';
 import { adminCertificateRoutes } from './http/routes/admin-certificates.js';
 import { adminStatsRoutes } from './http/routes/admin-stats.js';
@@ -83,6 +84,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
       ...(deps.ports && { clock: deps.ports.clock }),
     });
     publicCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
+    publicCertificatePdfRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS, deps.flags);
     adminCertificateRoutes(app, services, deps.publicUrls ?? DEFAULT_PUBLIC_URLS);
     adminCertificateRevocationRoutes(app, services);
     if (services.issuance) {

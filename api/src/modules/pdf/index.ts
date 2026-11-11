@@ -50,3 +50,12 @@ export {
   type RenderLimiterOptions,
 } from './limiter.js';
 export { RENDER_TOO_LARGE, type PdfLogger, type PdfServiceOptions } from './service.js';
+export {
+  DefaultPublicPdfService,
+  type EnsurePdfOptions,
+  type PublicPdf,
+  type PublicPdfLogger,
+  type PublicPdfService,
+  type PublicPdfServiceDeps,
+  type PublicPdfSource,
+} from './public-pdf-service.js';

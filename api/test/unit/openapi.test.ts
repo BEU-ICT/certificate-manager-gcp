@@ -52,6 +52,7 @@ describe('OpenAPI document', () => {
       '/api/v1/admin/templates/{reference}/copy',
       '/api/v1/admin/templates/{reference}/preview',
       '/api/v1/public/certificates/{id}',
+      '/api/v1/public/certificates/{id}/pdf',
       '/internal/healthz',
     ]);
   });

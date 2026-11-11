@@ -16,7 +16,9 @@ import {
 } from './modules/templates/index.js';
 import {
   DefaultPdfService,
+  DefaultPublicPdfService,
   InMemoryRendererRegistry,
+  RenderLimiter,
   SvgPdfRenderer,
   createFields,
   createFormatterRegistry,
@@ -38,6 +40,8 @@ export interface ServiceOptions {
   publicBaseUrl?: string;
   /** Text-fit dry run (the `PdfService`); issuance (`Services.issuance`) is built only when given. */
   fitChecker?: FitChecker;
+  /** `PDF_MAX_CONCURRENT_RENDERS` / `PDF_RENDER_TIMEOUT_MS`; defaults of the render limiter when absent. */
+  pdf?: { maxConcurrentRenders: number; renderTimeoutMs: number };
 }
 
 /**
@@ -117,9 +121,28 @@ export function buildServices(
     renderers,
     templateAssets,
     (certificate) => `${publicBase}/c/${certificate.id}`,
+    {
+      limiter: new RenderLimiter({
+        ...(options.pdf && {
+          maxConcurrent: options.pdf.maxConcurrentRenders,
+          timeoutMs: options.pdf.renderTimeoutMs,
+        }),
+      }),
+      ...(options.logger && { logger: options.logger }),
+    },
   );
+  const publicPdf = new DefaultPublicPdfService({
+    certificates: ports.certificates,
+    templates,
+    pdf,
+    storage: ports.storage,
+    ids: ports.ids,
+    clock: ports.clock,
+    ...(options.logger && { logger: options.logger }),
+  });
   return {
     pdf,
+    publicPdf,
     organizations,
     organizationReferences,
     events,
