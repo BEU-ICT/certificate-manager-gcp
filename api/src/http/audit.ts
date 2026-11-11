@@ -4,6 +4,15 @@ interface AuditRequest {
 }
 
 /** One structured line per administrative mutation: `audit:true`, what, on which entity, by whom. */
-export function audit(request: AuditRequest, action: string, entityId: string): void {
-  request.log.info({ audit: true, action, entityId, adminUid: request.admin?.uid }, 'audit');
+export function audit(
+  request: AuditRequest,
+  action: string,
+  entityId: string,
+  /** Further identifiers (never names, e-mail addresses or other personal data). */
+  context: Record<string, string> = {},
+): void {
+  request.log.info(
+    { audit: true, action, entityId, ...context, adminUid: request.admin?.uid },
+    'audit',
+  );
 }
