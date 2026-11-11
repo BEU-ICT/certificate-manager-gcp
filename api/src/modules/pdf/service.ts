@@ -1,5 +1,6 @@
 import type { Certificate, Template } from '../../shared/domain.js';
 import type { TemplateAssets } from '../templates/index.js';
+import { assertFits } from './fit-error.js';
 import type { RendererRegistry } from './registry.js';
 import type { FitResult, RenderInput } from './renderer.js';
 
@@ -48,7 +49,11 @@ export class DefaultPdfService implements PdfService {
   }
 
   async preview(templateRef: string, sample: RenderInput): Promise<Buffer> {
-    return this.renderWith(templateRef, sample);
+    // Same pipeline as production: load assets -> checkFit -> render (one asset load).
+    const loaded = await this.assets.load(templateRef);
+    const renderer = this.registry.get(engineOf(loaded.template));
+    assertFits(renderer.checkFit(sample, loaded));
+    return renderer.render(sample, loaded);
   }
 
   private async renderWith(reference: string, input: RenderInput): Promise<Buffer> {

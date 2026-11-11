@@ -11,6 +11,7 @@ export type {
   RenderInput,
   TemplateRenderer,
 } from './renderer.js';
+export { assertFits } from './fit-error.js';
 export {
   DefaultPdfService,
   toRenderInput,

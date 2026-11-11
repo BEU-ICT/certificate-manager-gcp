@@ -1,6 +1,12 @@
 import jsQRModule from 'jsqr';
 import { describe, expect, it } from 'vitest';
-import { SvgPdfRenderer, QR_TOO_SMALL, checkQrFit, drawQr } from '../../src/modules/pdf/index.js';
+import {
+  SvgPdfRenderer,
+  QR_TOO_SMALL,
+  checkQrFit,
+  createFields,
+  drawQr,
+} from '../../src/modules/pdf/index.js';
 import {
   MIN_MODULE_POINTS,
   modulePoints,
@@ -109,5 +115,21 @@ describe('QR drawing', () => {
       expect((error as UnprocessableError).code).toBe(QR_TOO_SMALL);
       expect((error as UnprocessableError).details?.[0]?.path).toBe('config.qr.size');
     });
+  });
+});
+
+describe('checkFit merges the QR layout verdict', () => {
+  it('reports QR_TOO_SMALL through SvgPdfRenderer.checkFit next to text misfits', () => {
+    const { fieldsLayer, checkFit } = createFields();
+    const renderer = new SvgPdfRenderer({ fieldsLayer, qrLayer: drawQr, fitChecker: checkFit });
+    const input = { ...SAMPLE_INPUT, publicUrl: `${BASE}${ID_22}` };
+    expect(renderer.checkFit(input, withQr({ x: 690, y: 440, size: 140 }))).toEqual({
+      fits: true,
+      issues: [],
+    });
+    const result = renderer.checkFit(input, withQr({ x: 690, y: 440, size: 40 }));
+    expect(result.fits).toBe(false);
+    expect(result.issues).toHaveLength(1);
+    expect(result.issues[0]).toMatchObject({ field: 'qr', reason: QR_TOO_SMALL });
   });
 });

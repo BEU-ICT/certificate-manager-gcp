@@ -841,6 +841,34 @@
         "required": ["items", "nextCursor"],
         "type": "object"
       },
+      "TemplatePreviewBodyInput": {
+        "additionalProperties": false,
+        "description": "All properties are optional; the body itself may be omitted. Provided fields override the preset.",
+        "properties": {
+          "issuedAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$",
+                "type": "string"
+              }
+            ]
+          },
+          "ownerName": { "maxLength": 2000, "type": "string" },
+          "preset": {
+            "description": "`typical` (default) or `longest`: every field at its maximum length, to stress the layout.",
+            "enum": ["typical", "longest"],
+            "type": "string"
+          },
+          "skills": {
+            "items": { "maxLength": 2000, "type": "string" },
+            "maxItems": 100,
+            "type": "array"
+          },
+          "subject": { "maxLength": 2000, "type": "string" }
+        },
+        "type": "object"
+      },
       "TemplateUploadBodyInput": {
         "additionalProperties": { "format": "binary", "type": "string" },
         "description": "multipart/form-data. Besides the fields above, every other part is a package file whose **filename is its relative path** (`background.svg`, `fonts/Inter-Regular.ttf`, `assets/logo.png`); the part name is free. Limits: 30 files, 10 MB of files, 5 MB per part (fonts 3 MB), 10.5 MB per request. The part content type is ignored.",
@@ -2436,6 +2464,86 @@
         },
         "security": [{ "bearerAuth": [] }],
         "summary": "Copy a template version to an organization, event and type"
+      }
+    },
+    "/api/v1/admin/templates/{reference}/preview": {
+      "post": {
+        "description": "Runs the production pipeline (load assets, fit check, render) with sample data: preset `typical` or `longest` (maximum field lengths), overridden by the provided fields. The QR code encodes `<PUBLIC_BASE_URL>/c/PREVIEW000000000000000`, which never resolves. `422 TEXT_DOES_NOT_FIT` lists the misfitting fields in `error.details[]` as `{ path, message }`. Nothing is written to storage or the database.",
+        "operationId": "previewTemplate",
+        "parameters": [
+          { "in": "path", "name": "reference", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  { "$ref": "#/components/schemas/TemplatePreviewBodyInput" },
+                  { "type": "null" }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": { "schema": { "format": "binary", "type": "string" } }
+            },
+            "description": "The sample PDF (`Content-Disposition: inline`, `Cache-Control: no-store`)"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "422": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "Well-formed request that violates a business rule (domain specific code)"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Render a sample PDF with a template (nothing is stored)"
       }
     },
     "/api/v1/public/certificates/{id}": {

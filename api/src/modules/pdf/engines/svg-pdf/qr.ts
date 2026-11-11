@@ -49,7 +49,9 @@ function tooSmallMessage(module: number): string {
 /** Layout findings of the QR code: empty when it prints large enough. */
 export function checkQrFit(input: RenderInput, config: TemplateConfig): FitIssue[] {
   const module = modulePoints(qrMatrix(input.publicUrl), config.qr.size);
-  return module < MIN_MODULE_POINTS ? [{ field: 'qr', message: tooSmallMessage(module) }] : [];
+  return module < MIN_MODULE_POINTS
+    ? [{ field: 'qr', message: tooSmallMessage(module), reason: QR_TOO_SMALL }]
+    : [];
 }
 
 /**
