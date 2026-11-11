@@ -23,6 +23,11 @@ export interface CertificateService {
    * `emailLastError=code`. `NotFoundError` for an unknown or malformed ID.
    */
   markEmailFailed(id: string, code: string): Promise<void>;
+  /**
+   * Records a delivered e-mail: `emailStatus=sent`, `emailSentAt=now`, `emailLastError` cleared.
+   * `NotFoundError` for an unknown or malformed ID.
+   */
+  markEmailSent(id: string): Promise<void>;
 }
 
 export class DefaultCertificateService implements CertificateService {
@@ -52,6 +57,17 @@ export class DefaultCertificateService implements CertificateService {
       emailStatus: 'failed',
       emailLastError: code,
       updatedAt: this.clock.now(),
+    });
+    if (!found) throw new NotFoundError('Certificate not found');
+  }
+
+  async markEmailSent(id: string): Promise<void> {
+    const now = this.clock.now();
+    const found = await this.certificates.updateEmailState(parseCertificateId(id), {
+      emailStatus: 'sent',
+      emailSentAt: now,
+      emailLastError: null,
+      updatedAt: now,
     });
     if (!found) throw new NotFoundError('Certificate not found');
   }

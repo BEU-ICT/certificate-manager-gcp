@@ -21,7 +21,13 @@ import { registerMemoryAdapters } from './adapters/memory/index.js';
 import { SystemClock } from './adapters/system/clock.js';
 import { buildServices } from './services.js';
 import type { FitChecker } from './modules/certificates/index.js';
-import { registerIssuedEmailSubscriber } from './modules/notifications/index.js';
+import {
+  createInProcessSendEmailTask,
+  createSendEmailHandler,
+  registerIssuedEmailSubscriber,
+} from './modules/notifications/index.js';
+import { inProcessTaskHandlers } from './adapters/in-process/task-handlers.js';
+import { SEND_EMAIL_HANDLER } from './shared/email-task.js';
 import { createLogger } from './http/logging/logger.js';
 import type { EmailSender, StorageGateway } from './ports/index.js';
 import type { AuthPorts, Ports, QueuePorts, RepositoryPorts, Services } from './wiring.js';
@@ -101,6 +107,8 @@ export interface Composition {
   readonly config: Config;
   readonly ports: Ports;
   readonly services: Services;
+  /** The send-email task handler; served by `/internal/tasks/send-email` and the in-process queue. */
+  readonly sendEmail: ReturnType<typeof createSendEmailHandler>;
 }
 
 /**
@@ -158,7 +166,16 @@ export async function compose(
     taskQueue: ports.taskQueue,
     logger,
   });
-  return { config, ports, services };
+  // One handler for both paths: Cloud Tasks calls the HTTP route, QUEUE_ADAPTER=in-process runs it here.
+  const sendEmail = createSendEmailHandler({
+    certificates: services.certificates,
+    emailSender: ports.emailSender,
+    logger,
+    publicBaseUrl: config.publicBaseUrl,
+    from: { address: config.email.fromAddress, replyTo: config.email.replyTo },
+  });
+  inProcessTaskHandlers.set(SEND_EMAIL_HANDLER, createInProcessSendEmailTask(sendEmail));
+  return { config, ports, services, sendEmail };
 }
 
 export { AdapterError, AdapterRegistry, buildServices };

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 /**
  * Naming of e-mail queue tasks (BEU-ICT/certificate-manager#366). Cloud Tasks accepts task IDs of
  * letters, digits, `-` and `_` up to 500 characters and refuses a name that was used within roughly
@@ -36,3 +38,11 @@ export function emailTaskName(certificateId: string, n: number): string {
   assertValidTaskName(name);
   return name;
 }
+
+/** Strict body of the send-email task: unknown properties are rejected (400). */
+export const sendEmailTaskSchema = z
+  .object({
+    certificateId: z.string().min(1).max(64),
+    sequence: z.number().int().min(1).max(1_000_000),
+  })
+  .strict();
