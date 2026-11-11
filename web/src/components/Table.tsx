@@ -19,6 +19,8 @@ export interface TableProps<T> {
   /** Tailwind max-height utility for the scroll container (sticky header needs a bound). */
   maxHeightClass?: string;
   className?: string;
+  /** Optional row activation (mouse); keep a real link or button in the row for keyboard users. */
+  onRowClick?: (row: T) => void;
 }
 
 /**
@@ -32,6 +34,7 @@ export function Table<T>({
   caption,
   maxHeightClass = 'max-h-[70vh]',
   className,
+  onRowClick,
 }: TableProps<T>) {
   const { t } = useTranslation();
   return (
@@ -65,7 +68,21 @@ export function Table<T>({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={getRowKey(row)} className="border-b border-line last:border-b-0">
+            <tr
+              key={getRowKey(row)}
+              className={cx(
+                'border-b border-line last:border-b-0',
+                onRowClick && 'cursor-pointer hover:bg-surface-muted',
+              )}
+              onClick={
+                onRowClick
+                  ? (event) => {
+                      if ((event.target as HTMLElement).closest('a,button')) return;
+                      onRowClick(row);
+                    }
+                  : undefined
+              }
+            >
               {columns.map((c) => (
                 <td key={c.key} className={cx('px-4 py-3 text-ink', c.className)}>
                   {c.cell(row)}

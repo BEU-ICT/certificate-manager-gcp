@@ -302,5 +302,58 @@
         "open": "Open template"
       }
     }
+  },
+  "certificates": {
+    "title": "Certificates",
+    "loading": "Loading certificates…",
+    "pageSize": "Rows per page",
+    "issue": "Issue certificate",
+    "import": "Import from file",
+    "clearFilters": "Clear filters",
+    "total": "Total: {{total}}",
+    "totalUnavailable": "Total: unavailable",
+    "rangeInvalid": "The end date must not be before the start date.",
+    "copyId": "Copy ID of the certificate of {{owner}}",
+    "fields": {
+      "organization": "Organization",
+      "event": "Event",
+      "type": "Type",
+      "status": "Status",
+      "issuedFrom": "Issued from",
+      "issuedTo": "Issued to"
+    },
+    "filter": {
+      "allOrganizations": "All organizations",
+      "allEvents": "All events",
+      "allTypes": "All types",
+      "allStatuses": "All statuses"
+    },
+    "columns": {
+      "owner": "Owner",
+      "event": "Event",
+      "organization": "Organization",
+      "type": "Type",
+      "subject": "Subject",
+      "issuedAt": "Issued",
+      "status": "Status",
+      "emailStatus": "Email",
+      "id": "ID"
+    },
+    "status": {
+      "active": "Active",
+      "revoked": "Revoked"
+    },
+    "emailStatus": {
+      "pending": "Pending",
+      "sent": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped"
+    },
+    "empty": {
+      "title": "No certificates yet",
+      "description": "Issue a certificate or import a file to get started.",
+      "filteredTitle": "No certificates match",
+      "filteredDescription": "Change or clear the filters to see more."
+    }
   }
 }
