@@ -80,6 +80,13 @@ describe('logging', () => {
     expect(sink.raw()).not.toContain('/items/abc');
   });
 
+  it('writes requestId exactly once per line', async () => {
+    const sink = capture();
+    app = buildApp({ log: { destination: sink.stream } });
+    await app.inject({ method: 'GET', url: '/internal/healthz' });
+    expect(sink.raw().match(/"requestId"/g)).toHaveLength(1);
+  });
+
   it('omits adminUid for anonymous requests', async () => {
     const sink = capture();
     app = buildApp({ log: { destination: sink.stream } });
