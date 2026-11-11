@@ -4,7 +4,7 @@ import { PayloadTooLargeError, ValidationError } from '../../shared/errors.js';
 
 const MIB = 1024 * 1024;
 
-/** Limits of `POST /api/v1/admin/templates` (BEU-ICT/certificate-manager-gcp#89). */
+/** Limits of `POST /api/v1/admin/templates` (BEU-ICT/certificate-manager#308). */
 export const UPLOAD_LIMITS = {
   /** Package files; one more part carries the config. */
   maxFiles: 30,

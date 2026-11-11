@@ -8,28 +8,28 @@ Source of truth for every binding of the application service accounts. `infra/ia
 | -------------------------- | ------------------------------------------------------------------------------------------------ |
 | `certificates-api-runtime` | identity of the Cloud Run service `certificates-api`                                             |
 | `tasks-invoker`            | identity of the OIDC token Cloud Tasks attaches to `/internal/**` calls (audience `SERVICE_URL`) |
-| `scheduler-invoker`        | identity of Cloud Scheduler jobs (#162)                                                          |
+| `scheduler-invoker`        | identity of Cloud Scheduler jobs (BEU-ICT/certificate-manager#381)                               |
 
 ## Bindings
 
-| Member              | Role                                   | On                           | Why / flow                                                                                        |
-| ------------------- | -------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------- |
-| runtime             | `roles/datastore.user`                 | project                      | read/write Firestore through the Admin SDK                                                        |
-| runtime             | `roles/firebaseauth.admin`             | project                      | **spec delta** create the bootstrap admin, set custom claims, generate password-setup links (#68) |
-| runtime             | `roles/storage.objectAdmin`            | bucket `<project>-templates` | read templates, upload template files                                                             |
-| runtime             | `roles/storage.objectAdmin`            | bucket `<project>-pdfs`      | write and delete PDFs (revocation, ADR 0007)                                                      |
-| runtime             | `roles/cloudtasks.enqueuer`            | queue `email-queue`          | enqueue email tasks                                                                               |
-| runtime             | `roles/secretmanager.secretAccessor`   | secret `EMAIL_API_KEY`       | read the email provider key (per secret, never project-wide)                                      |
-| runtime             | `roles/iam.serviceAccountUser`         | SA `tasks-invoker`           | **spec delta** attach the invoker's OIDC identity to tasks                                        |
-| runtime             | `roles/iam.serviceAccountTokenCreator` | itself                       | **spec delta** keyless domain-wide delegation for Gmail (#151)                                    |
-| `tasks-invoker`     | `roles/run.invoker`                    | service `certificates-api`   | keeps the OIDC path valid if ingress is tightened (the service is public)                         |
-| `scheduler-invoker` | `roles/run.invoker`                    | service `certificates-api`   | same, for scheduled jobs                                                                          |
-| `allUsers`          | `roles/run.invoker`                    | service `certificates-api`   | Hosting reaches Cloud Run unauthenticated; `/internal/**` enforces OIDC itself (#149)             |
-| `allUsers`          | `roles/storage.legacyObjectReader`     | bucket `<project>-pdfs`      | public PDFs without listing (ADR 0005)                                                            |
+| Member              | Role                                   | On                           | Why / flow                                                                                                                    |
+| ------------------- | -------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| runtime             | `roles/datastore.user`                 | project                      | read/write Firestore through the Admin SDK                                                                                    |
+| runtime             | `roles/firebaseauth.admin`             | project                      | **spec delta** create the bootstrap admin, set custom claims, generate password-setup links (BEU-ICT/certificate-manager#287) |
+| runtime             | `roles/storage.objectAdmin`            | bucket `<project>-templates` | read templates, upload template files                                                                                         |
+| runtime             | `roles/storage.objectAdmin`            | bucket `<project>-pdfs`      | write and delete PDFs (revocation, ADR 0007)                                                                                  |
+| runtime             | `roles/cloudtasks.enqueuer`            | queue `email-queue`          | enqueue email tasks                                                                                                           |
+| runtime             | `roles/secretmanager.secretAccessor`   | secret `EMAIL_API_KEY`       | read the email provider key (per secret, never project-wide)                                                                  |
+| runtime             | `roles/iam.serviceAccountUser`         | SA `tasks-invoker`           | **spec delta** attach the invoker's OIDC identity to tasks                                                                    |
+| runtime             | `roles/iam.serviceAccountTokenCreator` | itself                       | **spec delta** keyless domain-wide delegation for Gmail (BEU-ICT/certificate-manager#370)                                     |
+| `tasks-invoker`     | `roles/run.invoker`                    | service `certificates-api`   | keeps the OIDC path valid if ingress is tightened (the service is public)                                                     |
+| `scheduler-invoker` | `roles/run.invoker`                    | service `certificates-api`   | same, for scheduled jobs                                                                                                      |
+| `allUsers`          | `roles/run.invoker`                    | service `certificates-api`   | Hosting reaches Cloud Run unauthenticated; `/internal/**` enforces OIDC itself (BEU-ICT/certificate-manager#368)              |
+| `allUsers`          | `roles/storage.legacyObjectReader`     | bucket `<project>-pdfs`      | public PDFs without listing (ADR 0005)                                                                                        |
 
 ## Periodic review
 
-Every quarter and after any role change: run `infra/check-iam.sh`, review `gcloud projects get-iam-policy` for new members, remove stale human owners, confirm no keys exist (`gcloud iam service-accounts keys list --iam-account <sa> --managed-by=user` is empty). The runbook (#60) lists this as a recurring item.
+Every quarter and after any role change: run `infra/check-iam.sh`, review `gcloud projects get-iam-policy` for new members, remove stale human owners, confirm no keys exist (`gcloud iam service-accounts keys list --iam-account <sa> --managed-by=user` is empty). The runbook (BEU-ICT/certificate-manager#279) lists this as a recurring item.
 
 ## Not yet verified (needs the live project)
 

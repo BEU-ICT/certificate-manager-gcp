@@ -1,5 +1,5 @@
 /**
- * Slugs: ASCII kebab-case identifiers of organizations and events (issue #16 §5).
+ * Slugs: ASCII kebab-case identifiers of organizations and events (issue BEU-ICT/certificate-manager#236 §5).
  * No dependencies, so any module may use it.
  */
 export const SLUG_MIN_LENGTH = 2;

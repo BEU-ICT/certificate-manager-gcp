@@ -2,7 +2,7 @@
 
 Certificate management system on Google Cloud: Fastify API on Cloud Run, Firestore, Firebase Auth/Hosting and a React + Vite admin/public SPA.
 
-Planning (epics, stories, tasks) lives in this repository's [issues](https://github.com/BEU-ICT/certificate-manager-gcp/issues). Shared decisions and the Definition of Done are in [#16](https://github.com/BEU-ICT/certificate-manager-gcp/issues/16). The source of requirements is the _Certificate Management System: GCP Technical Specification v1.0_.
+Planning (epics, stories, tasks) lives in the private tracker [BEU-ICT/certificate-manager](https://github.com/BEU-ICT/certificate-manager/issues), not in this repository's issues. Shared decisions and the Definition of Done are in [BEU-ICT/certificate-manager#236](https://github.com/BEU-ICT/certificate-manager/issues/236). The source of requirements is the _Certificate Management System: GCP Technical Specification v1.0_.
 
 ## Layout
 
@@ -38,7 +38,7 @@ Without a JDK use `npm run dev:lite` (API with in-memory adapters + web). The AP
 
 - Default branch: `dev`. Work branches: `feature/<issue-number>-<short-slug>`.
 - Commit style: Conventional Commits.
-- Every PR needs one approval and a description ending with `Closes #<n>`.
+- Every PR needs one approval and a description ending with `Closes BEU-ICT/certificate-manager#<n>` (the issue lives in the tracker repository).
 
 ## License
 

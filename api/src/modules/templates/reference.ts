@@ -3,12 +3,12 @@ import { ValidationError, type ErrorDetail } from '../../shared/errors.js';
 import { TEMPLATE_REF_PATTERN, type TemplateRef } from '../../shared/ids.js';
 import { isValidSlug } from '../../shared/slug.js';
 
-/** Longest accepted template reference (#88). */
+/** Longest accepted template reference (BEU-ICT/certificate-manager#307). */
 export const MAX_REFERENCE_LENGTH = 120;
 
 /**
  * Builds `<organizationSlug>-<eventSlug>-<type>-v<version>` from validated parts. Every part is
- * checked and the final value is matched against the reference regex (#16) and the length cap, so
+ * checked and the final value is matched against the reference regex (BEU-ICT/certificate-manager#236) and the length cap, so
  * a bad combination is rejected here, before any file is written. The reference is never parsed
  * back into its parts.
  */

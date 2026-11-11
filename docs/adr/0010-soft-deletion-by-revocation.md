@@ -1,6 +1,6 @@
 # 0010 Soft deletion by `status=revoked`
 
-Status: accepted · Spec §2 · Issue #16 §4
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §4
 
 ## Context
 

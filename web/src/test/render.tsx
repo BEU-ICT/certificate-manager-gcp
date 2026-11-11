@@ -20,7 +20,7 @@ export function createTestQueryClient(): QueryClient {
 
 /**
  * Renders `ui` inside the providers the app has: router, TanStack Query and i18n. The auth stub
- * is added here once the session provider exists (#73).
+ * is added here once the session provider exists (BEU-ICT/certificate-manager#292).
  */
 export function renderWithProviders(
   ui: ReactElement,

@@ -1,6 +1,6 @@
 /**
  * Feature-flag registry: the single source of truth for every `FEATURE_*` variable.
- * Removing a flag is a change to this file plus its usages (BEU-ICT/certificate-manager#23 rule 7).
+ * Removing a flag is a change to this file plus its usages (BEU-ICT/certificate-manager#236 rule 7).
  *
  * Pure module: reads no environment itself. `config.ts` passes the environment in and exposes the
  * result as `config.flags`; consumers receive a {@link FeatureFlags} (`isEnabled`) as a dependency.
@@ -24,7 +24,8 @@ export const FLAG_REGISTRY = {
   },
   bounceJob: {
     env: 'FEATURE_BOUNCE_JOB',
-    description: 'Run the bounce-processing job. Off until verified (#161).',
+    description:
+      'Run the bounce-processing job. Off until verified (BEU-ICT/certificate-manager#380).',
     default: () => false,
   },
   emailFallback: {

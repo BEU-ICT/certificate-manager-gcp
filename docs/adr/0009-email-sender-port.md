@@ -1,6 +1,6 @@
 # 0009 E-mail through `EmailSender` (Gmail primary, Brevo fallback, Cloud Tasks)
 
-Status: accepted · Spec §2 · Issue #16 §6, §10
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §6, §10
 
 ## Context
 

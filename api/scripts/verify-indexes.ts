@@ -2,7 +2,7 @@
  * Runs all 63 non-empty combinations of the six certificate list filters (organization, event,
  * type, status, emailStatus, issuedAt range) through the real repository against a real Firestore
  * database and fails on FAILED_PRECONDITION (missing composite index). The emulator does not
- * validate indexes, so this runs manually against the real database before go-live (#203).
+ * validate indexes, so this runs manually against the real database before go-live (BEU-ICT/certificate-manager#422).
  *
  *   GOOGLE_CLOUD_PROJECT=<project> npx tsx scripts/verify-indexes.ts --yes
  *

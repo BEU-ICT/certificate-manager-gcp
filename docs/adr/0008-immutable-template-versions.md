@@ -1,6 +1,6 @@
 # 0008 Immutable template versions and reference scheme
 
-Status: accepted · Spec §2, §6 · Issue #16 §5
+Status: accepted · Spec §2, §6 · Issue BEU-ICT/certificate-manager#236 §5
 
 ## Context
 

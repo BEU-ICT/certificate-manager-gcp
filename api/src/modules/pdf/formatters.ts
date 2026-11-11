@@ -1,7 +1,7 @@
 import type { FormatKind } from '../templates/index.js';
 
 /**
- * Field formatter registry (spec §5.2 rule 2, issue #102).
+ * Field formatter registry (spec §5.2 rule 2, issue BEU-ICT/certificate-manager#321).
  *
  * A formatter turns the raw value of a certificate field into the string that is drawn on the PDF.
  * Names and kinds are the contract with the template config schema (`KNOWN_FORMATS` in the

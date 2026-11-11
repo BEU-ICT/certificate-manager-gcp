@@ -14,7 +14,7 @@ import type { Services } from '../../wiring.js';
  * knowing the ID": the ID is validated by the service before the single read; malformed and
  * unknown IDs give the identical 404. Nothing personal is logged.
  *
- * Rate limit hook point: the public rate limit (#168) is not implemented yet; when it lands it
+ * Rate limit hook point: the public rate limit (BEU-ICT/certificate-manager#387) is not implemented yet; when it lands it
  * belongs in the `onRequest` hook of this scope, before the handler runs.
  */
 export function publicCertificateRoutes(

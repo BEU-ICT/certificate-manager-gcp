@@ -14,7 +14,7 @@ export function api(): ApiClient {
 }
 
 /**
- * Wired once by the auth module (#73): provides `getToken` and the sign-out callback. A second
+ * Wired once by the auth module (BEU-ICT/certificate-manager#292): provides `getToken` and the sign-out callback. A second
  * 401 clears the query cache before invoking `onUnauthorized`.
  */
 export function configureApi(deps: ApiClientDeps): void {

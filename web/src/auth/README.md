@@ -2,7 +2,7 @@
 
 The only module allowed to import the Firebase SDK (ESLint `no-restricted-imports` for static
 imports plus `no-restricted-syntax` for dynamic `import()`, with negative fixtures in
-`scripts/eslint-firebase.test.mjs`). A different OIDC provider can replace it later (#208) without
+`scripts/eslint-firebase.test.mjs`). A different OIDC provider can replace it later (BEU-ICT/certificate-manager#427) without
 touching the rest of the app.
 
 ## Public interface (`@/auth`)
@@ -35,5 +35,5 @@ to the Auth emulator on `127.0.0.1:9099` and needs no real project.
 
 Browser local persistence (the SDK default: IndexedDB, falling back to localStorage). The session
 survives reloads and is shared between tabs. Trade-off: script injected into the page could read
-it; the CSP (#166) limits that. Our code never copies tokens elsewhere, logs credentials or puts
+it; the CSP (BEU-ICT/certificate-manager#385) limits that. Our code never copies tokens elsewhere, logs credentials or puts
 them in URLs.

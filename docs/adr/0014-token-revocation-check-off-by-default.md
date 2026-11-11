@@ -1,6 +1,6 @@
 # 0014 Token revocation check is off by default
 
-Status: accepted · Spec §10 · Issue/PR: #64
+Status: accepted · Spec §10 · Issue/PR: BEU-ICT/certificate-manager#283
 
 ## Context
 

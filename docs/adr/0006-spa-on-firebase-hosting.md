@@ -1,6 +1,6 @@
 # 0006 React SPA on Firebase Hosting with `/api/v1` rewrite
 
-Status: accepted · Spec §2 · Issue #16 §3, §7
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §3, §7
 
 ## Context
 

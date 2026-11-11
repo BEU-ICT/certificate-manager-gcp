@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** `?limit&cursor` of every admin list endpoint (issue #16 §4): limit 1..50 (default 25). */
+/** `?limit&cursor` of every admin list endpoint (issue BEU-ICT/certificate-manager#236 §4): limit 1..50 (default 25). */
 export const PageQueryDto = z.strictObject({
   limit: z.coerce.number().int().min(1).max(50).optional(),
   cursor: z.string().min(1).max(512).optional(),

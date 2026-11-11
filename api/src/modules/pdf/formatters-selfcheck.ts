@@ -3,7 +3,7 @@ import { TEMPLATE_TIMEZONE } from './formatters.js';
 /**
  * Startup self-check: the Node runtime must ship full ICU, otherwise Azerbaijani casing and month
  * names silently degrade to English. Throws a descriptive error; call it at boot so the service
- * fails fast instead of rendering wrong text (#102 non-functional requirement).
+ * fails fast instead of rendering wrong text (BEU-ICT/certificate-manager#321 non-functional requirement).
  */
 export function assertFormatterRuntime(): void {
   const problems: string[] = [];

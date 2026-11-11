@@ -21,7 +21,7 @@ const mib = (bytes: number): string => `${String(Math.round((bytes / 1024 / 1024
 
 /**
  * Validates an untrusted template package: size limits, file names, `background.svg`, images and
- * fonts (BEU-ICT/certificate-manager-gcp#86). Pure: no I/O and no network; it only inspects the
+ * fonts (BEU-ICT/certificate-manager#305). Pure: no I/O and no network; it only inspects the
  * given bytes, checking sizes before it parses anything. `files` maps package-relative paths to
  * contents and `config` is the already parsed config (see `parseTemplateConfig`). The upload is
  * rejected when `errors` is not empty.

@@ -4,7 +4,7 @@ Status: proposed | accepted | deprecated | superseded by NNNN · Spec §x · Iss
 
 ## Context
 
-What forces are at play? Facts only; link the spec section and the conventions in issue #16 instead of repeating them.
+What forces are at play? Facts only; link the spec section and the conventions in issue BEU-ICT/certificate-manager#236 instead of repeating them.
 
 ## Decision
 

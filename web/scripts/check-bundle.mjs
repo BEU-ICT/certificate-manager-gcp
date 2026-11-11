@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-/** Gzipped budget for the Firebase chunk(s): Auth only, no Analytics/Firestore (#71). */
+/** Gzipped budget for the Firebase chunk(s): Auth only, no Analytics/Firestore (BEU-ICT/certificate-manager#290). */
 export const MAX_FIREBASE_GZIP_BYTES = 80 * 1024;
 
 const ADMIN_SOURCES = /^src\/(admin|auth)\//;

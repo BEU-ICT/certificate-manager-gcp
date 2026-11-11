@@ -29,7 +29,7 @@ import {
   templateStoragePath,
 } from './storage-keys.js';
 
-/** Attempts after the first one when a concurrent upload took the version number (#88). */
+/** Attempts after the first one when a concurrent upload took the version number (BEU-ICT/certificate-manager#307). */
 export const MAX_REFERENCE_RETRIES = 3;
 
 /** Objects read in parallel to learn the package file sizes. */

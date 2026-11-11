@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-// The sign-in smoke test needs the Firebase Auth emulator with a seeded administrator (#61, not
+// The sign-in smoke test needs the Firebase Auth emulator with a seeded administrator (BEU-ICT/certificate-manager#280, not
 // available yet) and the web build started with VITE_USE_AUTH_EMULATOR=true. Opt in with
 // E2E_AUTH_EMULATOR=true plus E2E_ADMIN_EMAIL / E2E_ADMIN_PASSWORD (emulator-only test values).
 const emulator = process.env['E2E_AUTH_EMULATOR'] === 'true';
@@ -27,7 +27,7 @@ test('forgot-password page is reachable from the login page', async ({ page }) =
 test.describe('with the Auth emulator and a seeded administrator', () => {
   test.skip(
     !emulator || !adminEmail || !adminPassword,
-    'needs the Auth emulator, the seeded admin (#61) and VITE_USE_AUTH_EMULATOR=true; see web/README.md (Testing)',
+    'needs the Auth emulator, the seeded admin (BEU-ICT/certificate-manager#280) and VITE_USE_AUTH_EMULATOR=true; see web/README.md (Testing)',
   );
 
   test('administrator signs in and reaches the dashboard', async ({ page }) => {

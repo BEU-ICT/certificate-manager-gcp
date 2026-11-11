@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-// Needs the Auth emulator and a seeded administrator (#61), like the sign-in tests in
+// Needs the Auth emulator and a seeded administrator (BEU-ICT/certificate-manager#280), like the sign-in tests in
 // admin-login.spec.ts; see web/README.md (Testing). The locale is az-AZ (playwright.config.ts).
 const emulator = process.env['E2E_AUTH_EMULATOR'] === 'true';
 const adminEmail = process.env['E2E_ADMIN_EMAIL'] ?? '';
@@ -9,7 +9,7 @@ const adminPassword = process.env['E2E_ADMIN_PASSWORD'] ?? '';
 test.describe('organizations (signed in as administrator)', () => {
   test.skip(
     !emulator || !adminEmail || !adminPassword,
-    'needs the Auth emulator, the seeded admin (#61) and VITE_USE_AUTH_EMULATOR=true; see web/README.md (Testing)',
+    'needs the Auth emulator, the seeded admin (BEU-ICT/certificate-manager#280) and VITE_USE_AUTH_EMULATOR=true; see web/README.md (Testing)',
   );
 
   test('creates an organization and lists it with the suggested slug', async ({ page }) => {

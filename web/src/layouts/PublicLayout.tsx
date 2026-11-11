@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, Outlet } from 'react-router-dom';
 
 export interface PublicLayoutProps {
-  /** Slot for the language switcher component supplied by the i18n task (#39). */
+  /** Slot for the language switcher component supplied by the i18n task (BEU-ICT/certificate-manager#258). */
   languageSwitcher?: ReactNode;
 }
 

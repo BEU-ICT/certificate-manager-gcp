@@ -96,7 +96,7 @@ export const boundaryConfig = [
   {
     name: 'boundaries/adapters',
     files: ['src/adapters/**/*.ts'],
-    // The memory adapters are the in-memory fakes by design (BEU-ICT/certificate-manager#33).
+    // The memory adapters are the in-memory fakes by design (BEU-ICT/certificate-manager#245).
     ignores: ['src/adapters/memory/**'],
     rules: {
       // Vendors and DocumentReference are fine here, test helpers are not.

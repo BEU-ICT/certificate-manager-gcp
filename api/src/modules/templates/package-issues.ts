@@ -14,7 +14,7 @@ export interface ValidationReport {
   warnings: Issue[];
 }
 
-/** Hard limits of a template package (BEU-ICT/certificate-manager-gcp#86). */
+/** Hard limits of a template package (BEU-ICT/certificate-manager#305). */
 export const PACKAGE_LIMITS = {
   maxFiles: 30,
   maxTotalBytes: 10 * 1024 * 1024,

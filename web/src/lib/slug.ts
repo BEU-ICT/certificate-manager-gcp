@@ -1,5 +1,5 @@
 /**
- * Mirrors `api/src/shared/slug.ts` (issue #16 section 5): the same rules decide the slug that the
+ * Mirrors `api/src/shared/slug.ts` (issue BEU-ICT/certificate-manager#236 section 5): the same rules decide the slug that the
  * form suggests while typing and the one the API accepts. A shared package is out of scope, so
  * keep both files in sync (like `certificateTypes.ts`).
  */

@@ -1,6 +1,6 @@
 # 0004 Firebase Auth, administrators only
 
-Status: accepted · Spec §2 · Issue #16 §4, §10
+Status: accepted · Spec §2 · Issue BEU-ICT/certificate-manager#236 §4, §10
 
 ## Context
 
@@ -14,4 +14,4 @@ Administrators sign in with Firebase Auth in the SPA and call the API with `Auth
 
 - No user table and no role editor in v1; the claim is the single source of authority.
 - Swapping the identity provider only needs another `TokenVerifier` adapter.
-- Second and later administrators are a future epic (#224).
+- Second and later administrators are a future epic (BEU-ICT/certificate-manager#443).

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
-/** Placeholder, the real certificate page is built in #143. */
+/** Placeholder, the real certificate page is built in BEU-ICT/certificate-manager#362. */
 export default function CertificatePage() {
   const { t } = useTranslation(['public', 'common']);
   const { id } = useParams();

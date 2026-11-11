@@ -1,6 +1,6 @@
 # 0015 Region us-east1 and data residency
 
-Status: proposed (stakeholder confirmation pending) · Spec §3, §12, §14 · Issue/PR: #47
+Status: proposed (stakeholder confirmation pending) · Spec §3, §12, §14 · Issue/PR: BEU-ICT/certificate-manager#266
 
 ## Context
 
