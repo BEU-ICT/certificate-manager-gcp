@@ -6,7 +6,12 @@ import { Button, Dialog, Select, useToast } from '@/components';
 import { errorMessage } from '@/i18n/errors';
 import { CERTIFICATE_TYPES, certificateTypeLabel } from '@/lib/certificateTypes';
 import { OrganizationSelect } from '../events/OrganizationSelect';
-import { copyFieldErrors, useCopyTemplate, type TemplateDetail } from './api';
+import {
+  copyFieldErrors,
+  useCopyTemplate,
+  type CopyTemplateBody,
+  type TemplateDetail,
+} from './api';
 import { EventSelect } from './EventSelect';
 
 /** Copies a template version into another event (and optionally another type). Mounted while open. */
@@ -44,7 +49,7 @@ export function CopyTemplateDialog({
       const created = await copy.mutateAsync({
         organizationId,
         eventId,
-        ...(type ? { type } : {}),
+        ...(type ? { type: type as NonNullable<CopyTemplateBody['type']> } : {}),
       });
       toast.show(t('admin:templates.copy.toast', { reference: created.reference }), 'success');
       onClose();

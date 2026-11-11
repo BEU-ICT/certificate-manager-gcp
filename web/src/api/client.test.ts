@@ -234,6 +234,24 @@ describe('api client: FormData with onUploadProgress (XHR path)', () => {
     ]);
   });
 
+  it('requests and returns a PDF blob with responseType blob', async () => {
+    let accept: string | null = null;
+    server.use(
+      http.post('*/api/v1/admin/templates/r/preview', ({ request }) => {
+        accept = request.headers.get('Accept');
+        return new HttpResponse('%PDF-1.4', { headers: { 'Content-Type': 'application/pdf' } });
+      }),
+    );
+    const blob = await createApiClient().post<Blob>(
+      '/admin/templates/r/preview',
+      {},
+      { responseType: 'blob' },
+    );
+    expect(accept).toBe('application/pdf');
+    expect(blob.size).toBe(8);
+    expect(blob.type).toBe('application/pdf');
+  });
+
   it('handles 204 without a body', async () => {
     server.use(
       http.post('*/api/v1/admin/templates', () => new HttpResponse(null, { status: 204 })),

@@ -33,6 +33,8 @@ export interface RequestOptions {
    * `fetch` cannot report it, so such a request is sent with XMLHttpRequest.
    */
   onUploadProgress?: ((loaded: number, total: number) => void) | undefined;
+  /** `'blob'` sends `Accept: application/pdf` and resolves with `response.blob()`. Default `'json'`. */
+  responseType?: 'json' | 'blob';
 }
 
 export function isAdminPath(path: string): boolean {
@@ -204,7 +206,7 @@ export function createApiClient(deps: ApiClientDeps = {}): ApiClient {
       if (value !== null && value !== undefined) url.searchParams.set(key, String(value));
     }
     const headers = new Headers(options.headers);
-    headers.set('Accept', 'application/json');
+    headers.set('Accept', options.responseType === 'blob' ? 'application/pdf' : 'application/json');
     let body: BodyInit | null = null;
     if (options.body instanceof FormData) {
       body = options.body;
@@ -252,6 +254,7 @@ export function createApiClient(deps: ApiClientDeps = {}): ApiClient {
     if (!response.ok) throw await toApiError(response);
     if (response.status === 204) return undefined as T;
     try {
+      if (options.responseType === 'blob') return (await response.blob()) as T;
       return (await response.json()) as T;
     } catch {
       throw new ApiError({

@@ -216,7 +216,7 @@ describe('TemplateUploadPage', () => {
     expect(screen.getByText('acme-devfest-attendance-v3', { selector: 'dd' })).toBeInTheDocument();
     expect(screen.getByText('assets/old.png')).toBeInTheDocument();
     expect(screen.getByText('Not referenced by config.json')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Preview' })).toBeEnabled();
 
     expect(form?.get('organizationId')).toBe('o1');
     expect(form?.get('eventId')).toBe('e1');

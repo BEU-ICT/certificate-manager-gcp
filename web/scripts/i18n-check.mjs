@@ -19,6 +19,9 @@ export const ALLOW_DYNAMIC = [
   'admin:templates.uploadForm.check.*', // package pre-check messages are keyed by issue
   'admin:certificates.status.*', // badges are keyed by the certificate status
   'admin:certificates.emailStatus.*', // badges are keyed by the e-mail status
+  'admin:templates.preview.presets.*', // preset radios are rendered from a list
+  'admin:templates.preview.fieldNames.*', // keyed by the field path of a 422 detail
+  'admin:templates.preview.errors.*', // keyed by form validation code and API error kind
 ];
 
 function walk(dir, filter) {

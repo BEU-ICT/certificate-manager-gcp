@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
+import { cx } from './cx';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), ' +
@@ -14,13 +15,15 @@ export interface DialogProps {
   children: ReactNode;
   /** Buttons rendered in the footer. */
   actions?: ReactNode;
+  /** Enlarges the panel to the full viewport (CSS only; not the Fullscreen API). */
+  fullscreen?: boolean;
 }
 
 /**
  * Modal dialog: focus moves in on open, Tab/Shift+Tab cycle inside, Esc and the backdrop close it,
  * and focus returns to the trigger afterwards.
  */
-export function Dialog({ open, onClose, title, children, actions }: DialogProps) {
+export function Dialog({ open, onClose, title, children, actions, fullscreen }: DialogProps) {
   const { t } = useTranslation();
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -74,7 +77,12 @@ export function Dialog({ open, onClose, title, children, actions }: DialogProps)
 
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div
+      className={cx(
+        'fixed inset-0 z-50 flex items-end justify-center sm:items-center',
+        fullscreen ? 'p-0' : 'p-4',
+      )}
+    >
       <div
         className="absolute inset-0 bg-ink/50"
         aria-hidden="true"
@@ -86,7 +94,10 @@ export function Dialog({ open, onClose, title, children, actions }: DialogProps)
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="relative max-h-full w-full max-w-lg overflow-auto rounded-card bg-surface p-6 shadow-overlay"
+        className={cx(
+          'relative w-full overflow-auto bg-surface p-6 shadow-overlay',
+          fullscreen ? 'h-full max-w-none' : 'max-h-full max-w-lg rounded-card',
+        )}
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id={titleId} className="text-lg font-semibold text-ink">

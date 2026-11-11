@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { api, isApiError, LONG_TIMEOUT_MS, STALE_TIME, type ApiError } from '@/api';
-import type { components } from '@/api/schema';
+import type { components, paths } from '@/api/schema';
 import { EVENTS_KEY, ORGANIZATION_OPTIONS_PAGE, type EventPage } from '../events/api';
 import type { PackageEntry } from './package';
 
@@ -15,15 +15,10 @@ export type TemplateDetail = components['schemas']['TemplateDetail'];
 export type TemplateUploadResult = components['schemas']['TemplateUploadResult'];
 export type TemplatePage = components['schemas']['TemplatePage'];
 
-// TODO(BEU-ICT/certificate-manager#314): `POST /admin/templates/{reference}/copy` is not in
-// `schema.d.ts` yet. Switch to the generated types once `npm run api:types` includes it.
-export interface CopyTemplateBody {
-  organizationId: string;
-  eventId: string;
-  /** Defaults to the type of the source template. */
-  type?: string;
-}
-export type CopyTemplateResult = Template & { copiedFrom: string };
+export type CopyTemplateBody =
+  paths['/api/v1/admin/templates/{reference}/copy']['post']['requestBody']['content']['application/json'];
+export type CopyTemplateResult = components['schemas']['TemplateCopyResult'];
+export type PreviewTemplateBody = components['schemas']['TemplatePreviewBodyInput'];
 
 export const TEMPLATES_KEY = ['admin', 'templates'] as const;
 const BASE = '/admin/templates';
@@ -140,5 +135,22 @@ export function useUploadTemplate() {
       });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY }),
+  });
+}
+
+export interface PreviewTemplateVariables {
+  body: PreviewTemplateBody;
+  signal?: AbortSignal;
+}
+
+/** `POST /admin/templates/{reference}/preview`: renders a sample PDF (nothing stored); resolves with the PDF blob. */
+export function usePreviewTemplate(reference: string) {
+  return useMutation<Blob, ApiError, PreviewTemplateVariables>({
+    mutationFn: ({ body, signal }) =>
+      api().post<Blob>(`${BASE}/${encodeURIComponent(reference)}/preview`, body, {
+        responseType: 'blob',
+        timeoutMs: LONG_TIMEOUT_MS,
+        signal,
+      }),
   });
 }

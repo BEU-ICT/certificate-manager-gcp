@@ -284,6 +284,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/templates/{reference}/preview': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Render a sample PDF with a template (nothing is stored)
+     * @description Runs the production pipeline (load assets, fit check, render) with sample data: preset `typical` or `longest` (maximum field lengths), overridden by the provided fields. The QR code encodes `<PUBLIC_BASE_URL>/c/PREVIEW000000000000000`, which never resolves. `422 TEXT_DOES_NOT_FIT` lists the misfitting fields in `error.details[]` as `{ path, message }`. Nothing is written to storage or the database.
+     */
+    post: operations['previewTemplate'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/public/certificates/{id}': {
     parameters: {
       query?: never;
@@ -693,6 +713,18 @@ export interface components {
       items: components['schemas']['Template'][];
       /** @description Opaque; pass as `cursor` for the next page. */
       nextCursor: string | null;
+    };
+    /** @description All properties are optional; the body itself may be omitted. Provided fields override the preset. */
+    TemplatePreviewBodyInput: {
+      issuedAt?: string;
+      ownerName?: string;
+      /**
+       * @description `typical` (default) or `longest`: every field at its maximum length, to stress the layout.
+       * @enum {string}
+       */
+      preset?: 'typical' | 'longest';
+      skills?: string[];
+      subject?: string;
     };
     /** @description multipart/form-data. Besides the fields above, every other part is a package file whose **filename is its relative path** (`background.svg`, `fonts/Inter-Regular.ttf`, `assets/logo.png`); the part name is free. Limits: 30 files, 10 MB of files, 5 MB per part (fonts 3 MB), 10.5 MB per request. The part content type is ignored. */
     TemplateUploadBodyInput: {
@@ -2577,6 +2609,104 @@ export interface operations {
       };
       /** @description CONFLICT: conflicts with the current state */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description Well-formed request that violates a business rule (domain specific code) */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  previewTemplate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        reference: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TemplatePreviewBodyInput'] | null;
+      };
+    };
+    responses: {
+      /** @description The sample PDF (`Content-Disposition: inline`, `Cache-Control: no-store`) */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/pdf': string;
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
         headers: {
           [name: string]: unknown;
         };
