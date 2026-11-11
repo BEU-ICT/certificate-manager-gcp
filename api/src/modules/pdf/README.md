@@ -21,6 +21,15 @@ Render a certificate PDF on first request from its template, store it in the pub
 - `PdfService` (`DefaultPdfService(registry, templateAssets, publicUrl)`): `render(certificate, template)`, `checkFit(certificate, template)` and `preview(templateRef, sample)`. It loads the package via `TemplateAssets`, looks the engine up from `config.engine` and delegates; there are no engine branches. `publicUrl` is a function building the verification URL of a certificate.
 - Adding an engine: implement `TemplateRenderer` and add one `registry.register(...)` line in the composition root. No other file changes. The composition root does not construct `PdfService` yet because no engine and no public URL format exist; the first engine task wires it in `src/services.ts`.
 
+### `svg-pdf` engine (BEU-ICT/certificate-manager#319)
+
+- `SvgPdfRenderer` (`engines/svg-pdf/`, engine name `svg-pdf`) builds a PDFKit document (`autoFirstPage: false`, compressed, page size and orientation from `config.page`), registers the template fonts from the package buffers (subset-embedded by PDFKit), draws `background.svg` stretched over the page with svg-to-pdfkit (vector, `preserveAspectRatio="none"`, only `data:` images are embedded), then `config.images` in order, then the optional layers.
+- Metadata: `Title` "Certificate", `Author` = `RenderInput.organizationName` (omitted for previews), `Producer`/`Creator` "Certificate Management System", `CreationDate` = `issuedAt`. PDFKit derives the trailer `ID` from the info dictionary, so the same input renders byte-identical files; the clock is never read.
+- Extension points: `new SvgPdfRenderer({ fieldsLayer, qrLayer })`. A `DrawLayer` receives `DrawContext` (document, input, package, parsed config, page size, `fontName(key)`) and runs after the images in the order fields, QR. Text fitting (`checkFit`) and the QR code arrive with BEU-ICT/certificate-manager#320 and #323; until then `checkFit` reports that everything fits.
+- Fallback font: an SVG text whose `font-family` matches no template font uses the first template font, or PDFKit's built-in Helvetica when the package has none. Helvetica is read by PDFKit from its bundled `.afm` file (a read-only file inside `node_modules`, the only file access during a render). If the document build throws, the PDFKit document is destroyed before the error propagates.
+- Not registered in the composition root yet (see "Adding an engine"): that happens together with the fields layer.
+- Formatters (`FormatterRegistry`, `createFormatterRegistry`) are exported from the module index for the fields layer.
+
 ## Owned data
 
 Objects in the public PDF bucket with deterministic names derived from the certificate ID. No collection.
