@@ -144,6 +144,7 @@ export async function compose(
     templateCacheMb: config.templateCacheMb,
     statsCacheSeconds: config.statsCacheSeconds,
     publicBaseUrl: config.publicBaseUrl,
+    pdf: config.pdf,
     logger,
     fitChecker,
   });

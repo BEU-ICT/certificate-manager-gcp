@@ -2716,6 +2716,52 @@
         "summary": "Verify a certificate by ID"
       }
     },
+    "/api/v1/public/certificates/{id}/pdf": {
+      "get": {
+        "description": "Public. Generates the PDF on first use (single-flight per certificate) and redirects with `302` to the public bucket object; later calls redirect without rendering. A malformed and an unknown ID return the same 404; revoked certificates return 410. While `FEATURE_PUBLIC_PDF_GENERATION` is off, certificates without a PDF answer 503; existing PDFs still redirect. Storage or database outages answer 503 with `Retry-After: 5`. Never cached (`Cache-Control: no-store`).",
+        "operationId": "getPublicCertificatePdf",
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "302": {
+            "content": { "text/plain": { "schema": { "maxLength": 0, "type": "string" } } },
+            "description": "Redirect to the PDF object (`Location`)"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "410": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "GONE: resource is no longer available"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "summary": "Open the PDF of a certificate"
+      }
+    },
     "/internal/healthz": {
       "get": {
         "operationId": "getHealth",
