@@ -459,6 +459,67 @@
       "qrFailed": "QR kod yaradılmadı.",
       "qrDownload": "QR kodu PNG kimi yüklə",
       "newTab": "yeni sekmədə açılır"
+    },
+    "issueForm": {
+      "title": "Sertifikat verin",
+      "fields": {
+        "organization": "Təşkilat",
+        "organizationPlaceholder": "Təşkilat seçin",
+        "event": "Tədbir",
+        "eventPlaceholder": "Tədbir seçin",
+        "type": "Növ",
+        "typePlaceholder": "Növ seçin",
+        "template": "Şablon",
+        "ownerName": "Sahibinin adı",
+        "email": "E-poçt ünvanı (könüllü)",
+        "subject": "Mövzu",
+        "skills": "Bacarıqlar (könüllü)",
+        "issuedAt": "Verilmə tarixi"
+      },
+      "template": {
+        "latest": "Ən son ({{reference}})",
+        "version": "{{reference}} (versiya {{version}}, {{date}})",
+        "chooseFirst": "Əvvəlcə təşkilat, tədbir və növ seçin",
+        "loading": "Şablonlar yüklənir…",
+        "none": "Şablon yoxdur",
+        "noneHint": "Bu təşkilat, tədbir və növ üçün hələ şablon yoxdur. Sertifikat vermək üçün şablon yükləyin.",
+        "upload": "Şablon yüklə",
+        "failed": "Şablonlar yüklənə bilmədi."
+      },
+      "counter": "{{current}} / {{max}} simvol",
+      "emailHint": "Sertifikata keçid e-poçtla göndəriləcək",
+      "skillsHint": "{{count}} / {{max}} bacarıq. Əlavə etmək üçün Enter və ya vergül basın; hər biri ən çox {{limit}} simvol.",
+      "skillsList": "Əlavə edilmiş bacarıqlar",
+      "skillAdd": "Bacarıq əlavə et",
+      "skillRemove": "{{skill}} bacarığını sil",
+      "submit": "Sertifikat ver",
+      "submitting": "Verilir…",
+      "errors": {
+        "organizationRequired": "Təşkilat seçin.",
+        "eventRequired": "Tədbir seçin.",
+        "typeRequired": "Növ seçin.",
+        "ownerRequired": "Sahibinin adını daxil edin.",
+        "ownerTooLong": "Ad ən çox {{max}} simvol ola bilər.",
+        "emailInvalid": "Düzgün e-poçt ünvanı daxil edin.",
+        "subjectRequired": "Mövzunu daxil edin.",
+        "subjectTooLong": "Mövzu ən çox {{max}} simvol ola bilər.",
+        "skillTooLong": "Bacarıq ən çox {{max}} simvol ola bilər.",
+        "tooManySkills": "Ən çox {{max}} bacarıq əlavə etmək olar.",
+        "dateRequired": "Verilmə tarixini daxil edin.",
+        "dateFuture": "Verilmə tarixi gələcəkdə ola bilməz."
+      },
+      "failure": {
+        "fit": "Bəzi mətnlər şablona sığmır. İşarələnmiş sahələri qısaldıb yenidən cəhd edin.",
+        "template": "Başqa şablon seçin və ya uyğun şablon yükləyib yenidən cəhd edin.",
+        "retry": "Heç nə itirilməyib. “Sertifikat ver” düyməsini yenidən basın; təkrar cəhd dublikat yaratmayacaq.",
+        "retryAfter": "{{seconds}} saniyə sonra yenidən cəhd edin. Təkrar cəhd dublikat yaratmayacaq."
+      },
+      "success": {
+        "title": "Sertifikat verildi",
+        "body": "{{owner}} üçün sertifikat verildi.",
+        "another": "Eyni parametrlərlə başqasını ver",
+        "view": "Sertifikata bax"
+      }
     }
   }
 }
