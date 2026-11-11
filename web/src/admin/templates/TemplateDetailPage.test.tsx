@@ -104,7 +104,7 @@ describe('TemplateDetailPage', () => {
     expect(await screen.findByText('Could not copy to clipboard')).toBeInTheDocument();
   });
 
-  it('shows summary, files, count, immutability note and disabled placeholders; passes axe', async () => {
+  it('shows summary, files, count, immutability note and the new-version link; passes axe', async () => {
     server.use(
       ...lookups(),
       http.get(DETAIL_URL, () => HttpResponse.json(DETAIL)),
@@ -115,7 +115,10 @@ describe('TemplateDetailPage', () => {
     expect(screen.getByText('1,234')).toBeInTheDocument();
     expect(screen.getByText('background.png')).toBeInTheDocument();
     expect(screen.getByText(/2 kB/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'New version' })).toBeDisabled();
+    expect(screen.getByRole('link', { name: 'New version' })).toHaveAttribute(
+      'href',
+      `/admin/templates/new?from=${REF}`,
+    );
     expect(screen.getByRole('button', { name: 'Preview' })).toBeDisabled();
     await expectNoA11yViolations(container);
   });

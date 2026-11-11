@@ -5,6 +5,10 @@ export interface ApiErrorDetail {
   suggestion?: string | undefined;
   /** `IN_USE`: how many records of each kind reference the item. */
   counts?: Record<string, number> | undefined;
+  /** `TEMPLATE_INVALID`: stable finding code, e.g. `SVG_SCRIPT`. */
+  code?: string | undefined;
+  /** `TEMPLATE_INVALID`: the package file the finding belongs to. */
+  file?: string | undefined;
 }
 
 export interface ApiErrorInit {

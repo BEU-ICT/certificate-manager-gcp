@@ -99,7 +99,10 @@ describe('TemplatesPage', () => {
     );
     renderPage();
     expect(await screen.findByText('No templates yet')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Upload template' })).toBeDisabled();
+    expect(screen.getByRole('link', { name: 'Upload template' })).toHaveAttribute(
+      'href',
+      '/admin/templates/new',
+    );
   });
 
   it('shows the error state and retries', async () => {

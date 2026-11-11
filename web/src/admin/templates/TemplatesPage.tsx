@@ -4,7 +4,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { isApiError } from '@/api';
 import {
   Badge,
-  Button,
   EmptyState,
   ErrorState,
   Pagination,
@@ -109,9 +108,12 @@ export default function TemplatesPage() {
   ];
 
   const uploadButton = (
-    <Button disabled title={t('templates.uploadSoon')} aria-describedby="upload-soon">
+    <Link
+      to="/admin/templates/new"
+      className="inline-flex min-h-11 items-center justify-center rounded-control border border-transparent bg-primary px-4 py-2 text-base font-medium text-white hover:bg-primary-hover"
+    >
       {t('templates.upload')}
-    </Button>
+    </Link>
   );
 
   let body;
@@ -186,9 +188,6 @@ export default function TemplatesPage() {
         </h1>
         {data && (data.items.length > 0 || filtered) ? uploadButton : null}
       </div>
-      <p id="upload-soon" className="sr-only">
-        {t('templates.uploadSoon')}
-      </p>
       <div className="grid gap-4 sm:grid-cols-3">
         <OrganizationSelect
           label={t('templates.fields.organization')}
