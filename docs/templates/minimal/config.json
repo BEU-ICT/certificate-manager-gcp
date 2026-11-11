@@ -1,0 +1,28 @@
+{
+  "engine": "svg-pdf",
+  "page": {
+    "size": "A4",
+    "orientation": "landscape"
+  },
+  "background": "background.svg",
+  "fonts": {
+    "body": "fonts/NotoSans-Regular.ttf"
+  },
+  "fields": {
+    "ownerName": {
+      "x": 70.9,
+      "y": 250,
+      "width": 700,
+      "font": "body",
+      "size": 36,
+      "color": "#222222",
+      "align": "center",
+      "maxLines": 1
+    }
+  },
+  "qr": {
+    "x": 690,
+    "y": 440,
+    "size": 100
+  }
+}
