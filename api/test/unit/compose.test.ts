@@ -19,6 +19,8 @@ import {
   sampleTemplate,
 } from '../../src/testing/contracts/index.js';
 import { fakeToken } from '../../src/testing/fakes/index.js';
+import { FallbackEmailSender } from '../../src/modules/notifications/index.js';
+import { BrevoEmailSender } from '../../src/adapters/brevo/brevo-email-sender.js';
 import type { EmailSender, StorageGateway } from '../../src/ports/index.js';
 import type { AuthPorts, QueuePorts, RepositoryPorts } from '../../src/wiring.js';
 
@@ -214,8 +216,36 @@ describe('compose', () => {
     expect(ports.storage).toEqual({ tag: 'gcs' });
     expect(ports.taskQueue).toEqual({ tag: 'cloud-tasks' });
     expect(ports.tokenVerifier).toEqual({ tag: 'firebase' });
-    expect(ports.emailSender).toEqual({ tag: 'gmail' });
+    expect(ports.emailSender).toBeInstanceOf(FallbackEmailSender);
     expect(ports.emailFallback).toEqual({ tag: 'brevo' });
+  });
+
+  it('keeps the plain primary sender without a fallback', async () => {
+    const { ports } = await compose(loadConfig({ ...PROD_ENV }), stubRegistries());
+    expect(ports.emailSender).toEqual({ tag: 'gmail' });
+    expect(ports.emailFallback).toBeUndefined();
+  });
+
+  it('ignores EMAIL_FALLBACK_PROVIDER when FEATURE_EMAIL_FALLBACK is off', async () => {
+    const { ports } = await compose(
+      loadConfig({
+        ...PROD_ENV,
+        EMAIL_FALLBACK_PROVIDER: 'brevo',
+        EMAIL_API_KEY: 'k',
+        FEATURE_EMAIL_FALLBACK: 'false',
+      }),
+      stubRegistries(),
+    );
+    expect(ports.emailSender).toEqual({ tag: 'gmail' });
+    expect(ports.emailFallback).toBeUndefined();
+  });
+
+  it('registers the real brevo adapter in the default registries', async () => {
+    const regs = defaultRegistries();
+    const sender = await regs.email.resolve('brevo', {
+      config: loadConfig({ ...PROD_ENV, EMAIL_PROVIDER: 'brevo', EMAIL_API_KEY: 'k' }),
+    });
+    expect(sender).toBeInstanceOf(BrevoEmailSender);
   });
 
   it('only runs the factories of selected adapters', async () => {

@@ -23,6 +23,7 @@ import { buildServices } from './services.js';
 import type { FitChecker } from './modules/certificates/index.js';
 import {
   createInProcessSendEmailTask,
+  FallbackEmailSender,
   createSendEmailHandler,
   registerIssuedEmailSubscriber,
 } from './modules/notifications/index.js';
@@ -52,6 +53,11 @@ export const builtinRegistrations: AdapterRegistration[] = [
   (r) =>
     r.queue.register('cloud-tasks', async (ctx) =>
       (await import('./adapters/cloud-tasks/index.js')).createQueuePorts(ctx),
+    ),
+  // Replaces the in-memory stand-in registered above. A future `sendgrid` adapter registers the same way.
+  (r) =>
+    r.email.register('brevo', async (ctx) =>
+      (await import('./adapters/brevo/index.js')).createEmailSender(ctx),
     ),
 ];
 
@@ -143,7 +149,14 @@ export async function compose(
     storage,
     ...queue,
     ...auth,
-    emailSender: email,
+    // With a fallback, quota errors of the primary spill over to it; the handler's daily-cap path
+    // addresses `emailFallback` directly (see notifications README).
+    emailSender: emailFallback
+      ? new FallbackEmailSender(email, emailFallback, logger, {
+          primary: sel.email,
+          fallback: sel.emailFallback as string,
+        })
+      : email,
     ...(emailFallback ? { emailFallback } : {}),
     rateLimiter: new InProcessRateLimiter(clock),
     eventBus,

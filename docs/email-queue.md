@@ -20,6 +20,10 @@ Caveat: Cloud Tasks does not accept a task name used within roughly the last hou
 
 The handler counts sent e-mails per provider and UTC day in Firestore (`email_counters/<provider>:<YYYY-MM-DD>`, TTL on `expiresAt`) against `EMAIL_DAILY_CAP` (default 300). Over the cap it uses the fallback provider (only when `EMAIL_FALLBACK_PROVIDER` is set and `FEATURE_EMAIL_FALLBACK` is on; own cap `EMAIL_FALLBACK_DAILY_CAP`, default 300) or enqueues a new task `email-<id>-<n>-r<k>` scheduled for next UTC midnight + 5 min + 0 to 30 min jitter. After three reschedules the certificate is marked `failed` (`DAILY_CAP_EXHAUSTED`) and can be resent from the admin UI. Reschedule tasks appear in `gcloud tasks list` with a future schedule time; do not purge them unless the e-mails must not be sent.
 
+## Provider fallback
+
+With `EMAIL_FALLBACK_PROVIDER=brevo` and `FEATURE_EMAIL_FALLBACK=true`, a `QuotaExceededError` from the primary (provider 429) is retried on the fallback provider in the same attempt, with the same Message-ID. Permanent, configuration and transient errors are not redirected (transient ones are retried by Cloud Tasks). Logs name the provider, never addresses. Details and caveats (counter accounting, unverified DKIM) are in `api/src/modules/notifications/README.md`.
+
 ## Incident procedures
 
 ```bash

@@ -1,0 +1,2 @@
+# Fake API key in a unit test (introduced in the Brevo adapter commit, replaced afterwards)
+13527e9adb033ea07593895ef7a2b973021dc0cb:api/test/unit/brevo-email-sender.test.ts:generic-api-key:11
