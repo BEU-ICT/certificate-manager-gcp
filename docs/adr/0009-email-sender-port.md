@@ -15,3 +15,7 @@ The `notifications` module sends mail through the `EmailSender` port with typed 
 - Handlers must be idempotent because delivery is at-least-once.
 - Provider changes (SMTP on-prem, others) need only an adapter.
 - Bounce handling is optional behind `FEATURE_BOUNCE_JOB`.
+
+## Update (BEU-ICT/certificate-manager#373)
+
+Brevo is implemented as `BrevoEmailSender` (`fetch`, registry name `brevo`) and the fallback as a `FallbackEmailSender` decorator that reacts to `QuotaExceededError` only. `sendgrid` stays a documented future slot: a new adapter plus its name in `EMAIL_PROVIDERS`.

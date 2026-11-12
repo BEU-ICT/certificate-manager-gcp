@@ -45,3 +45,4 @@ export {
   type ResendCertificateState,
   type ResendOutcome,
 } from './resend.js';
+export { FallbackEmailSender, type FallbackLogger } from './fallback-email-sender.js';

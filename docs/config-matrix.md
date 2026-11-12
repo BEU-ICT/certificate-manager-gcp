@@ -44,3 +44,9 @@ Every variable validated at boot (issue BEU-ICT/certificate-manager#236 §6, `ap
 3. Verify sending works, then disable the old version: `gcloud secrets versions disable <n> --secret EMAIL_API_KEY`.
 
 The rotation procedure has not been tested yet (needs the live project). Review of this matrix by a second person is pending.
+
+## Brevo fallback (BEU-ICT/certificate-manager#373)
+
+`EMAIL_FALLBACK_PROVIDER=brevo` takes effect only with `FEATURE_EMAIL_FALLBACK=true`; `EMAIL_API_KEY` is then the Brevo API key (header `api-key`, never logged). Brevo needs the sending domain authenticated (DKIM/SPF) before use; this has not been verified against a live account. `sendgrid` is a reserved future provider name (no adapter yet).
+
+Locally use `EMAIL_PROVIDER=gmail` (in-memory fake); `EMAIL_PROVIDER=brevo` with a key calls the real Brevo API.
