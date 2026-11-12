@@ -185,6 +185,7 @@ export async function compose(
     emailSender: ports.emailSender,
     logger,
     publicBaseUrl: config.publicBaseUrl,
+    emailLanguageOf: async (eventId) => (await services.events.get(eventId)).emailLanguage,
     from: { address: config.email.fromAddress, replyTo: config.email.replyTo },
     quota: {
       store: ports.emailQuota,

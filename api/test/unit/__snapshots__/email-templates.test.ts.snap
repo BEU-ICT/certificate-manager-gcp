@@ -1,0 +1,81 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderCertificateEmail > matches the Azerbaijani snapshot > html 1`] = `
+"<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sertifikatınız: Şəbəkə təhlükəsizliyi</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
+<tr><td align="center" style="padding:24px 12px;">
+<main style="max-width:560px;background:#ffffff;padding:24px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;text-align:left;">
+<p style="margin:0 0 16px;">Salam, Aygün Məmmədova!</p>
+<p style="margin:0 0 24px;">Example Org tərəfindən sizə Şəbəkə təhlükəsizliyi üçün sertifikat verilmişdir.</p>
+<p style="margin:0 0 24px;"><a href="https://certs.example.org/c/AbCdEf123456" style="display:inline-block;background:#0b4fc2;color:#ffffff;text-decoration:underline;padding:12px 24px;border-radius:4px;font-weight:bold;">Sertifikata bax</a></p>
+<p style="margin:0 0 24px;font-size:14px;">Sertifikatınıza bu keçiddən baxa bilərsiniz:<br><a href="https://certs.example.org/c/AbCdEf123456" style="color:#0b4fc2;word-break:break-all;">https://certs.example.org/c/AbCdEf123456</a></p>
+<hr style="border:0;border-top:1px solid #d4d4d8;margin:0 0 16px;">
+<p style="margin:0 0 8px;font-size:14px;color:#52525b;">Bu məktubu sertifikat verilərkən bu e-poçt ünvanı göstərildiyi üçün alırsınız.</p>
+<p style="margin:0;font-size:14px;color:#52525b;">Suallarınız varsa, bu məktubu cavablandırın və ya support@example.org ünvanına yazın.</p>
+</main>
+</td></tr>
+</table>
+</body>
+</html>
+"
+`;
+
+exports[`renderCertificateEmail > matches the Azerbaijani snapshot > text 1`] = `
+"Salam, Aygün Məmmədova!
+
+Example Org tərəfindən sizə Şəbəkə təhlükəsizliyi üçün sertifikat verilmişdir.
+
+Sertifikatınıza bu keçiddən baxa bilərsiniz:
+https://certs.example.org/c/AbCdEf123456
+
+Bu məktubu sertifikat verilərkən bu e-poçt ünvanı göstərildiyi üçün alırsınız.
+Suallarınız varsa, bu məktubu cavablandırın və ya support@example.org ünvanına yazın.
+"
+`;
+
+exports[`renderCertificateEmail > matches the English snapshot > html 1`] = `
+"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your certificate: Spring Workshop</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
+<tr><td align="center" style="padding:24px 12px;">
+<main style="max-width:560px;background:#ffffff;padding:24px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1a1a1a;text-align:left;">
+<p style="margin:0 0 16px;">Hello Jane Doe,</p>
+<p style="margin:0 0 24px;">A certificate was issued to you by Example Org for Spring Workshop.</p>
+<p style="margin:0 0 24px;"><a href="https://certs.example.org/c/AbCdEf123456" style="display:inline-block;background:#0b4fc2;color:#ffffff;text-decoration:underline;padding:12px 24px;border-radius:4px;font-weight:bold;">View your certificate</a></p>
+<p style="margin:0 0 24px;font-size:14px;">You can view your certificate at this link:<br><a href="https://certs.example.org/c/AbCdEf123456" style="color:#0b4fc2;word-break:break-all;">https://certs.example.org/c/AbCdEf123456</a></p>
+<hr style="border:0;border-top:1px solid #d4d4d8;margin:0 0 16px;">
+<p style="margin:0 0 8px;font-size:14px;color:#52525b;">You received this email because this address was provided when the certificate was issued.</p>
+<p style="margin:0;font-size:14px;color:#52525b;">If you have questions, reply to this email or write to support@example.org.</p>
+</main>
+</td></tr>
+</table>
+</body>
+</html>
+"
+`;
+
+exports[`renderCertificateEmail > matches the English snapshot > text 1`] = `
+"Hello Jane Doe,
+
+A certificate was issued to you by Example Org for Spring Workshop.
+
+You can view your certificate at this link:
+https://certs.example.org/c/AbCdEf123456
+
+You received this email because this address was provided when the certificate was issued.
+If you have questions, reply to this email or write to support@example.org.
+"
+`;

@@ -71,7 +71,7 @@ A reserved slot that is not delivered (permanent or transient provider error, mi
 
 When `EMAIL_FALLBACK_PROVIDER` is set and `FEATURE_EMAIL_FALLBACK` is on, `compose.ts` builds `Ports.emailSender` as `FallbackEmailSender(primary, fallback)` and still exposes the raw fallback as `Ports.emailFallback`. The decorator falls back only on `QuotaExceededError` (same message, same Message-ID); permanent, configuration and transient errors propagate unchanged, and if the fallback fails its error propagates. Interplay with the daily cap: the handler reserves a primary slot; if the cap is reached it uses the raw `emailFallback` directly (fallback counter), so the decorator is not involved and there is no second attempt. If the primary then answers 429, the decorator sends via the fallback within the same attempt; that send is counted against the primary counter (the slot is kept because the message was delivered). A failed send never delivers twice: the fallback is only tried after the primary refused the message. Not verified without live Brevo: delivery and DKIM alignment with our domain (Brevo sender/domain authentication must be set up), and whether Brevo keeps a custom `Message-ID` header.
 
-Left for the other tasks: the localised template (BEU-ICT/certificate-manager#376) is only `PlainMessageComposer` (plain az/en text and escaped HTML).
+The localised template is described in the next section.
 
 ## Admin resend (BEU-ICT/certificate-manager#377)
 
@@ -85,3 +85,15 @@ Order of work:
 4. A changed address is logged as `audit` action `certificate.email_changed` (entity ID and admin UID only, never addresses).
 
 The send worker ignores superseded tasks (`sequence < emailAttempts`), so an older queued task cannot send after a resend.
+
+## E-mail template (BEU-ICT/certificate-manager#376)
+
+`TemplateMessageComposer` (`email-templates.ts`) is the default `MessageComposer`; `renderCertificateEmail` returns `{ subject, text, html }` for `az` and `en`. No template engine: the `markup` tagged template escapes every interpolated string (`& < > " '`), only nested `markup` results are kept as HTML. The text part is not HTML-escaped. Header-bound and displayed values (subject, names, URL, contact) have all control characters including CR/LF turned into single spaces (`oneLine`); the event name is truncated to 120 characters with an ellipsis in the subject only.
+
+Content: subject `Your certificate: <event>` / `Sertifikatınız: <event>`; greeting, one sentence (issued by organisation for event), a button plus the plain URL `<PUBLIC_BASE_URL>/c/<id>` (id only, no query), the reason line and the contact line with the Reply-To address (`EMAIL_REPLY_TO`, else the From address). Single column, inline CSS, no images, no tracking, `lang` attribute, well under 10 KB.
+
+Language: the `emailLanguage` of the certificate's event. The certificate snapshot does not carry it, so `compose.ts` passes `emailLanguageOf` (`services.events.get(eventId).emailLanguage`) to the handler; if the lookup fails or is not wired the default `az` is used (a warning with the error class only is logged). A future snapshot of the language on the certificate would remove this read.
+
+Preview: `npm run email:preview -- <az|en> [outDir]` writes `certificate-<lang>.html` and `.txt` with sample data to `<os tmpdir>/cm-email-preview` (outside the repository).
+
+The Azerbaijani wording needs native-speaker review (acceptance criterion of the issue).

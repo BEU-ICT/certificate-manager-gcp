@@ -9,11 +9,12 @@ import {
   type EmailSender,
   type TaskQueue,
 } from '../../ports/index.js';
-import type { Certificate } from '../../shared/domain.js';
+import type { Certificate, EmailLanguage } from '../../shared/domain.js';
 import { nextUtcMidnight, utcDay } from '../../shared/email-quota.js';
 import { MAX_RESCHEDULES, SEND_EMAIL_HANDLER, emailTaskName } from '../../shared/email-task.js';
 import { NotFoundError } from '../../shared/errors.js';
-import { PlainMessageComposer, type MessageComposer } from './message-composer.js';
+import { TemplateMessageComposer } from './email-templates.js';
+import type { MessageComposer } from './message-composer.js';
 
 /** `emailLastError` when the last allowed attempt failed with a retryable error. */
 export const RETRIES_EXHAUSTED = 'RETRIES_EXHAUSTED';
@@ -77,6 +78,11 @@ export interface SendEmailHandlerDeps {
   /** `PUBLIC_BASE_URL`: verification page is `<base>/c/<id>`. */
   publicBaseUrl: string;
   composer?: MessageComposer;
+  /**
+   * Language of the certificate's event (`emailLanguage`); the certificate snapshot does not carry it.
+   * Wired in compose.ts through the events service. Errors or absence mean the default `az`.
+   */
+  emailLanguageOf?: (eventId: string) => Promise<EmailLanguage>;
   quota?: DailyQuotaDeps;
 }
 
@@ -124,7 +130,8 @@ export function createSendEmailHandler(
   deps: SendEmailHandlerDeps,
 ): (request: SendEmailRequest) => Promise<SendEmailOutcome> {
   const { certificates, emailSender, logger } = deps;
-  const composer = deps.composer ?? new PlainMessageComposer();
+  const composer =
+    deps.composer ?? new TemplateMessageComposer(deps.from.replyTo ?? deps.from.address);
   const baseUrl = deps.publicBaseUrl.replace(/\/+$/, '');
 
   const quota = deps.quota;
@@ -195,7 +202,20 @@ export function createSendEmailHandler(
       }
     }
 
-    const content = composer.compose(certificate, { verifyUrl: `${baseUrl}/c/${certificate.id}` });
+    let language: EmailLanguage | undefined;
+    try {
+      language = await deps.emailLanguageOf?.(certificate.eventId);
+    } catch (error) {
+      logger.warn(
+        { certificateId, error: errorName(error) },
+        'e-mail language lookup failed, using default',
+      );
+    }
+    const content = composer.compose(certificate, {
+      verifyUrl: `${baseUrl}/c/${certificate.id}`,
+      language,
+      contactEmail: deps.from.replyTo ?? deps.from.address,
+    });
     const message: EmailMessage = {
       to,
       toName: certificate.ownerName,
