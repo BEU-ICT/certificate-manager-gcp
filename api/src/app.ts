@@ -23,6 +23,7 @@ import { adminStatsRoutes } from './http/routes/admin-stats.js';
 import { buildServices } from './services.js';
 import { createSendEmailHandler } from './modules/notifications/index.js';
 import type { Ports, Services } from './wiring.js';
+import { TRUSTED_PROXY_HOPS } from './http/client-ip.js';
 
 export interface AppDeps {
   /** Logging settings; the composition root passes LOG_LEVEL / GCP_PROJECT. Defaults to silent. */
@@ -48,7 +49,6 @@ export interface AppDeps {
 export type SendEmailHandler = ReturnType<typeof createSendEmailHandler>;
 
 const BODY_LIMIT_BYTES = 1024 * 1024;
-const TRUSTED_PROXY_HOPS = 1;
 const DEFAULT_PUBLIC_URLS: PublicUrls = {
   publicBaseUrl: 'http://localhost:5173',
   pdfPublicBaseUrl: 'http://localhost:8080',
@@ -68,7 +68,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     // Fastify answers 414 above 100 characters; long path parameters must reach validation (404).
     maxParamLength: 512,
     // Cloud Run terminates TLS behind a single Google front end hop.
-    // Final value is decided in BEU-ICT/certificate-manager#388.
+    // Hop count lives in http/client-ip.ts (docs/adr/0017-trusted-client-ip.md); unverified live.
     trustProxy: (_address, hop) => hop < TRUSTED_PROXY_HOPS,
   };
   const app = Fastify(options);
