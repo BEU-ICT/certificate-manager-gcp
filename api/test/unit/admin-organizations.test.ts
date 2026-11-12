@@ -11,7 +11,11 @@ describe('audit log', () => {
     const lines: string[] = [];
     const destination = { write: (line: string) => void lines.push(line) };
     const ports = createFakes();
-    const app = buildApp({ ports, log: { level: 'info', destination } });
+    const app = buildApp({
+      ports,
+      adminRateLimitPerMin: 1000,
+      log: { level: 'info', destination },
+    });
     const headers = { authorization: `Bearer ${fakeToken('admin-7', 'admin')}` };
     const created = (
       await app.inject({

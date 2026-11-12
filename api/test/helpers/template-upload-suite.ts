@@ -230,14 +230,17 @@ export function describeTemplateUploadApi(
 
     it('counts as one request for the admin rate limiter', async () => {
       const { fakes, upload, good } = await setup();
-      let calls = 0;
+      const keys: string[] = [];
       const original = fakes.rateLimiter.consume.bind(fakes.rateLimiter);
-      fakes.rateLimiter.consume = (...args) => {
-        calls += 1;
-        return original(...args);
+      fakes.rateLimiter.consume = (key, ...args) => {
+        keys.push(key);
+        return original(key, ...args);
       };
       expect((await upload(good())).statusCode).toBe(201);
-      expect(calls).toBe(1);
+      // One count per scope: the IP pre-auth budget and the per-admin budget.
+      expect(keys.filter((k) => k.startsWith('admin-auth:ip:'))).toHaveLength(1);
+      expect(keys.filter((k) => k.startsWith('admin:'))).toHaveLength(1);
+      expect(keys).toHaveLength(2);
     });
 
     it('reports every issue of an invalid package as 422 TEMPLATE_INVALID and stores nothing', async () => {

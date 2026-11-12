@@ -1,13 +1,18 @@
-import { createHash } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest, RouteOptions } from 'fastify';
 import type { RateLimiter, TokenVerifier } from '../../ports/index.js';
 import { ForbiddenError, RateLimitedError, UnauthenticatedError } from '../../shared/errors.js';
+import { getClientIp } from '../client-ip.js';
+import {
+  ADMIN_PER_MIN,
+  ADMIN_PRE_AUTH_PER_MIN,
+  enforceRateLimit,
+  hashKeyPart,
+  type RateLimitMetrics,
+} from '../rate-limit/index.js';
 import { parseBearerToken } from './bearer.js';
 
 export const ADMIN_PREFIX = '/api/v1/admin';
 const ADMIN_ROLE = 'admin';
-const WINDOW_MS = 60_000;
-const DEFAULT_PRE_AUTH_PER_MIN = 60;
 
 /** Identity attached to every request that passed the admin guard. */
 export interface AdminPrincipal {
@@ -32,6 +37,9 @@ export interface AdminGuardDeps {
   /** Throttles by client IP before any token is verified. */
   rateLimiter?: RateLimiter | undefined;
   preAuthRequestsPerMin?: number | undefined;
+  /** Budget per authenticated admin uid, enforced after authentication (default 60). */
+  adminRequestsPerMin?: number | undefined;
+  metrics?: RateLimitMetrics | undefined;
   /** Epoch milliseconds; defaults to `Date.now`. */
   now?: (() => number) | undefined;
 }
@@ -57,8 +65,6 @@ function stateOf(app: FastifyInstance): GuardState {
   return state;
 }
 
-const hashIp = (ip: string) => createHash('sha256').update(ip).digest('hex').slice(0, 32);
-
 async function authenticate(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -74,13 +80,19 @@ async function authenticate(
   };
 
   if (deps.rateLimiter) {
-    const result = await deps.rateLimiter.consume(`admin-auth:ip:${hashIp(request.ip)}`, {
-      limit: deps.preAuthRequestsPerMin ?? DEFAULT_PRE_AUTH_PER_MIN,
-      windowMs: WINDOW_MS,
-    });
-    if (!result.allowed) {
-      reject('rate-limited');
-      throw new RateLimitedError(Math.max(1, Math.ceil((result.resetAt.getTime() - now()) / 1000)));
+    try {
+      await enforceRateLimit({
+        limiter: deps.rateLimiter,
+        scope: 'admin-preauth',
+        key: `admin-auth:ip:${hashKeyPart(getClientIp(request))}`,
+        limit: deps.preAuthRequestsPerMin ?? ADMIN_PRE_AUTH_PER_MIN,
+        now,
+        reply,
+        metrics: deps.metrics,
+      });
+    } catch (error) {
+      if (error instanceof RateLimitedError) reject('rate-limited');
+      throw error;
     }
   }
 
@@ -99,6 +111,23 @@ async function authenticate(
   if (identity.role !== ADMIN_ROLE) {
     reject('forbidden', identity.uid);
     throw new ForbiddenError();
+  }
+  if (deps.rateLimiter) {
+    // Budget per verified uid, never per IP: two admins behind one NAT do not share it.
+    try {
+      await enforceRateLimit({
+        limiter: deps.rateLimiter,
+        scope: 'admin',
+        key: `admin:${identity.uid}`,
+        limit: deps.adminRequestsPerMin ?? ADMIN_PER_MIN,
+        now,
+        reply,
+        metrics: deps.metrics,
+      });
+    } catch (error) {
+      if (error instanceof RateLimitedError) reject('rate-limited', identity.uid);
+      throw error;
+    }
   }
   request.admin = { uid: identity.uid, email: identity.email };
   request.adminUid = identity.uid;
