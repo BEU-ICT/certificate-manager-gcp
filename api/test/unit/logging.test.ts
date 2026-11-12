@@ -80,6 +80,13 @@ describe('logging', () => {
     expect(sink.raw()).not.toContain('/items/abc');
   });
 
+  it('writes requestId exactly once per line', async () => {
+    const sink = capture();
+    app = buildApp({ log: { destination: sink.stream } });
+    await app.inject({ method: 'GET', url: '/internal/healthz' });
+    expect(sink.raw().match(/"requestId"/g)).toHaveLength(1);
+  });
+
   it('omits adminUid for anonymous requests', async () => {
     const sink = capture();
     app = buildApp({ log: { destination: sink.stream } });
@@ -201,4 +208,32 @@ describe('logging overhead', () => {
     await logging.close();
     expect(best).toBeLessThan(1);
   }, 30_000);
+});
+
+describe('error reporting', () => {
+  it('logs unexpected errors as ReportedErrorEvent with the stack in message and serviceContext', async () => {
+    const sink = capture();
+    app = buildApp({
+      log: {
+        destination: sink.stream,
+        serviceContext: { service: 'certificates-api', version: 'abc1234' },
+      },
+    });
+    app.get('/boom', () => {
+      throw new Error('db exploded');
+    });
+    const res = await app.inject({ method: 'GET', url: '/boom' });
+    const entry = sink.lines().find((l) => l['severity'] === 'ERROR');
+    expect(entry).toMatchObject({
+      '@type': 'type.googleapis.com/google.devtools.clouderrorreporting.v1beta1.ReportedErrorEvent',
+      serviceContext: { service: 'certificates-api', version: 'abc1234' },
+    });
+    expect(entry?.['message']).toContain('Error: db exploded');
+    expect(entry?.['message']).toContain('at ');
+    expect(res.statusCode).toBe(500);
+    expect(res.body).not.toContain('db exploded');
+    expect(res.body).not.toContain(' at ');
+    // INFO lines do not carry the service context
+    expect(sink.lines().find((l) => l['severity'] === 'INFO')).not.toHaveProperty('serviceContext');
+  });
 });

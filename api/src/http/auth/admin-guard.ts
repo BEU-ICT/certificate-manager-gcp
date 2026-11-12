@@ -68,7 +68,7 @@ async function authenticate(
   const route = request.routeOptions.url ?? '(unmatched)';
   const reject = (reason: string, uid?: string): void => {
     request.log.warn(
-      { requestId: request.id, route, reason, ...(uid !== undefined && { uid }) },
+      { route, reason, ...(uid !== undefined && { adminUid: uid }) },
       'admin authentication failed',
     );
   };
@@ -102,7 +102,7 @@ async function authenticate(
   }
   request.admin = { uid: identity.uid, email: identity.email };
   request.adminUid = identity.uid;
-  request.log.info({ requestId: request.id, route, uid: identity.uid }, 'admin authenticated');
+  request.log.info({ route, adminUid: identity.uid }, 'admin authenticated');
 }
 
 /**

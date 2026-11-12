@@ -21,6 +21,7 @@ Every variable validated at boot (issue BEU-ICT/certificate-manager#236 §6, `ap
 | `EMAIL_API_KEY`                                                   | **secret** | Secret Manager `EMAIL_API_KEY` (Brevo API key)                                        |
 | `EMAIL_FROM_ADDRESS`, `EMAIL_FROM_NAME`, `EMAIL_REPLY_TO`         | env        | sender identity of the Workspace domain, chosen by the owner                          |
 | `EMAIL_DAILY_CAP`                                                 | env        | `300` (below the provider daily limit)                                                |
+| `EMAIL_FALLBACK_DAILY_CAP`                                        | env        | `300` (cap of the fallback provider)                                                  |
 | `RATE_LIMIT_PUBLIC_PER_MIN`                                       | env        | `10` (default)                                                                        |
 | `RATE_LIMIT_ADMIN_PER_MIN`                                        | env        | `60` (allowed 30-100)                                                                 |
 | `TEMPLATE_CACHE_MB`                                               | env        | `40` (default; template asset cache budget, 1-256)                                    |

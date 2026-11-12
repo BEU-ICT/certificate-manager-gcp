@@ -15,6 +15,7 @@ import type {
   AdminUserDirectory,
   CertificateRepository,
   Clock,
+  EmailQuotaStore,
   EmailSender,
   EventBus,
   EventRepository,
@@ -44,6 +45,7 @@ export interface RepositoryPorts {
   readonly certificates: CertificateRepository;
   readonly migrationState: MigrationStateStore;
   readonly idempotency: IdempotencyStore;
+  readonly emailQuota: EmailQuotaStore;
 }
 
 /** Result of the `QUEUE_ADAPTER` selection. */
@@ -69,6 +71,7 @@ export interface Ports {
   certificates: CertificateRepository;
   migrationState: MigrationStateStore;
   idempotency: IdempotencyStore;
+  emailQuota: EmailQuotaStore;
   storage: StorageGateway;
   taskQueue: TaskQueue;
   scheduler: Scheduler;

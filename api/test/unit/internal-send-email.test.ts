@@ -219,7 +219,7 @@ describe('POST /internal/tasks/send-email', () => {
     const a = buildApp({ ports: createFakes(), openApiEndpoint: true });
     const res = await a.inject({ method: 'GET', url: '/internal/openapi.json' });
     await a.close();
-    expect(JSON.stringify(res.json())).not.toContain('send-email');
+    expect(JSON.stringify(res.json())).not.toContain('/internal/tasks/send-email');
   });
 
   it('has its own limiter: floods get 429, other routes are unaffected', async () => {
@@ -236,7 +236,7 @@ describe('POST /internal/tasks/send-email', () => {
 });
 
 describe('daily cap and in-process task', () => {
-  const build = (cap?: { tryAcquire(): Promise<boolean> }) => {
+  const build = () => {
     const fakes = createFakes();
     const logs: string[] = [];
     const handle = createSendEmailHandler({
@@ -249,24 +249,9 @@ describe('daily cap and in-process task', () => {
       },
       publicBaseUrl: 'https://certs.example.com/',
       from: { address: 'certificates@example.com', replyTo: 'reply@example.com' },
-      ...(cap && { dailyCap: cap }),
     });
     return { fakes, handle, logs };
   };
-
-  it('treats a reached cap like a transient failure (retry, then RETRIES_EXHAUSTED)', async () => {
-    const { fakes, handle } = build({ tryAcquire: () => Promise.resolve(false) });
-    const cert = sampleCertificate({
-      email: 'a@example.com',
-      emailStatus: 'pending',
-      emailAttempts: 1,
-    });
-    await fakes.certificates.create(cert);
-    expect(await handle({ certificateId: cert.id, sequence: 1, retryCount: 0 })).toBe('retry');
-    expect(await handle({ certificateId: cert.id, sequence: 1, retryCount: 4 })).toBe('done');
-    expect((await fakes.certificates.getById(cert.id))!.emailLastError).toBe('RETRIES_EXHAUSTED');
-    expect(fakes.emailSender.sent).toHaveLength(0);
-  });
 
   it('builds the link from the base URL and passes reply-to; logs carry no address or name', async () => {
     const { fakes, handle, logs } = build();

@@ -28,6 +28,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/certificates/bulk': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Issue up to 500 certificates at once
+     * @description All or nothing. Resolves the template once, validates (strict per-item schema, same normalisation as single issuance) and fit-checks every item, then stores all certificates in one atomic batch and publishes `certificate.issued` per certificate in request order. `1 <= items.length <= 500`, otherwise 400 `VALIDATION_FAILED`. A per-item `subject` overrides the common `subject`; every item needs one. 422 `BULK_INVALID` lists all item problems as `details[{ path: "items[17].ownerName", message, code }]`, at most 200; `error.truncated: true` marks that more exist; nothing is stored. Reference errors (`EVENT_ORG_MISMATCH`, `TEMPLATE_MISMATCH`, `TEMPLATE_NOT_FOUND`) are 422 as in single issuance. Counts as one request for rate limiting. Body limit 1 MB, timeout 55 s. 404 while the `bulkIssuance` feature is off. Supports `Idempotency-Key`: a replay returns the same `items` with `Idempotent-Replayed: true`. The response contains no e-mail addresses.
+     */
+    post: operations['issueCertificatesBulk'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/certificates/count': {
     parameters: {
       query?: never;
@@ -324,6 +344,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/public/certificates/{id}/pdf': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Open the PDF of a certificate
+     * @description Public. Generates the PDF on first use (single-flight per certificate) and redirects with `302` to the public bucket object; later calls redirect without rendering. A malformed and an unknown ID return the same 404; revoked certificates return 410. While `FEATURE_PUBLIC_PDF_GENERATION` is off, certificates without a PDF answer 503; existing PDFs still redirect. Storage or database outages answer 503 with `Retry-After: 5`. Never cached (`Cache-Control: no-store`).
+     */
+    get: operations['getPublicCertificatePdf'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/internal/healthz': {
     parameters: {
       query?: never;
@@ -495,6 +535,11 @@ export interface components {
         message: string;
         /** @description Request correlation ID; equals the X-Request-Id header. */
         requestId: string;
+        /**
+         * @description BULK_INVALID: present and true when more problems exist than the (at most 200) listed in details.
+         * @constant
+         */
+        truncated?: true;
       };
     };
     ErrorDetail: {
@@ -972,6 +1017,152 @@ export interface operations {
       };
       /** @description CONFLICT: conflicts with the current state */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description Well-formed request that violates a business rule (domain specific code) */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  issueCertificatesBulk: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description Optional retry key, scoped to the calling administrator and kept for 24 hours. Repeating a completed request with the same key returns the stored response with `Idempotent-Replayed: true`; the same key with another body yields 422 `IDEMPOTENCY_KEY_REUSED`; a concurrent duplicate yields 409 `REQUEST_IN_PROGRESS`. */
+        'idempotency-key'?: string;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          eventId: string;
+          /** @description Items `{ ownerName, email?, subject?, skills?, issuedAt? }` (strict; same rules as single issuance), validated individually; see 422 BULK_INVALID. */
+          items: unknown[];
+          organizationId: string;
+          /** @description Default subject; an item `subject` overrides it. Every item needs one of the two. */
+          subject?: string;
+          /** @description Template reference (`<name>-v<n>`). Omit to use the latest version for the organization, event and type. */
+          templateId?: string;
+          /** @enum {string} */
+          type:
+            | 'attendance'
+            | 'appreciation'
+            | 'thanks'
+            | 'distinction'
+            | 'instructor'
+            | 'student'
+            | 'team'
+            | 'other';
+        };
+      };
+    };
+    responses: {
+      /** @description The created certificates, in request order */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @description Number of certificates created. */
+            created: number;
+            /** @description In request order. */
+            items: {
+              /** @description Whether an e-mail address is stored; the address is never returned. */
+              hasEmail: boolean;
+              id: string;
+              ownerName: string;
+            }[];
+          };
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description PAYLOAD_TOO_LARGE */
+      413: {
         headers: {
           [name: string]: unknown;
         };
@@ -2774,6 +2965,73 @@ export interface operations {
       };
       /** @description NOT_FOUND: resource does not exist */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  getPublicCertificatePdf: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Redirect to the PDF object (`Location`) */
+      302: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': string;
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description GONE: resource is no longer available */
+      410: {
         headers: {
           [name: string]: unknown;
         };
