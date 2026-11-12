@@ -1,0 +1,87 @@
+{
+  "$comment": "legacyTemplate -> new template reference (BEU-ICT/certificate-manager#404). Consumed by the MySQL migration (#411). Validated against docs/migration/template-inventory.md by `npm run migration:validate-template-mapping`. All entries are proposals until the product owner approves them (see the inventory, section 8). `reference` is the expected first version; the server assigns the real number on upload.",
+  "organization": { "name": "BEU ICT Lab", "slug": "beu-ict-lab" },
+  "templates": {
+    "certificate-student": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-7",
+      "type": "student",
+      "reference": "beu-ict-lab-boostcamp-7-student-v0"
+    },
+    "certificate-student-825": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-8",
+      "type": "student",
+      "reference": "beu-ict-lab-boostcamp-8-student-v0"
+    },
+    "certificate-instructor": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-7",
+      "type": "instructor",
+      "reference": "beu-ict-lab-boostcamp-7-instructor-v0"
+    },
+    "certificate-instructor-825": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-8",
+      "type": "instructor",
+      "reference": "beu-ict-lab-boostcamp-8-instructor-v0"
+    },
+    "certificate-distinct": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-7",
+      "type": "distinction",
+      "reference": "beu-ict-lab-boostcamp-7-distinction-v0"
+    },
+    "certificate-distinct-825": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-8",
+      "type": "distinction",
+      "reference": "beu-ict-lab-boostcamp-8-distinction-v0"
+    },
+    "certificate-team": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-7",
+      "type": "team",
+      "reference": "beu-ict-lab-boostcamp-7-team-v0"
+    },
+    "certificate-team-825": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "boostcamp-8",
+      "type": "team",
+      "reference": "beu-ict-lab-boostcamp-8-team-v0"
+    },
+    "conf-thanks": {
+      "status": "pending",
+      "reason": "The conference it was made for is not named in the code (background hosted on Cloudinary, uploaded 2024-04-26). Ask the product owner; map it to an event of type thanks, or mark it not migrated if no certificate uses it."
+    },
+    "conf-ix-appreciation": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "ix-global-logistics-conference",
+      "type": "appreciation",
+      "reference": "beu-ict-lab-ix-global-logistics-conference-appreciation-v0"
+    },
+    "conf-ix-attendance": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "ix-global-logistics-conference",
+      "type": "attendance",
+      "reference": "beu-ict-lab-ix-global-logistics-conference-attendance-v0"
+    },
+    "conf-ix-thanks": {
+      "status": "migrate",
+      "organizationSlug": "beu-ict-lab",
+      "eventSlug": "ix-global-logistics-conference",
+      "type": "thanks",
+      "reference": "beu-ict-lab-ix-global-logistics-conference-thanks-v0"
+    }
+  }
+}
