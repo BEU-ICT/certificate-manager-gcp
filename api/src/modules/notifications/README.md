@@ -65,7 +65,7 @@ In-process queue (`QUEUE_ADAPTER=in-process`): `compose.ts` builds one handler a
 
 A reserved slot that is not delivered (permanent or transient provider error, misconfiguration) is released, so retries do not count twice; a crash between reserve and send can leak one slot (accepted). Cost: one read plus one write per e-mail. Counter documents carry `expiresAt` (end of the day + 2 days) for the TTL policy in `infra/firestore.indexes.json`. Provider fallback on provider errors (not on the cap) and the Brevo adapter are BEU-ICT/certificate-manager#373.
 
-Left for the other tasks: the localised template (BEU-ICT/certificate-manager#376) is only `PlainMessageComposer` (plain az/en text and escaped HTML).
+The localised template is described in the next section.
 
 ## Admin resend (BEU-ICT/certificate-manager#377)
 
@@ -79,3 +79,15 @@ Order of work:
 4. A changed address is logged as `audit` action `certificate.email_changed` (entity ID and admin UID only, never addresses).
 
 The send worker ignores superseded tasks (`sequence < emailAttempts`), so an older queued task cannot send after a resend.
+
+## E-mail template (BEU-ICT/certificate-manager#376)
+
+`TemplateMessageComposer` (`email-templates.ts`) is the default `MessageComposer`; `renderCertificateEmail` returns `{ subject, text, html }` for `az` and `en`. No template engine: the `markup` tagged template escapes every interpolated string (`& < > " '`), only nested `markup` results are kept as HTML. The text part is not HTML-escaped. Header-bound and displayed values (subject, names, URL, contact) have all control characters including CR/LF turned into single spaces (`oneLine`); the event name is truncated to 120 characters with an ellipsis in the subject only.
+
+Content: subject `Your certificate: <event>` / `Sertifikatınız: <event>`; greeting, one sentence (issued by organisation for event), a button plus the plain URL `<PUBLIC_BASE_URL>/c/<id>` (id only, no query), the reason line and the contact line with the Reply-To address (`EMAIL_REPLY_TO`, else the From address). Single column, inline CSS, no images, no tracking, `lang` attribute, well under 10 KB.
+
+Language: the `emailLanguage` of the certificate's event. The certificate snapshot does not carry it, so `compose.ts` passes `emailLanguageOf` (`services.events.get(eventId).emailLanguage`) to the handler; if the lookup fails or is not wired the default `az` is used (a warning with the error class only is logged). A future snapshot of the language on the certificate would remove this read.
+
+Preview: `npm run email:preview -- <az|en> [outDir]` writes `certificate-<lang>.html` and `.txt` with sample data to `<os tmpdir>/cm-email-preview` (outside the repository).
+
+The Azerbaijani wording needs native-speaker review (acceptance criterion of the issue).

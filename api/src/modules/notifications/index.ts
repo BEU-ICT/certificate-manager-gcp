@@ -22,11 +22,16 @@ export {
   type SendEmailOutcome,
   type SendEmailRequest,
 } from './send-email-handler.js';
+export type { ComposedContent, MessageComposer, MessageLinks } from './message-composer.js';
 export {
-  PlainMessageComposer,
-  type ComposedContent,
-  type MessageComposer,
-} from './message-composer.js';
+  TemplateMessageComposer,
+  escapeHtml,
+  markup,
+  oneLine,
+  renderCertificateEmail,
+  truncate,
+  type TemplateInput,
+} from './email-templates.js';
 export { SendEmailRetryError, createInProcessSendEmailTask } from './in-process-task.js';
 export {
   CERTIFICATE_REVOKED,
