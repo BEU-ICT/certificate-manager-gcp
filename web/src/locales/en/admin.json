@@ -512,6 +512,131 @@
       "qrDownload": "Download QR code as PNG",
       "newTab": "opens in a new tab"
     },
+    "importWizard": {
+      "title": "Import certificates from a file",
+      "steps": {
+        "label": "Import steps",
+        "item": "{{number}}. {{label}}",
+        "completed": "completed",
+        "select": "File and target",
+        "preview": "Preview",
+        "submit": "Import"
+      },
+      "subject": {
+        "label": "Common subject",
+        "hint": "Optional. Used for rows without their own subject."
+      },
+      "file": {
+        "label": "Spreadsheet file (.xlsx or .csv)",
+        "required": "Choose a file to import."
+      },
+      "template": {
+        "intro": "Need a template?",
+        "xlsx": "Download template (.xlsx)",
+        "csv": "Download template (.csv)"
+      },
+      "continue": "Continue to preview",
+      "back": "Back",
+      "start": "Import {{n}} certificates",
+      "blocking": {
+        "tooLarge": "The file is larger than {{max}} MB.",
+        "legacyXls": "Old .xls files are not supported. Save the file as .xlsx or .csv.",
+        "macroEnabled": "Macro-enabled files are not supported. Save the file as .xlsx or .csv.",
+        "unsupportedType": "Only .xlsx and .csv files are supported.",
+        "invalidFile": "The file could not be read.",
+        "invalidEncoding": "The file is not UTF-8 text. Save it as CSV UTF-8.",
+        "empty": "The file has no rows.",
+        "tooManyRows": "The file has more than {{max}} rows.",
+        "tooManyColumns": "The file has more than {{max}} columns.",
+        "missingOwnerName": "The file needs a column with the full name."
+      },
+      "notice": {
+        "unknownColumn": "Column \"{{column}}\" is not recognised and is ignored.",
+        "duplicateColumn": "Column \"{{column}}\" appears more than once; only the first one is used.",
+        "missingColumn": "The file has no \"{{column}}\" column."
+      },
+      "issue": {
+        "required": "Required.",
+        "tooLong": "At most {{max}} characters.",
+        "tooMany": "At most {{max}} items.",
+        "future": "The date is in the future.",
+        "invalid": "Invalid value.",
+        "subjectRequired": "Required (or enter a common subject)."
+      },
+      "status": {
+        "valid": "Valid",
+        "invalid": "Invalid",
+        "excluded": "Excluded",
+        "sent": "Imported"
+      },
+      "counts": {
+        "label": "Summary of the file",
+        "total": "Rows",
+        "valid": "Valid",
+        "invalid": "Invalid",
+        "withEmail": "With e-mail",
+        "toSend": "To import"
+      },
+      "preview": {
+        "errorsOnly": "Show errors only",
+        "downloadReport": "Download error report (CSV)",
+        "noErrors": "No rows to show.",
+        "invalidNotSent": "Invalid rows are not imported. Fix the file and choose it again, or leave them out.",
+        "caption": "Rows of the file ({{shown}} of {{total}} shown)",
+        "scrollRegion": "Scrollable table",
+        "include": "Import row {{row}}",
+        "columns": {
+          "include": "Import",
+          "row": "Row",
+          "status": "Status",
+          "ownerName": "Full name",
+          "email": "E-mail",
+          "subject": "Subject",
+          "skills": "Skills",
+          "issuedAt": "Date"
+        }
+      },
+      "progress": {
+        "label": "Import progress",
+        "value": "{{done}} of {{total}} rows",
+        "sending": "Importing: {{done}} of {{total}} rows done.",
+        "stopped": "Stopped: {{done}} of {{total}} rows done.",
+        "chunk": "Part {{number}} ({{rows}} rows)",
+        "pending": "Waiting",
+        "running": "Sending…",
+        "done": "Done",
+        "replayed": "Done (already created earlier)",
+        "failed": "Failed",
+        "waiting": "Too many requests, resuming in {{seconds}} s…",
+        "retrying": "Connection problem, retrying (attempt {{attempt}})…"
+      },
+      "failure": {
+        "invalid": "The server rejected {{n}} rows. Nothing from this part was created. Exclude the rows or go back, then resume.",
+        "pinned": "The outcome of the failed part is unknown, so its rows cannot be excluded now; the same rows are sent again with the same key. Resume the import.",
+        "unknown": "The import stopped because of an unexpected error.",
+        "rowExclude": "Exclude row {{row}} ({{name}})",
+        "resume": "Resume import",
+        "backToPreview": "Back to preview"
+      },
+      "report": {
+        "row": "Row",
+        "ownerName": "Full name",
+        "column": "Column",
+        "problem": "Problem"
+      },
+      "leave": {
+        "title": "Leave while importing?",
+        "message": "The import is still running. Leaving now stops it; parts already sent stay created.",
+        "confirm": "Leave",
+        "stay": "Stay"
+      },
+      "summary": {
+        "created": "Created certificates: {{formatted}}",
+        "emails": "E-mails queued: {{formatted}}",
+        "viewList": "View imported certificates",
+        "another": "Import another file"
+      }
+    },
     "issueForm": {
       "title": "Issue a certificate",
       "fields": {
