@@ -28,3 +28,15 @@ export {
   type MessageComposer,
 } from './message-composer.js';
 export { SendEmailRetryError, createInProcessSendEmailTask } from './in-process-task.js';
+export {
+  CERTIFICATE_REVOKED,
+  DefaultEmailResendService,
+  EMAIL_IN_PROGRESS,
+  EMAIL_REQUIRED,
+  RESEND_LIMIT,
+  RESEND_WINDOW_MS,
+  type EmailResendDeps,
+  type EmailResendService,
+  type ResendCertificateState,
+  type ResendOutcome,
+} from './resend.js';

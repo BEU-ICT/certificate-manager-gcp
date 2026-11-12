@@ -12,6 +12,8 @@ import type {
   MarkRevokedResult,
   Page,
   PageRequest,
+  PrepareEmailResendInput,
+  PrepareEmailResendResult,
   ReserveEmailSendResult,
   SetPdfPathResult,
 } from '../../ports/index.js';
@@ -326,6 +328,40 @@ export class FirestoreCertificateRepository implements CertificateRepository {
       const sequence = attempts + 1;
       tx.update(ref, { emailAttempts: sequence, updatedAt: ts(options.at) });
       return { outcome: 'reserved', sequence };
+    });
+  }
+
+  prepareEmailResend(
+    id: CertificateId,
+    input: PrepareEmailResendInput,
+  ): Promise<PrepareEmailResendResult> {
+    const ref = this.collection.doc(id);
+    return this.db.runTransaction(async (tx): Promise<PrepareEmailResendResult> => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return { outcome: 'not_found' };
+      const data = snap.data() as CertificateDocument;
+      if (data.status !== 'active') return { outcome: 'revoked' };
+      const address = input.email ?? data.email;
+      if (address === undefined || address === '') return { outcome: 'email_required' };
+      if (
+        data.emailStatus === 'pending' &&
+        data.updatedAt.toMillis() >= input.stuckBefore.getTime()
+      ) {
+        return { outcome: 'in_progress' };
+      }
+      const sequence = (data.emailAttempts ?? 0) + 1;
+      tx.update(ref, {
+        ...(input.email !== undefined && { email: input.email }),
+        emailStatus: 'pending',
+        emailLastError: FieldValue.delete(),
+        emailAttempts: sequence,
+        updatedAt: ts(input.at),
+      });
+      return {
+        outcome: 'reserved',
+        sequence,
+        emailChanged: input.email !== undefined && input.email !== data.email,
+      };
     });
   }
 

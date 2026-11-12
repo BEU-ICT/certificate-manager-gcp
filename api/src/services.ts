@@ -6,6 +6,7 @@ import {
   type FitChecker,
 } from './modules/certificates/index.js';
 import { DefaultEventService } from './modules/events/index.js';
+import { DefaultEmailResendService } from './modules/notifications/index.js';
 import { DefaultOrganizationService } from './modules/organizations/index.js';
 import {
   CachedTemplateAssets,
@@ -112,6 +113,13 @@ export function buildServices(
     ports.clock,
     ports.eventBus,
   );
+  const certificateService = new DefaultCertificateService(ports.certificates, ports.clock);
+  const emailResend = new DefaultEmailResendService({
+    certificates: certificateService,
+    taskQueue: ports.taskQueue,
+    rateLimiter: ports.rateLimiter,
+    clock: ports.clock,
+  });
   const formatters = createFormatterRegistry();
   const { fieldsLayer, checkFit: fitChecker } = createFields({ formatters });
   const renderers = new InMemoryRendererRegistry();
@@ -149,7 +157,8 @@ export function buildServices(
     eventReferences,
     templates,
     templateAssets,
-    certificates: new DefaultCertificateService(ports.certificates, ports.clock),
+    certificates: certificateService,
+    emailResend,
     idempotency: ports.idempotency,
     certificateQueries,
     revocation,

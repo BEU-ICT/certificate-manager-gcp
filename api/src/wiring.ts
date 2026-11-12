@@ -4,6 +4,7 @@ import type {
   CertificateService,
   RevocationService,
 } from './modules/certificates/index.js';
+import type { EmailResendService } from './modules/notifications/index.js';
 import type { PdfService, PublicPdfService } from './modules/pdf/index.js';
 import type { StatsService } from './modules/stats/index.js';
 import type { EventService } from './modules/events/index.js';
@@ -97,6 +98,8 @@ export interface Services {
   readonly templateAssets: TemplateAssets;
   /** Certificates module (public lookup now; issuance and admin APIs follow in the certificates epic). */
   readonly certificates: CertificateService;
+  /** Admin resend of the certificate e-mail (notifications module). */
+  readonly emailResend: EmailResendService;
   /** Idempotency-Key records for `withIdempotency` (http/idempotency.ts). */
   readonly idempotency: IdempotencyStore;
   /** Admin read side of certificates: list, count, detail (certificates module). */

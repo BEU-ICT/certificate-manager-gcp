@@ -219,7 +219,7 @@ describe('POST /internal/tasks/send-email', () => {
     const a = buildApp({ ports: createFakes(), openApiEndpoint: true });
     const res = await a.inject({ method: 'GET', url: '/internal/openapi.json' });
     await a.close();
-    expect(JSON.stringify(res.json())).not.toContain('send-email');
+    expect(JSON.stringify(res.json())).not.toContain('/internal/tasks/send-email');
   });
 
   it('has its own limiter: floods get 429, other routes are unaffected', async () => {

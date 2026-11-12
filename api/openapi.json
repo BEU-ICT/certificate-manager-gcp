@@ -530,6 +530,31 @@
         "required": ["name"],
         "type": "object"
       },
+      "ResendEmailBodyInput": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "description": "Corrected address; replaces the stored one. Omit to resend to the stored address.",
+            "maxLength": 2000,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ResendEmailResult": {
+        "additionalProperties": false,
+        "properties": {
+          "emailAttempts": {
+            "description": "Sequence of the queued send (names the task).",
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "emailStatus": { "const": "pending", "type": "string" }
+        },
+        "required": ["emailStatus", "emailAttempts"],
+        "type": "object"
+      },
       "RevokeCertificateBodyInput": {
         "additionalProperties": false,
         "properties": {
@@ -1581,6 +1606,92 @@
         },
         "security": [{ "bearerAuth": [] }],
         "summary": "Get a certificate (admin detail)"
+      }
+    },
+    "/api/v1/admin/certificates/{id}/resend-email": {
+      "post": {
+        "description": "Queues a new send (`202`). Allowed for `failed`, `sent` and `skipped` (a `skipped` certificate with a supplied address gets its first send); a `pending` e-mail blocks the call unless it has been pending for more than 2 hours. Optional `email` replaces the stored address (audit line `certificate.email_changed`, no addresses logged). Errors: 409 `CONFLICT` with detail `CERTIFICATE_REVOKED` or `EMAIL_IN_PROGRESS`, 422 `EMAIL_REQUIRED`, 429 `RATE_LIMITED` (at most 5 resends per certificate per 24 hours; refused attempts count; the counter is per instance with the in-process limiter), 503 `UNAVAILABLE` when the task queue refuses the task (the certificate is then `failed` with `ENQUEUE_FAILED`; retry).",
+        "operationId": "resendCertificateEmail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "maxLength": 512, "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ResendEmailBodyInput" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ResendEmailResult" } }
+            },
+            "description": "The send was queued"
+          },
+          "400": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "VALIDATION_FAILED: malformed or invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAUTHENTICATED: missing or invalid credentials"
+          },
+          "403": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "FORBIDDEN: not allowed to perform this action"
+          },
+          "404": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "NOT_FOUND: resource does not exist"
+          },
+          "409": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "CONFLICT: conflicts with the current state"
+          },
+          "422": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "Well-formed request that violates a business rule (domain specific code)"
+          },
+          "429": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "RATE_LIMITED: retry after the Retry-After header"
+          },
+          "500": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "INTERNAL: unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ErrorBody" } }
+            },
+            "description": "UNAVAILABLE: retry after the Retry-After header"
+          }
+        },
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Resend the certificate e-mail"
       }
     },
     "/api/v1/admin/certificates/{id}/revoke": {

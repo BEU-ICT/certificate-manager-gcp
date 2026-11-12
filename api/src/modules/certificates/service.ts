@@ -1,7 +1,10 @@
-import type { CertificateRepository, Clock } from '../../ports/index.js';
+import type { CertificateRepository, Clock, PrepareEmailResendResult } from '../../ports/index.js';
 import type { Certificate } from '../../shared/domain.js';
 import { NotFoundError } from '../../shared/errors.js';
 import { parseCertificateId } from '../../shared/ids.js';
+
+/** A `pending` e-mail older than this (by `updatedAt`) is considered stuck and may be resent. */
+export const EMAIL_STUCK_AFTER_MS = 2 * 60 * 60 * 1000;
 
 export interface CertificateService {
   /**
@@ -18,6 +21,13 @@ export interface CertificateService {
    * Costs one repository transaction (one read, one write).
    */
   reserveEmailSend(id: string, options?: { resend?: boolean }): Promise<number | null>;
+  /**
+   * Admin resend, one repository transaction (one read, one write): checks the preconditions
+   * (see `CertificateRepository.prepareEmailResend`), stores the corrected `email` if given,
+   * sets `emailStatus=pending`, clears `emailLastError` and reserves the next sequence. Returns
+   * the outcome; the caller maps refusals to errors. `email` must already be validated/lowercased.
+   */
+  prepareEmailResend(id: string, options?: { email?: string }): Promise<PrepareEmailResendResult>;
   /**
    * Records that the e-mail could not be handed to the queue: `emailStatus=failed`,
    * `emailLastError=code`. `NotFoundError` for an unknown or malformed ID.
@@ -50,6 +60,18 @@ export class DefaultCertificateService implements CertificateService {
     });
     if (result.outcome === 'not_found') throw new NotFoundError('Certificate not found');
     return result.outcome === 'reserved' ? result.sequence : null;
+  }
+
+  async prepareEmailResend(
+    id: string,
+    options: { email?: string } = {},
+  ): Promise<PrepareEmailResendResult> {
+    const at = this.clock.now();
+    return this.certificates.prepareEmailResend(parseCertificateId(id), {
+      at,
+      stuckBefore: new Date(at.getTime() - EMAIL_STUCK_AFTER_MS),
+      ...(options.email !== undefined && { email: options.email }),
+    });
   }
 
   async markEmailFailed(id: string, code: string): Promise<void> {

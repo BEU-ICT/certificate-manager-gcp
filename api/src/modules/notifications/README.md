@@ -66,3 +66,16 @@ In-process queue (`QUEUE_ADAPTER=in-process`): `compose.ts` builds one handler a
 A reserved slot that is not delivered (permanent or transient provider error, misconfiguration) is released, so retries do not count twice; a crash between reserve and send can leak one slot (accepted). Cost: one read plus one write per e-mail. Counter documents carry `expiresAt` (end of the day + 2 days) for the TTL policy in `infra/firestore.indexes.json`. Provider fallback on provider errors (not on the cap) and the Brevo adapter are BEU-ICT/certificate-manager#373.
 
 Left for the other tasks: the localised template (BEU-ICT/certificate-manager#376) is only `PlainMessageComposer` (plain az/en text and escaped HTML).
+
+## Admin resend (BEU-ICT/certificate-manager#377)
+
+`POST /api/v1/admin/certificates/{id}/resend-email` (`src/http/routes/admin-certificate-resend-email.ts`, service `DefaultEmailResendService` in `resend.ts`, exposed as `Services.emailResend`). Body `{ email? }`, strict; the address is validated and lowercased with the issuance `emailSchema`. Response `202 { emailStatus: "pending", emailAttempts }`.
+
+Order of work:
+
+1. Throttle: `RateLimiter.consume("email-resend:<certificateId>", 5 per 24 h)`, else `429 RATE_LIMITED` with `Retry-After`. Every attempt that passes ID validation counts, including attempts later refused with 409/422 (keeps the check to the limiter and avoids a second read). With the in-process limiter the counter is per instance and lost on restart (effective limit 5 x instances); a shared `RateLimiter` adapter would make it exact.
+2. `certificates.prepareEmailResend` = `CertificateRepository.prepareEmailResend`, one transaction (one read, one write), so concurrent resends cannot both pass: unknown ID `404`; not `active` `409 CONFLICT` (detail `CERTIFICATE_REVOKED`); no stored or supplied address `422 EMAIL_REQUIRED`; `pending` with `updatedAt` newer than 2 hours `409 CONFLICT` (detail `EMAIL_IN_PROGRESS`). Otherwise it stores the address, sets `pending`, clears `emailLastError` and increments `emailAttempts`. Allowed for `failed`, `sent`, `skipped` and a `pending` older than 2 hours.
+3. Enqueue `email-<id>-<emailAttempts>` (`dedupe: true`). A resend always gets a new number, so it never collides with Cloud Tasks' roughly one hour name reuse block. A `skipped` certificate (0 attempts) therefore gets sequence 1, exactly like a first send. If the queue refuses the task: the certificate is marked `failed` / `ENQUEUE_FAILED` and the route answers `503 UNAVAILABLE` (the address change is kept; the admin retries).
+4. A changed address is logged as `audit` action `certificate.email_changed` (entity ID and admin UID only, never addresses).
+
+The send worker ignores superseded tasks (`sequence < emailAttempts`), so an older queued task cannot send after a resend.

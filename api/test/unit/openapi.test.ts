@@ -41,6 +41,7 @@ describe('OpenAPI document', () => {
       '/api/v1/admin/certificates/bulk',
       '/api/v1/admin/certificates/count',
       '/api/v1/admin/certificates/{id}',
+      '/api/v1/admin/certificates/{id}/resend-email',
       '/api/v1/admin/certificates/{id}/revoke',
       '/api/v1/admin/events',
       '/api/v1/admin/events/{id}',

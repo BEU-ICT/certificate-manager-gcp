@@ -5,6 +5,8 @@ import type {
   MarkRevokedResult,
   Page,
   PageRequest,
+  PrepareEmailResendInput,
+  PrepareEmailResendResult,
   ReserveEmailSendResult,
   SetPdfPathResult,
 } from '../../ports/index.js';
@@ -173,6 +175,28 @@ export class FakeCertificateRepository implements CertificateRepository {
     c.emailAttempts += 1;
     c.updatedAt = new Date(options.at);
     return Promise.resolve({ outcome: 'reserved', sequence: c.emailAttempts });
+  }
+
+  prepareEmailResend(
+    id: CertificateId,
+    input: PrepareEmailResendInput,
+  ): Promise<PrepareEmailResendResult> {
+    const c = this.byId.get(id);
+    if (!c) return Promise.resolve({ outcome: 'not_found' });
+    if (c.status !== 'active') return Promise.resolve({ outcome: 'revoked' });
+    const address = input.email ?? c.email;
+    if (address === undefined || address === '')
+      return Promise.resolve({ outcome: 'email_required' });
+    if (c.emailStatus === 'pending' && c.updatedAt.getTime() >= input.stuckBefore.getTime()) {
+      return Promise.resolve({ outcome: 'in_progress' });
+    }
+    const emailChanged = input.email !== undefined && input.email !== c.email;
+    if (input.email !== undefined) c.email = input.email;
+    c.emailStatus = 'pending';
+    delete c.emailLastError;
+    c.emailAttempts += 1;
+    c.updatedAt = new Date(input.at);
+    return Promise.resolve({ outcome: 'reserved', sequence: c.emailAttempts, emailChanged });
   }
 
   countByTemplate(ref: TemplateRef): Promise<number> {
