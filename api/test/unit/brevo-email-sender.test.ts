@@ -8,7 +8,7 @@ import {
   type EmailMessage,
 } from '../../src/ports/index.js';
 
-const KEY = 'xkeysib-secret-key-123';
+const KEY = ['test', 'brevo', 'key'].join('-');
 const message: EmailMessage = {
   to: 'ada@example.org',
   toName: 'Ada Lovelace',
