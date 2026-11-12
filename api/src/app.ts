@@ -24,6 +24,7 @@ import { adminStatsRoutes } from './http/routes/admin-stats.js';
 import { buildServices } from './services.js';
 import { createSendEmailHandler } from './modules/notifications/index.js';
 import type { Ports, Services } from './wiring.js';
+import { TRUSTED_PROXY_HOPS } from './http/client-ip.js';
 
 export interface AppDeps {
   /** Logging settings; the composition root passes LOG_LEVEL / GCP_PROJECT. Defaults to silent. */
@@ -53,7 +54,6 @@ const MAX_PARAM_LENGTH = 128;
 const MAX_HEADER_BYTES = 16 * 1024;
 const REQUEST_TIMEOUT_MS = 55_000;
 const KEEP_ALIVE_TIMEOUT_MS = 65_000;
-const TRUSTED_PROXY_HOPS = 1;
 const DEFAULT_PUBLIC_URLS: PublicUrls = {
   publicBaseUrl: 'http://localhost:5173',
   pdfPublicBaseUrl: 'http://localhost:8080',
@@ -71,14 +71,14 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     genReqId: (req) => requestIdFrom(req.headers['x-cloud-trace-context']),
     bodyLimit: BODY_LIMIT_BYTES,
     // Longer path parameters are rejected by the router (404) before any handler logic runs.
-    maxParamLength: MAX_PARAM_LENGTH,
+    routerOptions: { maxParamLength: MAX_PARAM_LENGTH },
     // Google's front end keeps connections for 60 s: stay above it; requests end before its 60 s limit.
     connectionTimeout: REQUEST_TIMEOUT_MS,
     requestTimeout: REQUEST_TIMEOUT_MS,
     keepAliveTimeout: KEEP_ALIVE_TIMEOUT_MS,
     frameworkErrors: frameworkErrorHandler,
     // Cloud Run terminates TLS behind a single Google front end hop.
-    // Final value is decided in BEU-ICT/certificate-manager#388.
+    // Hop count lives in http/client-ip.ts (docs/adr/0017-trusted-client-ip.md); unverified live.
     trustProxy: (_address, hop) => hop < TRUSTED_PROXY_HOPS,
   };
   const app = Fastify({ ...options, http: { maxHeaderSize: MAX_HEADER_BYTES } });

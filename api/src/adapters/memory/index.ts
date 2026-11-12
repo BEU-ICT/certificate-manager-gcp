@@ -2,6 +2,7 @@ import { SystemClock } from '../system/clock.js';
 import { AdapterError, type AdapterFactory, type Registries } from '../registry.js';
 import { FakeCertificateRepository } from '../../testing/fakes/fake-certificate-repository.js';
 import { FakeEmailSender } from '../../testing/fakes/fake-email-sender.js';
+import { FakeEmailQuotaStore } from '../../testing/fakes/fake-email-quota-store.js';
 import { FakeEventRepository } from '../../testing/fakes/fake-event-repository.js';
 import { FakeIdempotencyStore } from '../../testing/fakes/fake-idempotency-store.js';
 import { FakeMigrationStateStore } from '../../testing/fakes/fake-migration-state-store.js';
@@ -33,6 +34,7 @@ export function registerMemoryAdapters(r: Registries): void {
     certificates: new FakeCertificateRepository(),
     migrationState: new FakeMigrationStateStore(new SystemClock()),
     idempotency: new FakeIdempotencyStore(new SystemClock()),
+    emailQuota: new FakeEmailQuotaStore(),
   }));
   r.storage.register('memory', () => new FakeStorageGateway());
   r.queue.register('in-process', async (ctx) =>

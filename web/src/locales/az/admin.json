@@ -1,6 +1,36 @@
 {
   "dashboard": {
-    "intro": "Sertifikatlar, təşkilatlar və tədbirlər burada idarə olunacaq."
+    "loading": "Statistika yüklənir",
+    "updatedAt": "Yenilənib: {{time}}",
+    "refresh": "Yenilə",
+    "throttled": "Statistika bir az əvvəl yenilənib. Yenidən yeniləmək üçün təxminən 10 saniyə gözləyin.",
+    "viewList": "Siyahını göstər",
+    "certificates": {
+      "title": "Sertifikatlar",
+      "total": "Ümumi sertifikatlar",
+      "active": "Aktiv sertifikatlar",
+      "revoked": "Ləğv edilmiş sertifikatlar",
+      "issuedLast30Days": "Son 30 gündə verilib"
+    },
+    "email": {
+      "title": "E-poçt göndərişi",
+      "pending": "E-poçt gözləyir",
+      "sent": "E-poçt göndərilib",
+      "failed": "E-poçt göndərilməyib (xəta)",
+      "skipped": "E-poçt buraxılıb"
+    },
+    "data": {
+      "title": "Məlumat siyahıları",
+      "organizations": "Təşkilatlar",
+      "events": "Tədbirlər",
+      "templates": "Şablonlar"
+    },
+    "actions": {
+      "title": "Sürətli əməliyyatlar",
+      "issue": "Sertifikat ver",
+      "import": "İdxal",
+      "uploadTemplate": "Şablon yüklə"
+    }
   },
   "login": {
     "title": "Daxil ol",
@@ -481,6 +511,131 @@
       "qrFailed": "QR kod yaradılmadı.",
       "qrDownload": "QR kodu PNG kimi yüklə",
       "newTab": "yeni sekmədə açılır"
+    },
+    "importWizard": {
+      "title": "Fayldan sertifikatların idxalı",
+      "steps": {
+        "label": "İdxal addımları",
+        "item": "{{number}}. {{label}}",
+        "completed": "tamamlandı",
+        "select": "Fayl və hədəf",
+        "preview": "Önbaxış",
+        "submit": "İdxal"
+      },
+      "subject": {
+        "label": "Ümumi mövzu",
+        "hint": "İstəyə bağlı. Öz mövzusu olmayan sətirlər üçün istifadə olunur."
+      },
+      "file": {
+        "label": "Cədvəl faylı (.xlsx və ya .csv)",
+        "required": "İdxal üçün fayl seçin."
+      },
+      "template": {
+        "intro": "Şablon lazımdır?",
+        "xlsx": "Şablonu endir (.xlsx)",
+        "csv": "Şablonu endir (.csv)"
+      },
+      "continue": "Önbaxışa keç",
+      "back": "Geri",
+      "start": "{{n}} sertifikatı idxal et",
+      "blocking": {
+        "tooLarge": "Fayl {{max}} MB-dan böyükdür.",
+        "legacyXls": "Köhnə .xls faylları dəstəklənmir. Faylı .xlsx və ya .csv kimi saxlayın.",
+        "macroEnabled": "Makro dəstəkli fayllar dəstəklənmir. Faylı .xlsx və ya .csv kimi saxlayın.",
+        "unsupportedType": "Yalnız .xlsx və .csv faylları dəstəklənir.",
+        "invalidFile": "Fayl oxunmadı.",
+        "invalidEncoding": "Fayl UTF-8 mətn deyil. Onu CSV UTF-8 kimi saxlayın.",
+        "empty": "Faylda sətir yoxdur.",
+        "tooManyRows": "Faylda {{max}} sətirdən çox var.",
+        "tooManyColumns": "Faylda {{max}} sütundan çox var.",
+        "missingOwnerName": "Faylda ad və soyad sütunu olmalıdır."
+      },
+      "notice": {
+        "unknownColumn": "\"{{column}}\" sütunu tanınmadı və nəzərə alınmır.",
+        "duplicateColumn": "\"{{column}}\" sütunu bir neçə dəfə var; yalnız birincisi istifadə olunur.",
+        "missingColumn": "Faylda \"{{column}}\" sütunu yoxdur."
+      },
+      "issue": {
+        "required": "Məcburidir.",
+        "tooLong": "Ən çox {{max}} simvol.",
+        "tooMany": "Ən çox {{max}} element.",
+        "future": "Tarix gələcəkdədir.",
+        "invalid": "Yanlış dəyər.",
+        "subjectRequired": "Məcburidir (və ya ümumi mövzu daxil edin)."
+      },
+      "status": {
+        "valid": "Düzgün",
+        "invalid": "Yanlış",
+        "excluded": "Xaric edilib",
+        "sent": "İdxal edilib"
+      },
+      "counts": {
+        "label": "Faylın xülasəsi",
+        "total": "Sətirlər",
+        "valid": "Düzgün",
+        "invalid": "Yanlış",
+        "withEmail": "E-poçtlu",
+        "toSend": "İdxal ediləcək"
+      },
+      "preview": {
+        "errorsOnly": "Yalnız xətaları göstər",
+        "downloadReport": "Xəta hesabatını endir (CSV)",
+        "noErrors": "Göstəriləcək sətir yoxdur.",
+        "invalidNotSent": "Yanlış sətirlər idxal edilmir. Faylı düzəldib yenidən seçin və ya onları kənarda saxlayın.",
+        "caption": "Faylın sətirləri ({{total}} sətirdən {{shown}} göstərilir)",
+        "scrollRegion": "Sürüşdürülən cədvəl",
+        "include": "{{row}}-ci sətri idxal et",
+        "columns": {
+          "include": "İdxal",
+          "row": "Sətir",
+          "status": "Status",
+          "ownerName": "Ad Soyad",
+          "email": "E-poçt",
+          "subject": "Mövzu",
+          "skills": "Bacarıqlar",
+          "issuedAt": "Tarix"
+        }
+      },
+      "progress": {
+        "label": "İdxalın gedişi",
+        "value": "{{total}} sətirdən {{done}}",
+        "sending": "İdxal gedir: {{total}} sətirdən {{done}} tamamlandı.",
+        "stopped": "Dayandı: {{total}} sətirdən {{done}} tamamlandı.",
+        "chunk": "{{number}}-ci hissə ({{rows}} sətir)",
+        "pending": "Gözləyir",
+        "running": "Göndərilir…",
+        "done": "Tamamlandı",
+        "replayed": "Tamamlandı (əvvəl yaradılıb)",
+        "failed": "Uğursuz",
+        "waiting": "Çox sorğu var, {{seconds}} san. sonra davam edilir…",
+        "retrying": "Bağlantı problemi, yenidən cəhd edilir ({{attempt}}-ci cəhd)…"
+      },
+      "failure": {
+        "invalid": "Server {{n}} sətri rədd etdi. Bu hissədən heç nə yaradılmadı. Sətirləri xaric edin və ya geri qayıdın, sonra davam edin.",
+        "pinned": "Uğursuz hissənin nəticəsi məlum deyil, ona görə onun sətirləri indi xaric edilə bilməz; eyni sətirlər eyni açarla yenidən göndərilir. İdxalı davam etdirin.",
+        "unknown": "İdxal gözlənilməz xəta səbəbindən dayandı.",
+        "rowExclude": "{{row}}-ci sətri xaric et ({{name}})",
+        "resume": "İdxalı davam etdir",
+        "backToPreview": "Önbaxışa qayıt"
+      },
+      "report": {
+        "row": "Sətir",
+        "ownerName": "Ad Soyad",
+        "column": "Sütun",
+        "problem": "Problem"
+      },
+      "leave": {
+        "title": "İdxal zamanı çıxılsın?",
+        "message": "İdxal hələ davam edir. İndi çıxsanız, dayanacaq; artıq göndərilən hissələr yaradılmış qalır.",
+        "confirm": "Çıx",
+        "stay": "Qal"
+      },
+      "summary": {
+        "created": "Yaradılan sertifikatlar: {{formatted}}",
+        "emails": "Növbəyə qoyulan e-poçtlar: {{formatted}}",
+        "viewList": "İdxal edilən sertifikatlara bax",
+        "another": "Başqa fayl idxal et"
+      }
     },
     "issueForm": {
       "title": "Sertifikat verin",

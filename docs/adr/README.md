@@ -19,3 +19,4 @@ One Markdown file per decision, numbered `NNNN-title.md`, in the Michael Nygard 
 | [0013](0013-spec-corrections.md)                      | Corrections to the spec recorded in issue BEU-ICT/certificate-manager#236 | accepted |
 | [0014](0014-token-revocation-check-off-by-default.md) | Token revocation check is off by default                                  | accepted |
 | [0016](0016-identity-platform-for-signup-lockdown.md) | Disable sign-up through the Identity Platform configuration               | proposed |
+| [0017](0017-trusted-client-ip.md)                     | Trusted client IP behind Firebase Hosting and Cloud Run                   | proposed |

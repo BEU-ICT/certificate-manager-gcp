@@ -15,3 +15,4 @@ export * from './fake-template-repository.js';
 export * from './fake-admin-user-directory.js';
 export * from './fake-verifiers.js';
 export * from './create-fakes.js';
+export * from './fake-email-quota-store.js';

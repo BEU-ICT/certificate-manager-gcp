@@ -16,6 +16,10 @@ Tasks carry an OIDC token of `tasks-invoker` with audience `SERVICE_URL`. Cost: 
 
 Caveat: Cloud Tasks does not accept a task name used within roughly the last hour, which affects resends (naming scheme in BEU-ICT/certificate-manager#366).
 
+## Daily cap and rescheduling
+
+The handler counts sent e-mails per provider and UTC day in Firestore (`email_counters/<provider>:<YYYY-MM-DD>`, TTL on `expiresAt`) against `EMAIL_DAILY_CAP` (default 300). Over the cap it uses the fallback provider (only when `EMAIL_FALLBACK_PROVIDER` is set and `FEATURE_EMAIL_FALLBACK` is on; own cap `EMAIL_FALLBACK_DAILY_CAP`, default 300) or enqueues a new task `email-<id>-<n>-r<k>` scheduled for next UTC midnight + 5 min + 0 to 30 min jitter. After three reschedules the certificate is marked `failed` (`DAILY_CAP_EXHAUSTED`) and can be resent from the admin UI. Reschedule tasks appear in `gcloud tasks list` with a future schedule time; do not purge them unless the e-mails must not be sent.
+
 ## Incident procedures
 
 ```bash
