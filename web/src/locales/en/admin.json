@@ -1,6 +1,36 @@
 {
   "dashboard": {
-    "intro": "Certificates, organizations and events will be managed here."
+    "loading": "Loading statistics",
+    "updatedAt": "Updated at {{time}}",
+    "refresh": "Refresh",
+    "throttled": "Statistics were refreshed a moment ago. Please wait about 10 seconds before refreshing again.",
+    "viewList": "Show the list",
+    "certificates": {
+      "title": "Certificates",
+      "total": "Total certificates",
+      "active": "Active certificates",
+      "revoked": "Revoked certificates",
+      "issuedLast30Days": "Issued in the last 30 days"
+    },
+    "email": {
+      "title": "E-mail delivery",
+      "pending": "E-mail pending",
+      "sent": "E-mail sent",
+      "failed": "E-mail failed",
+      "skipped": "E-mail skipped"
+    },
+    "data": {
+      "title": "Reference data",
+      "organizations": "Organizations",
+      "events": "Events",
+      "templates": "Templates"
+    },
+    "actions": {
+      "title": "Quick actions",
+      "issue": "Issue certificate",
+      "import": "Import",
+      "uploadTemplate": "Upload template"
+    }
   },
   "login": {
     "title": "Sign in",
