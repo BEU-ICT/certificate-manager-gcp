@@ -11,6 +11,7 @@ import {
 } from './http/logging/error-reporting.js';
 import { installProcessSafety } from './process-safety.js';
 import { shutdown } from './shutdown.js';
+import { ADMIN_PRE_AUTH_FACTOR } from './http/rate-limit/index.js';
 
 // Composition root: the only module that reads process.env.
 let config: Config;
@@ -45,6 +46,8 @@ const app = buildApp({
   openApiEndpoint: config.flags.openApiEndpoint,
   flags: createFeatureFlags(config.flags),
   adminRateLimitPerMin: config.rateLimit.adminPerMin,
+  adminPreAuthRateLimitPerMin: ADMIN_PRE_AUTH_FACTOR * config.rateLimit.adminPerMin,
+  publicRateLimitPerMin: config.rateLimit.publicPerMin,
   publicUrls: { publicBaseUrl: config.publicBaseUrl, pdfPublicBaseUrl: config.pdfPublicBaseUrl },
 });
 

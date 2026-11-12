@@ -26,6 +26,7 @@ import { buildServices } from './services.js';
 import { createSendEmailHandler } from './modules/notifications/index.js';
 import type { Ports, Services } from './wiring.js';
 import { TRUSTED_PROXY_HOPS } from './http/client-ip.js';
+import { installEdgeRateLimits, installRateLimitMetrics } from './http/rate-limit/index.js';
 
 export interface AppDeps {
   /** Logging settings; the composition root passes LOG_LEVEL / GCP_PROJECT. Defaults to silent. */
@@ -37,8 +38,21 @@ export interface AppDeps {
   openApiEndpoint?: boolean;
   /** Feature flags (flags.ts); route modules guard endpoints with http/flag-guard.ts. */
   flags?: FeatureFlags;
-  /** Pre-authentication requests per minute and IP on admin routes (config.rateLimit.adminPerMin). */
+  /** Requests per minute per authenticated admin (config.rateLimit.adminPerMin, default 60). */
   adminRateLimitPerMin?: number;
+  /**
+   * Pre-authentication requests per minute and client IP on admin routes. Defaults to
+   * `adminRateLimitPerMin` when that is set (tests lift both at once), else 120 (2x the
+   * default per-admin budget). server.ts passes 2x the configured per-admin value.
+   */
+  adminPreAuthRateLimitPerMin?: number;
+  /**
+   * Requests per minute and client IP, one shared budget for every `/api/v1/public/**` route
+   * (config.rateLimit.publicPerMin). Without it the public and `/internal` limits are off.
+   */
+  publicRateLimitPerMin?: number;
+  /** Metrics flush interval in ms (default 60 000); tests only. */
+  rateLimitMetricsIntervalMs?: number;
   /** Bases for public PDF links (config.publicBaseUrl / pdfPublicBaseUrl); defaults to the local-dev values. */
   publicUrls?: PublicUrls;
   /**
@@ -88,10 +102,28 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
   installSecurity(app);
   installErrorHandling(app);
   installOpenApi(app);
+  const rateLimiter = deps.ports?.rateLimiter;
+  const rateLimitMetrics = rateLimiter
+    ? installRateLimitMetrics(app, deps.rateLimitMetricsIntervalMs)
+    : undefined;
+  // The in-process adapter owns an (unref'd) cleanup timer; stop it with the app.
+  const closable = rateLimiter as { close?: () => void } | undefined;
+  if (closable?.close) app.addHook('onClose', () => closable.close?.());
+  const nowMs = deps.ports ? () => deps.ports!.clock.now().getTime() : Date.now;
+  if (rateLimiter && rateLimitMetrics && deps.publicRateLimitPerMin !== undefined) {
+    installEdgeRateLimits(app, {
+      limiter: rateLimiter,
+      now: nowMs,
+      metrics: rateLimitMetrics,
+      publicPerMin: deps.publicRateLimitPerMin,
+    });
+  }
   installAdminGuard(app, {
     tokenVerifier: deps.ports?.tokenVerifier,
-    rateLimiter: deps.ports?.rateLimiter,
-    preAuthRequestsPerMin: deps.adminRateLimitPerMin,
+    rateLimiter,
+    preAuthRequestsPerMin: deps.adminPreAuthRateLimitPerMin ?? deps.adminRateLimitPerMin,
+    adminRequestsPerMin: deps.adminRateLimitPerMin,
+    metrics: rateLimitMetrics,
     now: deps.ports ? () => deps.ports!.clock.now().getTime() : undefined,
   });
 

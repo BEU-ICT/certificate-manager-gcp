@@ -4,20 +4,26 @@ import { FakeClock, FakeRateLimiter } from '../../../src/testing/fakes/index.js'
 
 describeRateLimiterContract('FakeRateLimiter', () => {
   const clock = new FakeClock();
+  const adapter = new FakeRateLimiter(clock);
   return {
-    adapter: new FakeRateLimiter(clock),
+    adapter,
     clock,
     advance: (ms) => clock.advance(ms),
-    cleanup: () => undefined,
+    cleanup: () => {
+      adapter.close();
+    },
   };
 });
 
 describeRateLimiterContract('InProcessRateLimiter', () => {
   const clock = new FakeClock();
+  const adapter = new InProcessRateLimiter(clock);
   return {
-    adapter: new InProcessRateLimiter(clock),
+    adapter,
     clock,
     advance: (ms) => clock.advance(ms),
-    cleanup: () => undefined,
+    cleanup: () => {
+      adapter.close();
+    },
   };
 });

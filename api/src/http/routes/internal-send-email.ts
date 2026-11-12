@@ -1,12 +1,17 @@
-import { createHash } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import type { RateLimiter, TaskRequestVerifier } from '../../ports/index.js';
 import { SEND_EMAIL_HANDLER, sendEmailTaskSchema } from '../../shared/email-task.js';
 import { UnauthenticatedError } from '../../shared/errors.js';
+import { getClientIp } from '../client-ip.js';
+import { hashKeyPart } from '../rate-limit/index.js';
 import type { SendEmailRequest, SendEmailOutcome } from '../../modules/notifications/index.js';
 
-/** Generous: the queue dispatches about 1 task/s; this only stops floods of forged requests. */
+/**
+ * Route-level flood guard. `/internal/**` is also limited at the edge (http/rate-limit, 120/min per
+ * IP, stricter) when `publicRateLimitPerMin` is configured; this one stays because it works
+ * without that option and is covered by this route's tests. The queue dispatches about 1 task/s.
+ */
 export const INTERNAL_TASKS_PER_MIN = 600;
 const WINDOW_MS = 60_000;
 
@@ -36,7 +41,7 @@ export function internalSendEmailRoutes(app: FastifyInstance, deps: InternalSend
   void app.register((scope, _opts, done) => {
     scope.addHook('onRequest', async (request, reply) => {
       const result = await deps.rateLimiter.consume(
-        `internal-tasks:ip:${createHash('sha256').update(request.ip).digest('hex').slice(0, 32)}`,
+        `internal-tasks:ip:${hashKeyPart(getClientIp(request))}`,
         { limit: deps.perMinute ?? INTERNAL_TASKS_PER_MIN, windowMs: WINDOW_MS },
       );
       if (!result.allowed) {

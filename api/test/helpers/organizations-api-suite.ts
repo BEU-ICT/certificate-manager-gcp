@@ -27,7 +27,7 @@ export function describeOrganizationsApi(
   async function setup(): Promise<{ app: FastifyInstance; services: Services; ports: Fakes }> {
     const ports = await makePorts();
     const services = buildServices(ports);
-    app = buildApp({ ports, services });
+    app = buildApp({ ports, services, adminRateLimitPerMin: 1000 });
     return { app, services, ports };
   }
   const call = (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: unknown) =>
