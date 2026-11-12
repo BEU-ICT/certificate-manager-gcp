@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -71,7 +72,8 @@ describe('CertificateDetailPage', () => {
     for (const name of ['Recipient', 'Issuance', 'Status', 'PDF', 'Email', 'Public link']) {
       expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument();
     }
-    expect(screen.getByText('aysel@example.org')).toBeInTheDocument();
+    expect(screen.getByTestId('masked-email')).toHaveTextContent('a***@e***.org');
+    expect(screen.queryByText('aysel@example.org')).not.toBeInTheDocument();
     expect(screen.getByText('React')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'acme-devfest-attendance-v2' })).toHaveAttribute(
       'href',
@@ -155,7 +157,8 @@ describe('CertificateDetailPage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Skipped')).toBeInTheDocument();
     expect(screen.getByText('None listed')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Resend email' })).not.toBeInTheDocument();
+    // A first send is possible once an address is entered, so the action stays available.
+    expect(screen.getByRole('button', { name: 'Resend email' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Revoke' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Open PDF/ })).not.toBeInTheDocument();
     await expectNoA11yViolations(container);
@@ -168,14 +171,16 @@ describe('CertificateDetailPage', () => {
           ...CERT,
           emailStatus: 'failed',
           emailAttempts: 3,
-          emailLastError: 'Mailbox unavailable',
+          emailLastError: 'BOUNCED: Mailbox unavailable',
           emailSentAt: null,
         }),
       ),
     );
     const { container } = renderPage();
     expect(
-      await screen.findByText('Mailbox unavailable', undefined, { timeout: 5000 }),
+      await screen.findByText('The email bounced: Mailbox unavailable', undefined, {
+        timeout: 5000,
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText('Failed')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
@@ -232,4 +237,70 @@ describe('CertificateDetailPage', () => {
       await screen.findByRole('button', { name: /Retry|Try again/ }, { timeout: 10000 }),
     ).toBeInTheDocument();
   }, 15000);
+
+  it('reveals and hides the email address with the toggle', async () => {
+    server.use(http.get(URL_, () => HttpResponse.json(CERT)));
+    renderPage();
+    const show = await screen.findByRole(
+      'button',
+      { name: 'Show email address' },
+      { timeout: 5000 },
+    );
+    await userEvent.click(show);
+    expect(screen.getByTestId('masked-email')).toHaveTextContent('aysel@example.org');
+    await userEvent.click(screen.getByRole('button', { name: 'Hide email address' }));
+    expect(screen.getByTestId('masked-email')).toHaveTextContent('a***@e***.org');
+  });
+
+  it.each([
+    ['pending', 'Pending', null, null],
+    ['sent', 'Sent', null, ts],
+    ['skipped', 'Skipped', null, null],
+    ['failed', 'Failed', 'ENQUEUE_FAILED', null],
+  ] as const)('shows the %s email status with an icon', async (status, label, error, sentAt) => {
+    server.use(
+      http.get(URL_, () =>
+        HttpResponse.json({
+          ...CERT,
+          emailStatus: status,
+          emailLastError: error,
+          emailSentAt: sentAt,
+        }),
+      ),
+    );
+    const { container } = renderPage();
+    const badge = await screen.findByText(label, undefined, { timeout: 5000 });
+    expect(badge.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    await expectNoA11yViolations(container);
+  });
+
+  it.each([
+    ['ENQUEUE_FAILED', 'The email could not be queued. Resend it.'],
+    ['REJECTED: invalid recipient', 'The mail provider rejected the email: invalid recipient'],
+    ['RETRIES_EXHAUSTED', 'Delivery failed after several attempts.'],
+    ['DAILY_CAP_EXHAUSTED', 'The daily sending limit was reached. Resend tomorrow.'],
+    ['BOUNCED: mailbox full', 'The email bounced: mailbox full'],
+    ['SOMETHING_NEW', 'The email could not be delivered.'],
+  ])('maps the last error %s to a message', async (code, message) => {
+    server.use(
+      http.get(URL_, () =>
+        HttpResponse.json({
+          ...CERT,
+          emailStatus: 'failed',
+          emailAttempts: 2,
+          emailLastError: code,
+        }),
+      ),
+    );
+    renderPage();
+    expect(await screen.findByText(message, undefined, { timeout: 5000 })).toBeInTheDocument();
+    expect(screen.queryByText(code)).not.toBeInTheDocument();
+  });
+
+  it('shows the last sent date', async () => {
+    server.use(http.get(URL_, () => HttpResponse.json(CERT)));
+    renderPage();
+    const term = await screen.findByText('Sent on', undefined, { timeout: 5000 });
+    expect(term.nextElementSibling).toHaveTextContent('Nov 4, 2026');
+  });
 });

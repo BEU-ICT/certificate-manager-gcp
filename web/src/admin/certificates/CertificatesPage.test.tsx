@@ -302,4 +302,55 @@ describe('CertificatesPage', () => {
     await waitFor(() => expect(signals[0]?.aborted).toBe(true));
     expect(await screen.findByRole('link', { name: 'Aysel' })).toBeVisible();
   });
+
+  it('filters by email status in the URL and shows an icon with each status badge', async () => {
+    const seen: URLSearchParams[] = [];
+    server.use(
+      ...lookups(),
+      count(4),
+      http.get(LIST, ({ request }) => {
+        seen.push(new URL(request.url).searchParams);
+        return HttpResponse.json({
+          items: (['pending', 'sent', 'failed', 'skipped'] as const).map((emailStatus) =>
+            CERT(emailStatus, `Owner ${emailStatus}`, { emailStatus }),
+          ),
+          nextCursor: null,
+        });
+      }),
+    );
+    renderPage('/admin/certificates?emailStatus=failed');
+    await screen.findByRole('link', { name: 'Owner sent' }, { timeout: 5000 });
+    expect(screen.getByLabelText('Email status')).toHaveValue('failed');
+    expect(seen[0]?.get('emailStatus')).toBe('failed');
+    for (const label of ['Pending', 'Sent', 'Failed', 'Skipped']) {
+      const badge = screen.getByRole('cell', { name: label });
+      expect(badge.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    }
+    await userEvent.selectOptions(screen.getByLabelText('Email status'), 'pending');
+    await waitFor(() =>
+      expect(screen.getByTestId('loc')).toHaveTextContent(
+        '/admin/certificates?emailStatus=pending',
+      ),
+    );
+    await waitFor(() => expect(seen[seen.length - 1]?.get('emailStatus')).toBe('pending'));
+    await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('loc')).toHaveTextContent(/^\/admin\/certificates$/),
+    );
+  });
+
+  it('ignores an unknown email status in the URL', async () => {
+    const seen: URLSearchParams[] = [];
+    server.use(
+      ...lookups(),
+      count(),
+      http.get(LIST, ({ request }) => {
+        seen.push(new URL(request.url).searchParams);
+        return HttpResponse.json({ items: [CERT('c1', 'Aysel')], nextCursor: null });
+      }),
+    );
+    renderPage('/admin/certificates?emailStatus=bogus');
+    await screen.findByRole('link', { name: 'Aysel' }, { timeout: 5000 });
+    expect(seen[0]?.has('emailStatus')).toBe(false);
+  });
 });

@@ -2,25 +2,23 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { isApiError } from '@/api';
-import { Badge, Button, EmptyState, ErrorState, Skeleton, type BadgeTone } from '@/components';
+import { Badge, EmptyState, ErrorState, Skeleton, type BadgeTone } from '@/components';
 import { errorMessage } from '@/i18n/errors';
 import { DEFAULT_LANGUAGE, isLanguage } from '@/i18n/language';
 import { certificateTypeLabel } from '@/lib/certificateTypes';
 import { isCertificateId } from '@/lib/certificateId';
 import { formatDate, formatNumber } from '@/lib/format';
 import { useCertificate, type CertificateDetail } from './api';
+import { emailErrorMessage } from './email-error';
+import { EmailStatusBadge } from './EmailStatusBadge';
+import { MaskedEmail } from './MaskedEmail';
+import { ResendEmail } from './ResendEmail';
 import { RevokeCertificate } from './RevokeCertificate';
 import { PublicLinkCard } from './PublicLinkCard';
 
 const STATUS_TONE: Record<CertificateDetail['status'], BadgeTone> = {
   active: 'success',
   revoked: 'danger',
-};
-const EMAIL_TONE: Record<CertificateDetail['emailStatus'], BadgeTone> = {
-  pending: 'warning',
-  sent: 'success',
-  failed: 'danger',
-  skipped: 'neutral',
 };
 
 const linkButton =
@@ -121,22 +119,9 @@ export default function CertificateDetailPage() {
             <span className="sr-only"> ({t('certificates.detail.newTab')})</span>
           </a>
           <RevokeCertificate id={data.id} showButton={!revoked} />
-          {/* HOOK BEU-ICT/certificate-manager#378: replace this placeholder with the resend action. */}
-          {data.email && !revoked ? (
-            <Button
-              variant="secondary"
-              disabled
-              title={t('certificates.detail.actionSoon')}
-              aria-describedby="action-soon"
-            >
-              {t('certificates.detail.resend')}
-            </Button>
-          ) : null}
+          <ResendEmail id={data.id} email={data.email} showButton={!revoked} />
         </div>
       </div>
-      <p id="action-soon" className="sr-only">
-        {t('certificates.detail.actionSoon')}
-      </p>
 
       <Section id="recipient-title" title={t('certificates.detail.recipient')}>
         <Fields
@@ -144,7 +129,9 @@ export default function CertificateDetailPage() {
             [t('certificates.detail.fields.name'), data.ownerName],
             [
               t('certificates.detail.fields.email'),
-              data.email ?? (
+              data.email ? (
+                <MaskedEmail email={data.email} />
+              ) : (
                 <span className="text-ink-muted">{t('certificates.detail.fields.noEmail')}</span>
               ),
             ],
@@ -249,15 +236,16 @@ export default function CertificateDetailPage() {
           rows={[
             [
               t('certificates.detail.fields.emailStatus'),
-              <Badge key="e" tone={EMAIL_TONE[data.emailStatus]}>
-                {t(`certificates.emailStatus.${data.emailStatus}`)}
-              </Badge>,
+              <EmailStatusBadge key="e" status={data.emailStatus} />,
             ],
             [
               t('certificates.detail.fields.emailAttempts'),
               formatNumber(data.emailAttempts, language),
             ],
-            [t('certificates.detail.fields.emailLastError'), data.emailLastError ?? none],
+            [
+              t('certificates.detail.fields.emailLastError'),
+              data.emailLastError ? emailErrorMessage(t, data.emailLastError) : none,
+            ],
             [t('certificates.detail.fields.emailSentAt'), date(data.emailSentAt)],
           ]}
         />
