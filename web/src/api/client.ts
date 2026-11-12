@@ -35,6 +35,8 @@ export interface RequestOptions {
   onUploadProgress?: ((loaded: number, total: number) => void) | undefined;
   /** `'blob'` sends `Accept: application/pdf` and resolves with `response.blob()`. Default `'json'`. */
   responseType?: 'json' | 'blob';
+  /** Called with the response of a successful request (for headers such as `Idempotent-Replayed`). */
+  onResponse?: ((response: Response) => void) | undefined;
 }
 
 export function isAdminPath(path: string): boolean {
@@ -252,6 +254,7 @@ export function createApiClient(deps: ApiClientDeps = {}): ApiClient {
       }
     }
     if (!response.ok) throw await toApiError(response);
+    options.onResponse?.(response);
     if (response.status === 204) return undefined as T;
     try {
       if (options.responseType === 'blob') return (await response.blob()) as T;

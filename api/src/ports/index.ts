@@ -11,3 +11,4 @@ export * from './repositories.js';
 export * from './scheduler.js';
 export * from './storage-gateway.js';
 export * from './task-queue.js';
+export * from './email-quota-store.js';

@@ -2,6 +2,7 @@ import { FakeAdminUserDirectory } from './fake-admin-user-directory.js';
 import { FakeCertificateRepository } from './fake-certificate-repository.js';
 import { FakeClock } from './fake-clock.js';
 import { FakeEmailSender } from './fake-email-sender.js';
+import { FakeEmailQuotaStore } from './fake-email-quota-store.js';
 import { FakeEventBus } from './fake-event-bus.js';
 import { FakeEventRepository } from './fake-event-repository.js';
 import { FakeIdGenerator } from './fake-id-generator.js';
@@ -27,6 +28,7 @@ export function createFakes() {
     certificates: new FakeCertificateRepository(),
     migrationState: new FakeMigrationStateStore(clock),
     idempotency: new FakeIdempotencyStore(clock),
+    emailQuota: new FakeEmailQuotaStore(),
     storage: new FakeStorageGateway(),
     taskQueue: new FakeTaskQueue(),
     scheduler: new FakeScheduler(),

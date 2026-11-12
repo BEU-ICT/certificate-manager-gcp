@@ -3,10 +3,15 @@ import {
   PermanentEmailError,
   QuotaExceededError,
   TransientEmailError,
+  type Clock,
   type EmailMessage,
+  type EmailQuotaStore,
   type EmailSender,
+  type TaskQueue,
 } from '../../ports/index.js';
 import type { Certificate } from '../../shared/domain.js';
+import { nextUtcMidnight, utcDay } from '../../shared/email-quota.js';
+import { MAX_RESCHEDULES, SEND_EMAIL_HANDLER, emailTaskName } from '../../shared/email-task.js';
 import { NotFoundError } from '../../shared/errors.js';
 import { PlainMessageComposer, type MessageComposer } from './message-composer.js';
 
@@ -22,9 +27,37 @@ export interface SendEmailCertificates {
   markEmailFailed(id: string, code: string): Promise<void>;
 }
 
-/** Optional daily sending cap (BEU-ICT/certificate-manager#374). `false` means the cap is reached. */
-export interface DailyCap {
-  tryAcquire(): Promise<boolean>;
+/** `emailLastError` when the daily cap stayed reached through every allowed reschedule. */
+export const DAILY_CAP_EXHAUSTED = 'DAILY_CAP_EXHAUSTED';
+/** A rescheduled task runs this long after the next UTC midnight, plus jitter. */
+export const RESCHEDULE_DELAY_MS = 5 * 60 * 1000;
+/** Upper bound (exclusive) of the random jitter added to the rescheduled time. */
+export const RESCHEDULE_JITTER_MS = 30 * 60 * 1000;
+
+/**
+ * When a task that hit the cap at `now` runs again: next UTC midnight + 5 min + jitter in
+ * [0, 30 min). `random` returns a number in [0, 1).
+ */
+export function rescheduleTime(now: Date, random: () => number): Date {
+  const jitter = Math.min(RESCHEDULE_JITTER_MS - 1, Math.floor(random() * RESCHEDULE_JITTER_MS));
+  return new Date(nextUtcMidnight(now).getTime() + RESCHEDULE_DELAY_MS + Math.max(0, jitter));
+}
+
+/**
+ * Daily sending caps (BEU-ICT/certificate-manager#374). Without this the handler sends without a
+ * cap here (the provider's own quota still applies).
+ */
+export interface DailyQuotaDeps {
+  store: EmailQuotaStore;
+  /** Receives the rescheduled task. */
+  taskQueue: TaskQueue;
+  clock: Clock;
+  /** In [0, 1); injected for tests. Defaults to `Math.random`. */
+  random?: () => number;
+  /** Counter name (the configured provider, e.g. `gmail`) and `EMAIL_DAILY_CAP`. */
+  primary: { provider: string; dailyCap: number };
+  /** Only when `Ports.emailFallback` exists: its own counter and `EMAIL_FALLBACK_DAILY_CAP`. */
+  fallback?: { sender: EmailSender; provider: string; dailyCap: number };
 }
 
 /** Minimal logger surface; satisfied by pino. Only certificate IDs and error class names are logged. */
@@ -44,8 +77,7 @@ export interface SendEmailHandlerDeps {
   /** `PUBLIC_BASE_URL`: verification page is `<base>/c/<id>`. */
   publicBaseUrl: string;
   composer?: MessageComposer;
-  /** Without a cap nothing is limited here (the provider's own quota still applies). */
-  dailyCap?: DailyCap;
+  quota?: DailyQuotaDeps;
 }
 
 export interface SendEmailRequest {
@@ -53,11 +85,13 @@ export interface SendEmailRequest {
   sequence: number;
   /** `X-CloudTasks-TaskRetryCount`: 0 on the first attempt. */
   retryCount: number;
+  /** Daily-cap reschedules so far (task name suffix `-r<k>`); 0 or omitted for the original task. */
+  reschedule?: number | undefined;
 }
 
 /**
  * - `done`: respond 200 (sent, failed for good, or nothing to do).
- * - `retry`: respond 500 so the queue retries (transient provider problem or cap reached).
+ * - `retry`: respond 500 so the queue retries (transient provider problem).
  * - `misconfigured`: respond 500, status untouched, CRITICAL logged; a fixed configuration lets a retry succeed.
  */
 export type SendEmailOutcome = 'done' | 'retry' | 'misconfigured';
@@ -93,7 +127,10 @@ export function createSendEmailHandler(
   const composer = deps.composer ?? new PlainMessageComposer();
   const baseUrl = deps.publicBaseUrl.replace(/\/+$/, '');
 
-  return async ({ certificateId, sequence, retryCount }) => {
+  const quota = deps.quota;
+  const random = quota?.random ?? Math.random;
+
+  return async ({ certificateId, sequence, retryCount, reschedule = 0 }) => {
     let certificate: Certificate;
     try {
       certificate = await certificates.getPublic(certificateId);
@@ -123,9 +160,39 @@ export function createSendEmailHandler(
       return 'done';
     };
 
-    if (deps.dailyCap && !(await deps.dailyCap.tryAcquire())) {
-      logger.warn({ certificateId, sequence }, 'e-mail daily cap reached');
-      return retryOrFail();
+    // Reserve one slot of today's primary counter, else of the fallback's, else reschedule.
+    let sender = emailSender;
+    let reserved: { provider: string; day: string } | undefined;
+    if (quota) {
+      const now = quota.clock.now();
+      const day = utcDay(now);
+      const { provider, dailyCap } = quota.primary;
+      if ((await quota.store.tryReserve(provider, day, dailyCap)).granted) {
+        reserved = { provider, day };
+      } else if (
+        quota.fallback &&
+        (await quota.store.tryReserve(quota.fallback.provider, day, quota.fallback.dailyCap))
+          .granted
+      ) {
+        logger.warn({ certificateId, sequence }, 'e-mail daily cap reached, using the fallback');
+        sender = quota.fallback.sender;
+        reserved = { provider: quota.fallback.provider, day };
+      } else {
+        logger.warn({ certificateId, sequence, reschedule }, 'e-mail daily cap reached');
+        if (reschedule >= MAX_RESCHEDULES) {
+          await certificates.markEmailFailed(certificateId, DAILY_CAP_EXHAUSTED);
+          return 'done';
+        }
+        const next = reschedule + 1;
+        await quota.taskQueue.enqueue({
+          name: emailTaskName(certificateId, sequence, next),
+          handler: SEND_EMAIL_HANDLER,
+          payload: { certificateId, sequence, reschedule: next },
+          scheduleAt: rescheduleTime(now, random),
+          dedupe: true,
+        });
+        return 'done';
+      }
     }
 
     const content = composer.compose(certificate, { verifyUrl: `${baseUrl}/c/${certificate.id}` });
@@ -140,8 +207,10 @@ export function createSendEmailHandler(
       messageId: emailMessageId(certificate.id, sequence, deps.from.address),
     };
 
+    let delivered = false;
     try {
-      await emailSender.send(message);
+      await sender.send(message);
+      delivered = true;
     } catch (error) {
       if (error instanceof PermanentEmailError) {
         await certificates.markEmailFailed(certificateId, permanentCode(error));
@@ -163,6 +232,18 @@ export function createSendEmailHandler(
         return 'misconfigured';
       }
       throw error;
+    } finally {
+      // A reserved slot that was never delivered goes back (a retry reserves again).
+      if (!delivered && quota && reserved) {
+        try {
+          await quota.store.release(reserved.provider, reserved.day);
+        } catch (error) {
+          logger.warn(
+            { certificateId, sequence, errorName: errorName(error) },
+            'e-mail quota slot could not be released',
+          );
+        }
+      }
     }
     await certificates.markEmailSent(certificateId);
     logger.info({ certificateId, sequence }, 'e-mail sent');

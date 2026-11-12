@@ -30,6 +30,7 @@ const dbStub = (tag: string): RepositoryPorts => ({
   certificates: stub(tag),
   migrationState: stub(tag),
   idempotency: stub(tag),
+  emailQuota: stub(tag),
 });
 const queueStub = (tag: string): QueuePorts => ({ taskQueue: stub(tag), scheduler: stub(tag) });
 const authStub = (tag: string): AuthPorts => ({

@@ -24,6 +24,7 @@ import { adminStatsRoutes } from './http/routes/admin-stats.js';
 import { buildServices } from './services.js';
 import { createSendEmailHandler } from './modules/notifications/index.js';
 import type { Ports, Services } from './wiring.js';
+import { TRUSTED_PROXY_HOPS } from './http/client-ip.js';
 
 export interface AppDeps {
   /** Logging settings; the composition root passes LOG_LEVEL / GCP_PROJECT. Defaults to silent. */
@@ -78,7 +79,7 @@ export function buildApp(deps: AppDeps = {}): FastifyInstance {
     keepAliveTimeout: KEEP_ALIVE_TIMEOUT_MS,
     frameworkErrors: frameworkErrorHandler,
     // Cloud Run terminates TLS behind a single Google front end hop.
-    // Final value is decided in BEU-ICT/certificate-manager#388.
+    // Hop count lives in http/client-ip.ts (docs/adr/0017-trusted-client-ip.md); unverified live.
     trustProxy: (_address, hop) => hop < TRUSTED_PROXY_HOPS,
   };
   const app = Fastify({ ...options, http: { maxHeaderSize: MAX_HEADER_BYTES } });

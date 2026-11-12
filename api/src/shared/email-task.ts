@@ -11,10 +11,15 @@ export const TASK_NAME_MAX_LENGTH = 500;
 /** Internal route that executes an e-mail task. */
 export const SEND_EMAIL_HANDLER = '/internal/tasks/send-email';
 
+/** A task that hit the daily cap is rescheduled at most this many times (BEU-ICT/certificate-manager#374). */
+export const MAX_RESCHEDULES = 3;
+
 /** Payload of an e-mail task: identifiers only, never addresses or names. */
 export interface SendEmailTaskPayload {
   certificateId: string;
   sequence: number;
+  /** Number of daily-cap reschedules so far; omitted (0) for a first send or resend. */
+  reschedule?: number;
 }
 
 /** Throws `RangeError` when `name` cannot be a Cloud Tasks task ID. */
@@ -27,14 +32,18 @@ export function assertValidTaskName(name: string): void {
 }
 
 /**
- * `email-<certificateId>-<n>`, where `n` is `emailAttempts` after the increment (first send: 1).
+ * `email-<certificateId>-<n>`, where `n` is `emailAttempts` after the increment (first send: 1);
+ * the k-th daily-cap reschedule (1..3) of that send is `email-<certificateId>-<n>-r<k>`.
  * Throws `RangeError` for an invalid certificate ID or sequence; the message never echoes input.
  */
-export function emailTaskName(certificateId: string, n: number): string {
+export function emailTaskName(certificateId: string, n: number, reschedule = 0): string {
   if (!Number.isSafeInteger(n) || n < 1)
     throw new RangeError('sequence must be a positive integer');
   if (certificateId.length === 0) throw new RangeError('certificate ID must not be empty');
-  const name = `email-${certificateId}-${n}`;
+  if (!Number.isSafeInteger(reschedule) || reschedule < 0 || reschedule > MAX_RESCHEDULES) {
+    throw new RangeError(`reschedule must be an integer from 0 to ${MAX_RESCHEDULES}`);
+  }
+  const name = `email-${certificateId}-${n}${reschedule > 0 ? `-r${reschedule}` : ''}`;
   assertValidTaskName(name);
   return name;
 }
@@ -44,5 +53,6 @@ export const sendEmailTaskSchema = z
   .object({
     certificateId: z.string().min(1).max(64),
     sequence: z.number().int().min(1).max(1_000_000),
+    reschedule: z.number().int().min(0).max(MAX_RESCHEDULES).optional(),
   })
   .strict();

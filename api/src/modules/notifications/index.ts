@@ -9,11 +9,13 @@ export {
   type NotificationsLogger,
 } from './issued-email-subscriber.js';
 export {
+  DAILY_CAP_EXHAUSTED,
   LAST_RETRY_COUNT,
+  rescheduleTime,
   RETRIES_EXHAUSTED,
   createSendEmailHandler,
   emailMessageId,
-  type DailyCap,
+  type DailyQuotaDeps,
   type SendEmailCertificates,
   type SendEmailHandlerDeps,
   type SendEmailLogger,
