@@ -1,3 +1,5 @@
+// Routes with a happy-path test in this file (checked by test/unit/authz-matrix.test.ts):
+// happy-path: GET /api/v1/admin/stats
 import { describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/app.js';
 import { openApiDocument } from '../../src/http/openapi/plugin.js';

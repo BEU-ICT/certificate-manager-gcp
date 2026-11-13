@@ -1,3 +1,7 @@
+// Routes with a happy-path test in this file (checked by test/unit/authz-matrix.test.ts):
+// happy-path: GET /api/v1/admin/certificates
+// happy-path: GET /api/v1/admin/certificates/count
+// happy-path: GET /api/v1/admin/certificates/:id
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument -- HTTP response bodies are untyped JSON; the assertions check their shape. */
 import type { FastifyInstance } from 'fastify';
 import { afterEach, describe, expect, it } from 'vitest';

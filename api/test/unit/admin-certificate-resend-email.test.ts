@@ -1,3 +1,5 @@
+// Routes with a happy-path test in this file (checked by test/unit/authz-matrix.test.ts):
+// happy-path: POST /api/v1/admin/certificates/:id/resend-email
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- HTTP response bodies are untyped JSON; the assertions check their shape. */
 import { Writable } from 'node:stream';
 import type { FastifyInstance } from 'fastify';
