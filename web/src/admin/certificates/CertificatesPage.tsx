@@ -20,6 +20,7 @@ import { DEFAULT_LANGUAGE, isLanguage } from '@/i18n/language';
 import { CERTIFICATE_TYPES, certificateTypeLabel } from '@/lib/certificateTypes';
 import { formatDate, formatNumber } from '@/lib/format';
 import { OrganizationSelect } from '../events/OrganizationSelect';
+import { EmailStatusBadge } from './EmailStatusBadge';
 import { CopyButton } from '../templates/CopyButton';
 import { EventSelect } from '../templates/EventSelect';
 import {
@@ -32,17 +33,20 @@ import {
 const PAGE_SIZES = [25, 50] as const;
 const STATUSES = ['active', 'revoked'] as const;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const FILTER_KEYS = ['organizationId', 'eventId', 'type', 'status', 'issuedFrom', 'issuedTo'];
+const EMAIL_STATUSES = ['pending', 'sent', 'failed', 'skipped'] as const;
+const FILTER_KEYS = [
+  'organizationId',
+  'eventId',
+  'type',
+  'status',
+  'issuedFrom',
+  'issuedTo',
+  'emailStatus',
+];
 
 const STATUS_TONE: Record<CertificateSummary['status'], BadgeTone> = {
   active: 'success',
   revoked: 'danger',
-};
-const EMAIL_TONE: Record<CertificateSummary['emailStatus'], BadgeTone> = {
-  pending: 'warning',
-  sent: 'success',
-  failed: 'danger',
-  skipped: 'neutral',
 };
 
 const linkClass =
@@ -65,6 +69,10 @@ export default function CertificatesPage() {
   const status = (STATUSES as readonly string[]).includes(statusParam ?? '')
     ? (statusParam as CertificateSummary['status'])
     : undefined;
+  const emailParam = params.get('emailStatus');
+  const emailStatus = (EMAIL_STATUSES as readonly string[]).includes(emailParam ?? '')
+    ? (emailParam as CertificateSummary['emailStatus'])
+    : undefined;
   const fromParam = params.get('issuedFrom');
   const issuedFrom = fromParam && DATE_RE.test(fromParam) ? fromParam : undefined;
   const toParam = params.get('issuedTo');
@@ -76,6 +84,7 @@ export default function CertificatesPage() {
     eventId,
     type,
     status,
+    emailStatus,
     issuedFrom,
     issuedTo,
   };
@@ -155,11 +164,7 @@ export default function CertificatesPage() {
     {
       key: 'emailStatus',
       header: t('certificates.columns.emailStatus'),
-      cell: (row) => (
-        <Badge tone={EMAIL_TONE[row.emailStatus]}>
-          {t(`certificates.emailStatus.${row.emailStatus}`)}
-        </Badge>
-      ),
+      cell: (row) => <EmailStatusBadge status={row.emailStatus} />,
     },
     {
       key: 'id',
@@ -311,6 +316,16 @@ export default function CertificatesPage() {
           value={status ?? ''}
           options={STATUSES.map((s) => ({ value: s, label: t(`certificates.status.${s}`) }))}
           onChange={(event) => setFilters({ status: event.target.value })}
+        />
+        <Select
+          label={t('certificates.fields.emailStatus')}
+          placeholder={t('certificates.filter.allEmailStatuses')}
+          value={emailStatus ?? ''}
+          options={EMAIL_STATUSES.map((s) => ({
+            value: s,
+            label: t(`certificates.emailStatus.${s}`),
+          }))}
+          onChange={(event) => setFilters({ emailStatus: event.target.value })}
         />
         <DatePicker
           label={t('certificates.fields.issuedFrom')}

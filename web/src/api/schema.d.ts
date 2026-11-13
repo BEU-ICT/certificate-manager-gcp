@@ -88,6 +88,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/certificates/{id}/resend-email': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resend the certificate e-mail
+     * @description Queues a new send (`202`). Allowed for `failed`, `sent` and `skipped` (a `skipped` certificate with a supplied address gets its first send); a `pending` e-mail blocks the call unless it has been pending for more than 2 hours. Optional `email` replaces the stored address (audit line `certificate.email_changed`, no addresses logged). Errors: 409 `CONFLICT` with detail `CERTIFICATE_REVOKED` or `EMAIL_IN_PROGRESS`, 422 `EMAIL_REQUIRED`, 429 `RATE_LIMITED` (at most 5 resends per certificate per 24 hours; refused attempts count; the counter is per instance with the in-process limiter), 503 `UNAVAILABLE` when the task queue refuses the task (the certificate is then `failed` with `ENQUEUE_FAILED`; retry).
+     */
+    post: operations['resendCertificateEmail'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/certificates/{id}/revoke': {
     parameters: {
       query?: never;
@@ -623,6 +643,16 @@ export interface components {
     RenameOrganizationBodyInput: {
       /** @description 1 to 120 characters. */
       name: string;
+    };
+    ResendEmailBodyInput: {
+      /** @description Corrected address; replaces the stored one. Omit to resend to the stored address. */
+      email?: string;
+    };
+    ResendEmailResult: {
+      /** @description Sequence of the queued send (names the task). */
+      emailAttempts: number;
+      /** @constant */
+      emailStatus: 'pending';
     };
     RevokeCertificateBodyInput: {
       /** @description Plain text, 1 to 500 characters; escaped on output. */
@@ -1340,6 +1370,113 @@ export interface operations {
       };
       /** @description NOT_FOUND: resource does not exist */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description RATE_LIMITED: retry after the Retry-After header */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description INTERNAL: unexpected error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAVAILABLE: retry after the Retry-After header */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+    };
+  };
+  resendCertificateEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResendEmailBodyInput'];
+      };
+    };
+    responses: {
+      /** @description The send was queued */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ResendEmailResult'];
+        };
+      };
+      /** @description VALIDATION_FAILED: malformed or invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description UNAUTHENTICATED: missing or invalid credentials */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description FORBIDDEN: not allowed to perform this action */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description NOT_FOUND: resource does not exist */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description CONFLICT: conflicts with the current state */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorBody'];
+        };
+      };
+      /** @description Well-formed request that violates a business rule (domain specific code) */
+      422: {
         headers: {
           [name: string]: unknown;
         };

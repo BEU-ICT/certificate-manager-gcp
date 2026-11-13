@@ -399,13 +399,15 @@
       "type": "Növ",
       "status": "Status",
       "issuedFrom": "Verilmə tarixi (başlanğıc)",
-      "issuedTo": "Verilmə tarixi (son)"
+      "issuedTo": "Verilmə tarixi (son)",
+      "emailStatus": "E-poçt statusu"
     },
     "filter": {
       "allOrganizations": "Bütün təşkilatlar",
       "allEvents": "Bütün tədbirlər",
       "allTypes": "Bütün növlər",
-      "allStatuses": "Bütün statuslar"
+      "allStatuses": "Bütün statuslar",
+      "allEmailStatuses": "Bütün e-poçt statusları"
     },
     "columns": {
       "owner": "Sahib",
@@ -465,7 +467,6 @@
         "done": "PDF silindi."
       },
       "resend": "E-poçtu yenidən göndər",
-      "actionSoon": "Tezliklə əlçatan olacaq.",
       "recipient": "Sahib",
       "issuance": "Verilmə",
       "status": "Status",
@@ -510,7 +511,37 @@
       "qrLoading": "QR kod hazırlanır…",
       "qrFailed": "QR kod yaradılmadı.",
       "qrDownload": "QR kodu PNG kimi yüklə",
-      "newTab": "yeni sekmədə açılır"
+      "newTab": "yeni sekmədə açılır",
+      "emailReveal": {
+        "show": "E-poçt ünvanını göstər",
+        "hide": "E-poçt ünvanını gizlət"
+      },
+      "emailPolling": "Çatdırılma statusu yoxlanılır…",
+      "resendDialog": {
+        "title": "E-poçtu yenidən göndər",
+        "intro": "Sertifikat e-poçtu yenidən göndəriləcək.",
+        "current": "Cari ünvan",
+        "none": "Ünvan qeyd olunmayıb",
+        "newLabel": "Düzəldilmiş ünvan",
+        "newOptionalHint": "İstəyə bağlıdır. Cari ünvandan istifadə üçün boş buraxın; yeni ünvan saxlanılan ünvanı əvəz edir.",
+        "newRequiredHint": "Məcburidir: sertifikat üçün qeyd olunmuş ünvan yoxdur.",
+        "required": "E-poçt ünvanını daxil edin.",
+        "invalid": "Düzgün e-poçt ünvanı daxil edin.",
+        "cancel": "Ləğv et",
+        "submit": "E-poçtu yenidən göndər",
+        "toast": "E-poçt növbəyə qoyuldu.",
+        "sent": "E-poçt göndərildi.",
+        "failed": "E-poçtu çatdırmaq alınmadı.",
+        "stillPending": "E-poçt hələ göndərilir. Bir azdan yenidən yoxlayın.",
+        "errors": {
+          "revoked": "Sertifikat ləğv edilib; e-poçtu yenidən göndərmək olmaz.",
+          "inProgress": "E-poçt artıq göndərilir. Bitməsini gözləyin.",
+          "required": "Sertifikat üçün e-poçt ünvanı yoxdur. Ünvan daxil edin.",
+          "rateLimited": "Bu sertifikat üçün çox sayda təkrar göndərmə olub. Sonra yenidən cəhd edin.",
+          "rateLimitedRetry": "Bu sertifikat üçün çox sayda təkrar göndərmə olub. {{seconds}} saniyədən sonra yenidən cəhd edin.",
+          "notFound": "Bu sertifikat artıq mövcud deyil."
+        }
+      }
     },
     "importWizard": {
       "title": "Fayldan sertifikatların idxalı",
@@ -697,6 +728,14 @@
         "another": "Eyni parametrlərlə başqasını ver",
         "view": "Sertifikata bax"
       }
+    },
+    "emailError": {
+      "ENQUEUE_FAILED": "E-poçtu növbəyə qoymaq mümkün olmadı. Yenidən göndərin.",
+      "REJECTED": "E-poçt provayderi məktubu rədd etdi: {{reason}}",
+      "RETRIES_EXHAUSTED": "Bir neçə cəhddən sonra göndərmək alınmadı.",
+      "DAILY_CAP_EXHAUSTED": "Gündəlik göndərmə limiti bitdi. Sabah yenidən göndərin.",
+      "BOUNCED": "E-poçt geri qayıtdı: {{reason}}",
+      "unknown": "E-poçtu çatdırmaq mümkün olmadı."
     }
   }
 }

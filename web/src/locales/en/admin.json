@@ -399,13 +399,15 @@
       "type": "Type",
       "status": "Status",
       "issuedFrom": "Issued from",
-      "issuedTo": "Issued to"
+      "issuedTo": "Issued to",
+      "emailStatus": "Email status"
     },
     "filter": {
       "allOrganizations": "All organizations",
       "allEvents": "All events",
       "allTypes": "All types",
-      "allStatuses": "All statuses"
+      "allStatuses": "All statuses",
+      "allEmailStatuses": "All email statuses"
     },
     "columns": {
       "owner": "Owner",
@@ -465,7 +467,6 @@
         "done": "PDF deleted."
       },
       "resend": "Resend email",
-      "actionSoon": "Coming soon.",
       "recipient": "Recipient",
       "issuance": "Issuance",
       "status": "Status",
@@ -510,7 +511,37 @@
       "qrLoading": "Preparing QR code…",
       "qrFailed": "The QR code could not be generated.",
       "qrDownload": "Download QR code as PNG",
-      "newTab": "opens in a new tab"
+      "newTab": "opens in a new tab",
+      "emailReveal": {
+        "show": "Show email address",
+        "hide": "Hide email address"
+      },
+      "emailPolling": "Checking the delivery status…",
+      "resendDialog": {
+        "title": "Resend email",
+        "intro": "The certificate email will be sent again.",
+        "current": "Current address",
+        "none": "No address on file",
+        "newLabel": "Corrected address",
+        "newOptionalHint": "Optional. Leave empty to use the current address; a new address replaces the stored one.",
+        "newRequiredHint": "Required: the certificate has no address on file.",
+        "required": "Enter an email address.",
+        "invalid": "Enter a valid email address.",
+        "cancel": "Cancel",
+        "submit": "Resend email",
+        "toast": "Email queued.",
+        "sent": "Email sent.",
+        "failed": "Email delivery failed.",
+        "stillPending": "The email is still being sent. Check again later.",
+        "errors": {
+          "revoked": "The certificate is revoked; its email cannot be resent.",
+          "inProgress": "An email is already being sent. Wait for it to finish.",
+          "required": "The certificate has no email address. Enter one.",
+          "rateLimited": "Too many resends for this certificate. Try again later.",
+          "rateLimitedRetry": "Too many resends for this certificate. Try again in {{seconds}} seconds.",
+          "notFound": "This certificate no longer exists."
+        }
+      }
     },
     "importWizard": {
       "title": "Import certificates from a file",
@@ -697,6 +728,14 @@
         "another": "Issue another with same settings",
         "view": "View certificate"
       }
+    },
+    "emailError": {
+      "ENQUEUE_FAILED": "The email could not be queued. Resend it.",
+      "REJECTED": "The mail provider rejected the email: {{reason}}",
+      "RETRIES_EXHAUSTED": "Delivery failed after several attempts.",
+      "DAILY_CAP_EXHAUSTED": "The daily sending limit was reached. Resend tomorrow.",
+      "BOUNCED": "The email bounced: {{reason}}",
+      "unknown": "The email could not be delivered."
     }
   }
 }

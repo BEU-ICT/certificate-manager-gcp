@@ -9,7 +9,7 @@ type ListQuery = NonNullable<operations['listCertificates']['parameters']['query
 
 type Picked = Pick<
   ListQuery,
-  'organizationId' | 'eventId' | 'type' | 'status' | 'issuedFrom' | 'issuedTo'
+  'organizationId' | 'eventId' | 'type' | 'status' | 'emailStatus' | 'issuedFrom' | 'issuedTo'
 >;
 export type CertificateFilters = { [K in keyof Picked]?: Picked[K] | undefined };
 
@@ -22,6 +22,7 @@ function filterKey(filters: CertificateFilters) {
     eventId: filters.eventId ?? null,
     type: filters.type ?? null,
     status: filters.status ?? null,
+    emailStatus: filters.emailStatus ?? null,
     issuedFrom: filters.issuedFrom ?? null,
     issuedTo: filters.issuedTo ?? null,
   };
@@ -64,12 +65,15 @@ export function useCertificateCount(filters: CertificateFilters, enabled = true)
 
 export type CertificateDetail = components['schemas']['AdminCertificate'];
 
+const detailKey = (id: string) => [...CERTIFICATES_KEY, 'detail', id] as const;
+const fetchCertificate = (id: string, signal?: AbortSignal) =>
+  api().get<CertificateDetail>(`${BASE}/${encodeURIComponent(id)}`, { signal });
+
 /** One certificate with every field (including the e-mail address); 404 for malformed and unknown IDs. */
 export function useCertificate(id: string, enabled = true) {
   return useQuery<CertificateDetail, ApiError>({
-    queryKey: [...CERTIFICATES_KEY, 'detail', id],
-    queryFn: ({ signal }) =>
-      api().get<CertificateDetail>(`${BASE}/${encodeURIComponent(id)}`, { signal }),
+    queryKey: detailKey(id),
+    queryFn: ({ signal }) => fetchCertificate(id, signal),
     staleTime: STALE_TIME.detail,
     enabled,
   });
@@ -84,5 +88,33 @@ export function useRevokeCertificate(id: string) {
     mutationFn: ({ reason }) =>
       api().post<RevokedCertificate>(`${BASE}/${encodeURIComponent(id)}/revoke`, { reason }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: CERTIFICATES_KEY }),
+  });
+}
+
+export type ResendEmailResult = components['schemas']['ResendEmailResult'];
+
+/** Queues a new send of the certificate e-mail; `email` (optional) replaces the stored address. */
+export function useResendEmail(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation<ResendEmailResult, ApiError, { email?: string }>({
+    mutationFn: ({ email }) =>
+      api().post<ResendEmailResult>(
+        `${BASE}/${encodeURIComponent(id)}/resend-email`,
+        email ? { email } : {},
+      ),
+    // Awaited, so `mutateAsync` resolves once the detail (now `pending`) was refetched.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: CERTIFICATES_KEY }),
+  });
+}
+
+/** Fetches the certificate fresh and stores it in the query cache (used to poll the e-mail status). */
+export function refreshCertificate(
+  queryClient: ReturnType<typeof useQueryClient>,
+  id: string,
+): Promise<CertificateDetail> {
+  return queryClient.fetchQuery({
+    queryKey: detailKey(id),
+    queryFn: ({ signal }) => fetchCertificate(id, signal),
+    staleTime: 0,
   });
 }
