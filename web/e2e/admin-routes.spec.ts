@@ -50,7 +50,8 @@ test.describe('with the Auth emulator and a seeded administrator', () => {
     await signIn(page);
     await expect(page).toHaveURL(/\/admin\/certificates$/);
     await expect(page.getByText(adminEmail)).toBeVisible();
-    expect(order.slice(0, 2)).toEqual(['me', 'admin-chunk']);
+    // First occurrences only: the session check may call /admin/me more than once.
+    expect([...new Set(order)].slice(0, 2)).toEqual(['me', 'admin-chunk']);
     expect(order.indexOf('admin-data')).not.toBe(0);
   });
 

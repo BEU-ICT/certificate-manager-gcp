@@ -29,6 +29,6 @@ test.describe('organizations (signed in as administrator)', () => {
     await dialog.getByRole('button', { name: 'Yarat' }).click();
 
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('cell', { name })).toBeVisible();
+    await expect(page.getByRole('cell', { name, exact: true })).toBeVisible();
   });
 });
