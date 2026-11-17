@@ -24,7 +24,7 @@ const ADMIN_PASSWORD = process.env['SEED_ADMIN_PASSWORD'] ?? 'local-admin-passwo
 const ORG_NAME = 'Demo Organization';
 const EVENT_NAME = 'Demo Event 2026';
 const TEMPLATE_TYPE: CertificateType = 'attendance';
-const TEMPLATE_DIR = resolve(__dirname, '../api/test/fixtures/templates/good');
+const TEMPLATE_DIR = resolve(__dirname, '../docs/templates/reference');
 
 function fail(message: string): never {
   process.stderr.write(`seed-dev: ${message}\n`);
@@ -42,6 +42,10 @@ const env: Record<string, string | undefined> = {
   FIRESTORE_EMULATOR_HOST: process.env['FIRESTORE_EMULATOR_HOST'] ?? '127.0.0.1:8081',
   FIREBASE_AUTH_EMULATOR_HOST: process.env['FIREBASE_AUTH_EMULATOR_HOST'] ?? '127.0.0.1:9099',
   DB_ADAPTER: 'firestore',
+  // Persistent local storage by default; the API (cwd api/) reads the same directory.
+  STORAGE_ADAPTER: process.env['STORAGE_ADAPTER'] ?? 'fs',
+  STORAGE_FS_ROOT:
+    process.env['STORAGE_FS_ROOT'] ?? resolve(__dirname, '../api/.local-data/storage'),
   LOG_LEVEL: process.env['LOG_LEVEL'] ?? 'warn',
 };
 if (!env['GCP_PROJECT']?.startsWith('demo-')) {
@@ -57,6 +61,7 @@ if (!isLocal(env['FIRESTORE_EMULATOR_HOST']) || !isLocal(env['FIREBASE_AUTH_EMUL
 // The Admin SDK reads these from process.env.
 process.env['FIRESTORE_EMULATOR_HOST'] = env['FIRESTORE_EMULATOR_HOST'];
 process.env['FIREBASE_AUTH_EMULATOR_HOST'] = env['FIREBASE_AUTH_EMULATOR_HOST'];
+process.env['STORAGE_FS_ROOT'] = env['STORAGE_FS_ROOT'];
 
 function readPackage(dir: string): Map<string, Buffer> {
   const files = new Map<string, Buffer>();
@@ -120,6 +125,9 @@ async function main(): Promise<void> {
       (files.get('config.json') ?? fail('fixture config.json missing')).toString('utf8'),
     );
     files.delete('config.json');
+    // Not uploadable parts of the reference folder: golden raster and font licence text.
+    files.delete('golden.png');
+    files.delete('fonts/LICENSE.txt');
     const checked = checkTemplateUpload(configJson, files);
     const templateFiles: TemplateFile[] = [...files].map(([path, body]) => ({ path, body }));
     template = await services.templates.publish({
@@ -182,11 +190,14 @@ async function main(): Promise<void> {
     `  template      ${template.reference}${templateCreated ? '' : ' (existing)'}`,
     `  certificates  ${certificateCount > 0 ? `${String(certificateCount)} created (1 revoked, 1 without e-mail)` : 'already present'}`,
   ];
-  if (config.adapters.storage === 'memory' && templateCreated) {
+  if (config.adapters.storage === 'fs') {
+    lines.push(
+      `  storage       fs, root ${env['STORAGE_FS_ROOT'] ?? ''} (run the API with the same STORAGE_FS_ROOT)`,
+    );
+  } else if (config.adapters.storage === 'memory' && templateCreated) {
     lines.push(
       '',
-      'Note: STORAGE_ADAPTER=memory, so the template package files were not kept after this script exited;',
-      'the template document exists, the stored files will appear once a persistent storage adapter is available.',
+      'Note: STORAGE_ADAPTER=memory, so the template package files were not kept after this script exited.',
     );
   }
   process.stdout.write(`${lines.join('\n')}\n`);
