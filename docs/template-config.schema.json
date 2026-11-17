@@ -79,7 +79,7 @@
       "properties": {
         "x": { "type": "number", "minimum": 0, "maximum": 10000 },
         "y": { "type": "number", "minimum": 0, "maximum": 10000 },
-        "size": { "type": "number", "minimum": 40, "maximum": 10000 }
+        "size": { "type": "number", "minimum": 47, "maximum": 10000 }
       },
       "required": ["x", "y", "size"],
       "additionalProperties": false

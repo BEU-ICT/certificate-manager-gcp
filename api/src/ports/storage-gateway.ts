@@ -7,6 +7,13 @@ export interface PutOptions {
   contentDisposition?: string;
 }
 
+/** An object found by {@link StorageGateway.list}. */
+export interface StoredObject {
+  key: string;
+  /** Size of the object body in bytes. */
+  size: number;
+}
+
 /**
  * Object storage. Keys are `/`-separated, never start with `/`.
  * Failures of the backing service surface as `UnavailableError`.
@@ -30,8 +37,8 @@ export interface StorageGateway {
   delete(kind: BucketKind, key: string): Promise<void>;
   /** Fails with `NotFoundError` when `fromKey` is missing; overwrites `toKey`. */
   copy(kind: BucketKind, fromKey: string, toKey: string): Promise<void>;
-  /** Keys starting with `prefix`, lexicographic order. */
-  list(kind: BucketKind, prefix: string): Promise<string[]>;
+  /** Objects (key and size in bytes) whose key starts with `prefix`, lexicographic key order. */
+  list(kind: BucketKind, prefix: string): Promise<StoredObject[]>;
   /** Public URL of a PDF key; pure, performs no I/O. */
   publicUrl(key: string): string;
 }

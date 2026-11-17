@@ -81,7 +81,12 @@ export class FakeGcsClient implements GcsClientLike {
       file: (key) => Object.assign(file(key), { name: key }),
       getFiles: async ({ prefix }) => {
         await fail();
-        return [[...store.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name }))];
+        return [
+          [...store.entries()]
+            .filter(([k]) => k.startsWith(prefix))
+            // The real client reports `metadata.size` as a decimal string.
+            .map(([name, found]) => ({ name, metadata: { size: String(found.body.length) } })),
+        ];
       },
     };
   }

@@ -37,9 +37,6 @@ import {
 /** Attempts after the first one when a concurrent upload took the version number (BEU-ICT/certificate-manager#307). */
 export const MAX_REFERENCE_RETRIES = 3;
 
-/** Objects read in parallel to learn the package file sizes. */
-const SIZE_READ_CONCURRENCY = 4;
-
 export interface TemplateTarget {
   organizationId: OrganizationId;
   eventId: EventId;
@@ -265,6 +262,7 @@ export class DefaultTemplateService implements TemplateService {
     const sourcePrefix = templateStoragePath(source.reference);
     const sourceConfigKey = templateConfigKey(source.reference);
     const paths = (await this.storage.list(TEMPLATES_BUCKET, sourcePrefix))
+      .map((object) => object.key)
       .filter((key) => key !== sourceConfigKey)
       .map((key) => key.slice(sourcePrefix.length))
       // Stray objects that are not part of a package layout are never copied.
@@ -404,24 +402,16 @@ export class DefaultTemplateService implements TemplateService {
 
   async getDetail(reference: string): Promise<TemplateDetail> {
     const template = await this.get(reference);
-    const [maxima, keys, certificateCount] = await Promise.all([
+    const [maxima, objects, certificateCount] = await Promise.all([
       this.latestVersions([template]),
       this.storage.list(TEMPLATES_BUCKET, templateStoragePath(template.reference)),
       this.certificateCounter.countByTemplate(template.reference),
     ]);
     const prefix = templateStoragePath(template.reference);
-    // StorageGateway.list returns keys only; follow-up: add size metadata to the storage port.
-    const files: { path: string; size: number }[] = [];
-    for (let i = 0; i < keys.length; i += SIZE_READ_CONCURRENCY) {
-      const batch = await Promise.all(
-        keys.slice(i, i + SIZE_READ_CONCURRENCY).map(async (key) => ({
-          path: key.slice(prefix.length),
-          body: await this.storage.get(TEMPLATES_BUCKET, key),
-        })),
-      );
-      // A null body means the object was deleted between list and get: leave it out.
-      for (const { path, body } of batch) if (body) files.push({ path, size: body.length });
-    }
+    const files = objects.map((object) => ({
+      path: object.key.slice(prefix.length),
+      size: object.size,
+    }));
     return {
       template,
       isLatest: maxima.get(groupKey(template)) === template.version,

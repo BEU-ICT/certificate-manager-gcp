@@ -1,4 +1,4 @@
-import type { BucketKind, PutOptions, StorageGateway } from '../../ports/index.js';
+import type { BucketKind, PutOptions, StorageGateway, StoredObject } from '../../ports/index.js';
 import { NotFoundError, UnavailableError } from '../../shared/errors.js';
 
 /** The slice of `@google-cloud/storage` this adapter uses, so tests inject a mock or fake. */
@@ -23,7 +23,9 @@ export interface GcsBucketLike {
   getFiles(query: {
     prefix: string;
     autoPaginate: true;
-  }): Promise<readonly [Array<{ name: string }>, ...unknown[]]>;
+  }): Promise<
+    readonly [Array<{ name: string; metadata?: { size?: string | number } }>, ...unknown[]]
+  >;
 }
 
 export interface GcsClientLike {
@@ -108,11 +110,13 @@ export class GcsStorageGateway implements StorageGateway {
     }
   }
 
-  async list(kind: BucketKind, prefix: string): Promise<string[]> {
+  async list(kind: BucketKind, prefix: string): Promise<StoredObject[]> {
     try {
       const [files] = await this.bucket(kind).getFiles({ prefix, autoPaginate: true });
       // GCS lists in UTF-8 byte order; sorting keeps the contract for any client/emulator.
-      return files.map((file) => file.name).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+      return files
+        .map((file) => ({ key: file.name, size: Number(file.metadata?.size ?? 0) }))
+        .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
     } catch (error) {
       throw unavailable(error);
     }

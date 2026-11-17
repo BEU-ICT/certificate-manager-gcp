@@ -230,9 +230,9 @@ describe('parseTemplateConfig: invalid configs report the exact path', () => {
       /QR bottom edge 640 pt exceeds the page height 595\.28 pt/,
     );
     expectIssue(
-      errorsOf(landscape({ qr: { x: 700, y: 440, size: 39 } })),
+      errorsOf(landscape({ qr: { x: 700, y: 440, size: 46 } })),
       'qr.size',
-      /(>=|at least) ?40/,
+      /(>=|at least) ?47/,
     );
   });
 

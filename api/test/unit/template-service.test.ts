@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildTemplateReference,
   templateAssetKey,
@@ -112,7 +112,9 @@ describe('TemplateService.publish', () => {
     });
     const second = await ctx.services.templates.publish(ctx.input);
     expect(second.reference).toBe('acme-devfest-attendance-v1');
-    const keys = await ctx.storage.list('templates', 'templates/acme-devfest-attendance-v0/');
+    const keys = (await ctx.storage.list('templates', 'templates/acme-devfest-attendance-v0/')).map(
+      (o) => o.key,
+    );
     expect(keys).toEqual([
       'templates/acme-devfest-attendance-v0/assets/logo.png',
       'templates/acme-devfest-attendance-v0/background.svg',
@@ -212,6 +214,18 @@ describe('TemplateService.publish', () => {
       details: [{ counts: { templates: 1 } }],
     });
     await expect(ctx.services.organizations.delete(ctx.org.id)).rejects.toBeInstanceOf(InUseError);
+  });
+
+  it('reports file sizes from one storage listing, without reading objects', async () => {
+    const t = await ctx.services.templates.publish(ctx.input);
+    const get = vi.spyOn(ctx.storage, 'get');
+    const detail = await ctx.services.templates.getDetail(t.reference);
+    expect(get).not.toHaveBeenCalled();
+    const sizes = new Map(detail.files.map((f) => [f.path, f.size]));
+    expect(sizes.get('background.svg')).toBe(Buffer.byteLength('<svg/>'));
+    expect(sizes.get('fonts/main.ttf')).toBe(3);
+    expect(sizes.get('assets/logo.png')).toBe(3);
+    expect(sizes.get('config.json')).toBeGreaterThan(0);
   });
 
   it('gets, lists and counts', async () => {
