@@ -13,8 +13,11 @@
   "scripts": {
     "dev": "concurrently -k -n emulators,api,web -c yellow,cyan,magenta \"npm run dev:emulators\" \"npm run dev -w @certificate-manager/api\" \"npm run dev -w @certificate-manager/web\"",
     "dev:lite": "concurrently -k -n api,web -c cyan,magenta \"npm run dev -w @certificate-manager/api\" \"npm run dev -w @certificate-manager/web\"",
+    "dev:local": "concurrently -k -n emulators,api,web -c yellow,cyan,magenta \"npm run dev:emulators\" \"until curl -fs http://127.0.0.1:9099/ >/dev/null && curl -fs http://127.0.0.1:8081/ >/dev/null; do sleep 1; done; npm run seed:dev && DB_ADAPTER=firestore STORAGE_ADAPTER=fs EMAIL_PROVIDER=file QUEUE_ADAPTER=in-process FIRESTORE_EMULATOR_HOST=127.0.0.1:8081 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 BOOTSTRAP_ADMIN_EMAIL=admin@example.test npm run dev -w @certificate-manager/api\" \"VITE_USE_AUTH_EMULATOR=true npm run dev -w @certificate-manager/web\"",
     "dev:emulators": "firebase emulators:start --only firestore,auth --project demo-certificate-manager",
     "seed:dev": "tsx scripts/seed-dev.ts",
+    "local:reset": "bash scripts/local-reset.sh",
+    "local:fixtures": "bash scripts/local-fixtures.sh",
     "verify:pdf-lifecycle": "tsx scripts/verify-pdf-lifecycle.ts",
     "migration:validate-template-mapping": "tsx scripts/migration/validate-template-mapping.ts",
     "test:e2e:auth": "firebase emulators:exec --only firestore,auth --project demo-certificate-manager \"npm run seed:dev && E2E_AUTH_EMULATOR=true E2E_ADMIN_EMAIL=admin@example.test E2E_ADMIN_PASSWORD=local-admin-password VITE_USE_AUTH_EMULATOR=true npm run test:e2e -w @certificate-manager/web\""

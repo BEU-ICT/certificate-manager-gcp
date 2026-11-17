@@ -69,4 +69,8 @@ It creates the administrator `admin@example.test` (password `local-admin-passwor
 
 To see the data in the SPA, run the API against the Firestore emulator (`DB_ADAPTER=firestore` in `api/.env`, or leave it unset and export `FIRESTORE_EMULATOR_HOST=127.0.0.1:8081`), set `VITE_USE_AUTH_EMULATOR=true` in `web/.env` and sign in with the seeded administrator. The seed stores the template package (`docs/templates/reference`) through `STORAGE_ADAPTER=fs` (default for the script) under `api/.local-data/storage`, so run the API with `STORAGE_ADAPTER=fs` as well (see below).
 
+## One command for the manual local test
+
+`npm run dev:local` starts the emulators, waits for them, seeds, then runs the API (`DB_ADAPTER=firestore`, `STORAGE_ADAPTER=fs`, `EMAIL_PROVIDER=file`, `QUEUE_ADAPTER=in-process`) and the SPA against the Auth emulator. The API does **not** read `api/.env` by itself (settings come from the process environment), which is why the variables are set inline. `npm run local:reset` clears the emulators, `api/.local-data/storage` and `api/.local-data/mail` and re-seeds; `npm run local:fixtures` writes broken template packages and CSV files to `api/.local-data/fixtures`. The full checklist is [local-test.md](local-test.md).
+
 `npm run test:e2e:auth` starts the emulators, seeds and runs the Playwright suite including the sign-in tests (needs Java 21).
