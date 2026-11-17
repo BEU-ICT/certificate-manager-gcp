@@ -54,6 +54,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
     r.queue.register('cloud-tasks', async (ctx) =>
       (await import('./adapters/cloud-tasks/index.js')).createQueuePorts(ctx),
     ),
+  (r) =>
+    r.storage.register('fs', async (ctx) =>
+      (await import('./adapters/fs/index.js')).createStorageGateway(ctx),
+    ),
   // Replaces the in-memory stand-in registered above. A future `sendgrid` adapter registers the same way.
   (r) =>
     r.email.register('brevo', async (ctx) =>

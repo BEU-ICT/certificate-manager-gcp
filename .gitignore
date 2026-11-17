@@ -14,3 +14,6 @@ firebase-debug.log*
 .vscode/
 playwright-report/
 test-results/
+
+# Local object storage (STORAGE_ADAPTER=fs)
+.local-data/
