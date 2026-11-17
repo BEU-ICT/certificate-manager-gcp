@@ -11,6 +11,10 @@ Two buckets in `us-east1`, Standard class, uniform bucket-level access, created 
 
 `PDF_PUBLIC_BASE_URL` is `https://storage.googleapis.com/<project>-pdfs` (no custom domain, no paid load balancer).
 
+## API adapter (`STORAGE_ADAPTER=gcs`)
+
+`api/src/adapters/gcs` implements `StorageGateway` on `@google-cloud/storage`; `templates` maps to `TEMPLATES_BUCKET` and `pdfs` to `PDF_BUCKET` (both required), `publicUrl(key)` is `PDF_PUBLIC_BASE_URL/<key>`. Credentials are the runtime service account (ADC). PDF writes default to `Cache-Control: no-cache` unless the caller passes `cacheControl`. `putIfAbsent` uses `ifGenerationMatch=0` (HTTP 412 means "already exists"); a missing `copy` source is `NotFoundError`; every other backend failure is `UnavailableError` (503). With `STORAGE_EMULATOR_HOST=localhost:4443` the client talks plain http to fake-gcs-server without credentials (`api/README.md`, "Storage emulator"). The runtime service account needs `roles/storage.objectAdmin` on both buckets (create, overwrite, delete, list, copy).
+
 ## Soft delete and cost
 
 Soft delete is **disabled** (`--soft-delete-duration=0`) on both buckets. The default 7 days would keep deleted and replaced objects billed, and a revoked certificate's PDF must disappear immediately (ADR 0007). Trade-off: a deleted object cannot be restored from the bucket; PDFs are regenerated lazily from Firestore data and templates are versioned immutably (ADR 0008), so nothing irreplaceable depends on soft delete. Expected size: about 1 GB of PDFs per month at the cost model's volume; the free 5 GB-months last about five months (`docs/cost-model.md`). A lifecycle rule for old PDFs is a decision for that point.

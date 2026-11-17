@@ -51,6 +51,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
       (await import('./adapters/firestore/index.js')).createRepositories(ctx),
     ),
   (r) =>
+    r.storage.register('gcs', async (ctx) =>
+      (await import('./adapters/gcs/index.js')).createStorageGateway(ctx),
+    ),
+  (r) =>
     r.queue.register('cloud-tasks', async (ctx) =>
       (await import('./adapters/cloud-tasks/index.js')).createQueuePorts(ctx),
     ),

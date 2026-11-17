@@ -1,14 +1,16 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { createStorageClient } from '../../src/adapters/gcs/index.js';
+import { GcsStorageGateway } from '../../src/adapters/gcs/gcs-storage-gateway.js';
+import { describeStorageGatewayContract } from '../../src/testing/contracts/index.js';
 
 // Runs only against a fake-gcs-server (see README, "Storage emulator"):
 //   docker compose -f test/integration/docker-compose.storage.yml up -d
 //   STORAGE_EMULATOR_HOST=localhost:4443 npm run test:integration
 // Without STORAGE_EMULATOR_HOST the suite is skipped, so CI and a plain local run need no Docker.
 //
-// TODO(Storage adapter task): replace this capability probe by
-// `describeStorageGatewayContract(...)` run against the GCS adapter. Until the adapter exists the
-// test talks to the JSON API directly to pin down what the emulator supports (ifGenerationMatch).
+// The first block probes the emulator's JSON API directly (ifGenerationMatch); the second runs the
+// shared StorageGateway contract against the real `@google-cloud/storage` client and GcsStorageGateway.
 const host = process.env['STORAGE_EMULATOR_HOST'];
 const base = host ? (host.startsWith('http') ? host : `http://${host}`) : '';
 
@@ -60,3 +62,32 @@ describe.skipIf(!host)('fake-gcs-server (STORAGE_EMULATOR_HOST)', () => {
     expect(statuses.filter((s) => s === 412)).toHaveLength(19);
   });
 });
+
+async function createBucket(name: string): Promise<void> {
+  const res = await fetch(`${base}/storage/v1/b`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) throw new Error(`cannot create bucket ${name}: ${res.status}`);
+}
+
+if (host) {
+  // A fresh pair of buckets per contract test keeps tests independent.
+  describeStorageGatewayContract('GcsStorageGateway (fake-gcs-server)', async () => {
+    const id = randomUUID();
+    const templatesBucket = `it-t-${id}`;
+    const pdfBucket = `it-p-${id}`;
+    await createBucket(templatesBucket);
+    await createBucket(pdfBucket);
+    return {
+      adapter: new GcsStorageGateway({
+        client: createStorageClient('demo-certificate-manager'),
+        templatesBucket,
+        pdfBucket,
+        pdfPublicBaseUrl: `${base}/${pdfBucket}`,
+      }),
+      cleanup: () => undefined,
+    };
+  });
+}
