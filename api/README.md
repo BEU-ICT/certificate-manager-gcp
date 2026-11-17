@@ -176,7 +176,7 @@ STORAGE_EMULATOR_HOST=localhost:4443 npm run test:integration
 docker compose -f test/integration/docker-compose.storage.yml down
 ```
 
-The GCS adapter is expected to read the same variable (the official `@google-cloud/storage` client does). CI does not run these tests; the Firestore/Auth job needs no Docker.
+`GcsStorageGateway` (`STORAGE_ADAPTER=gcs`) reads the same variable through the official `@google-cloud/storage` client, and `storage.integration.test.ts` runs the shared contract suite against it. CI does not run these tests; the Firestore/Auth job needs no Docker.
 
 **Generation preconditions.** `StorageGateway.putIfAbsent` maps to `ifGenerationMatch=0`. Verified against fake-gcs-server 1.56.1 (`storage.integration.test.ts`): uploads honour `ifGenerationMatch` for the media, multipart and resumable protocols, the second write of a key with `ifGenerationMatch=0` fails with HTTP 412, a stale generation fails with 412, and of 20 concurrent writers exactly one succeeds. So the emulator covers the `putIfAbsent` contract and **no ADR is needed**. Known gap, not relied on by the port: `DELETE ... ?ifGenerationMatch=` is ignored by the emulator (the object is deleted regardless). `StorageGateway.delete` takes no precondition, so nothing is lost; if one is ever added, cover it with a manual check against a real bucket in the E2 verification story. The `copy` path (`rewriteTo`/`copyTo`) was not exercised and belongs to the adapter contract tests.
 
