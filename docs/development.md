@@ -28,6 +28,16 @@ npx prettier --check . && npm run lint --workspaces --if-present
 infra/test-dry-run.sh && infra/test-smoke.sh   # deployment scripts, offline
 ```
 
+## Local file storage (`STORAGE_ADAPTER=fs`)
+
+`memory` storage loses template files and PDFs on every restart. For a full local test use the `fs` adapter:
+
+```bash
+STORAGE_ADAPTER=fs npm run dev        # or npm run dev:lite
+```
+
+Files live under `STORAGE_FS_ROOT` (default `.local-data/storage` relative to the API working directory, i.e. `api/.local-data/storage`; git-ignored): `templates/` and `pdfs/` mirror the two buckets, `.meta/` keeps content types. Delete the folder to reset storage. The API also serves `GET /pdfs/<key>` (read-only, no listing), so with the default `PDF_PUBLIC_BASE_URL=http://localhost:8080` the redirect of `/api/v1/public/certificates/{id}/pdf` opens the PDF locally. `npm run seed:dev` writes to the same directory; use the same `STORAGE_FS_ROOT` for both if you override it.
+
 ## Debugging and resetting data
 
 Run the API with `LOG_LEVEL=debug`. Emulator data lives only in memory: stop and restart `npm run dev` to reset. The integration helpers expose `resetFirestore()` for tests.
@@ -57,6 +67,6 @@ npm run seed:dev
 
 It creates the administrator `admin@example.test` (password `local-admin-password`, valid only in the Auth emulator; override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`), one organization, one event, one template and three certificates (two active, one revoked, one without e-mail). It is idempotent and refuses to run unless `GCP_PROJECT` starts with `demo-` and both emulator hosts are local.
 
-To see the data in the SPA, run the API against the Firestore emulator (`DB_ADAPTER=firestore` in `api/.env`, or leave it unset and export `FIRESTORE_EMULATOR_HOST=127.0.0.1:8081`), set `VITE_USE_AUTH_EMULATOR=true` in `web/.env` and sign in with the seeded administrator. Limitation: no persistent storage adapter exists yet (`STORAGE_ADAPTER=memory`), so the template document is seeded but its package files vanish when the script exits; previews and PDFs of the seeded template work once a storage adapter lands.
+To see the data in the SPA, run the API against the Firestore emulator (`DB_ADAPTER=firestore` in `api/.env`, or leave it unset and export `FIRESTORE_EMULATOR_HOST=127.0.0.1:8081`), set `VITE_USE_AUTH_EMULATOR=true` in `web/.env` and sign in with the seeded administrator. The seed stores the template package (`docs/templates/reference`) through `STORAGE_ADAPTER=fs` (default for the script) under `api/.local-data/storage`, so run the API with `STORAGE_ADAPTER=fs` as well (see below).
 
 `npm run test:e2e:auth` starts the emulators, seeds and runs the Playwright suite including the sign-in tests (needs Java 21).

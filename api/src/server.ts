@@ -51,6 +51,14 @@ const app = buildApp({
   publicUrls: { publicBaseUrl: config.publicBaseUrl, pdfPublicBaseUrl: config.pdfPublicBaseUrl },
 });
 
+if (config.adapters.storage === 'fs') {
+  // Local profile: this API doubles as the public PDF bucket (PDF_PUBLIC_BASE_URL -> this API).
+  const { registerFsPublicPdfRoutes, FsStorageGateway } = await import('./adapters/fs/index.js');
+  if (composition.ports.storage instanceof FsStorageGateway) {
+    registerFsPublicPdfRoutes(app, composition.ports.storage);
+  }
+}
+
 installProcessSafety(process, app.log, { revision: process.env['K_REVISION'] ?? version });
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
