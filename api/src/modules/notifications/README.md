@@ -97,3 +97,7 @@ Language: the `emailLanguage` of the certificate's event. The certificate snapsh
 Preview: `npm run email:preview -- <az|en> [outDir]` writes `certificate-<lang>.html` and `.txt` with sample data to `<os tmpdir>/cm-email-preview` (outside the repository).
 
 The Azerbaijani wording needs native-speaker review (acceptance criterion of the issue).
+
+## Local file sink (BEU-ICT/certificate-manager#452)
+
+`EMAIL_PROVIDER=file` selects `src/adapters/file` (registered lazily in `compose.ts`): each message is written to `EMAIL_FILE_DIR` (default `.local-data/mail`) as `<timestamp>-<local part of the Message-ID>.eml` (multipart/alternative, text and HTML) and one log line without addresses is emitted. It never touches the network, is rejected by config when `NODE_ENV=production`, and the factory also refuses non-`demo-` projects and non-localhost base URLs. The same Message-ID is written only once per process (like the fake sender). `EmailMessage` has no attachments today, so none are written. See `docs/development.md`.

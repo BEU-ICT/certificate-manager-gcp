@@ -17,7 +17,7 @@ export const DB_ADAPTERS = ['firestore', 'memory'] as const;
 export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
 export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process'] as const;
 export const AUTH_PROVIDERS = ['firebase'] as const;
-export const EMAIL_PROVIDERS = ['gmail', 'brevo'] as const;
+export const EMAIL_PROVIDERS = ['gmail', 'brevo', 'file'] as const;
 
 export interface Config {
   readonly env: (typeof NODE_ENVS)[number];
@@ -47,6 +47,8 @@ export interface Config {
     readonly fromAddress: string;
     readonly fromName: string;
     readonly replyTo: string | undefined;
+    /** Output directory of the local-only `file` provider (`EMAIL_FILE_DIR`). */
+    readonly fileDir: string;
     readonly dailyCap: number;
     /** Daily cap of the fallback provider (`EMAIL_FALLBACK_DAILY_CAP`). */
     readonly fallbackDailyCap: number;
@@ -116,6 +118,7 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   LOG_LEVEL: 'info',
   AUTH_CHECK_REVOKED: 'false',
   EMAIL_FROM_NAME: 'Certificate Manager',
+  EMAIL_FILE_DIR: '.local-data/mail',
   EMAIL_DAILY_CAP: '300',
   EMAIL_FALLBACK_DAILY_CAP: '300',
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
@@ -169,6 +172,7 @@ const schema = z.object({
   EMAIL_FROM_ADDRESS: email,
   EMAIL_FROM_NAME: text(120),
   EMAIL_REPLY_TO: email.optional(),
+  EMAIL_FILE_DIR: text(500),
   EMAIL_DAILY_CAP: int(1, 1_000_000),
   EMAIL_FALLBACK_DAILY_CAP: int(1, 1_000_000),
   RATE_LIMIT_PUBLIC_PER_MIN: int(1, 10_000),
@@ -207,6 +211,13 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
       'EMAIL_API_KEY',
       'is required when brevo is used as EMAIL_PROVIDER or EMAIL_FALLBACK_PROVIDER',
     );
+  }
+
+  if (isProd) {
+    for (const name of ['EMAIL_PROVIDER', 'EMAIL_FALLBACK_PROVIDER']) {
+      if (env[name] === 'file')
+        add(name, '"file" is a local-only provider, not allowed when NODE_ENV=production');
+    }
   }
 
   if (env['STORAGE_ADAPTER'] === 'gcs') {
@@ -303,6 +314,7 @@ export function loadConfig(env: Env): Config {
       fromAddress: e.EMAIL_FROM_ADDRESS,
       fromName: e.EMAIL_FROM_NAME,
       replyTo: e.EMAIL_REPLY_TO,
+      fileDir: e.EMAIL_FILE_DIR,
       dailyCap: e.EMAIL_DAILY_CAP,
       fallbackDailyCap: e.EMAIL_FALLBACK_DAILY_CAP,
     },

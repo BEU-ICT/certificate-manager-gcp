@@ -15,5 +15,6 @@ firebase-debug.log*
 playwright-report/
 test-results/
 
+# Local-only data (file e-mail sink, ...)
 # Local object storage (STORAGE_ADAPTER=fs)
 .local-data/
