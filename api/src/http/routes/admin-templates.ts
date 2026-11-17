@@ -97,8 +97,16 @@ export function adminTemplateRoutes(
       async (request, reply) => {
         // After the handler timeout the 503 has been sent but this code keeps running: stop before
         // anything is stored so that a retry cannot create a second version.
+        // Fastify also aborts the signal on the request's `close` event, which Node emits as soon as the
+        // request body has been read, so only the handler-timeout reason counts here.
         const assertNotTimedOut = (): void => {
-          if (request.signal.aborted) throw new UnavailableError();
+          const { aborted, reason } = request.signal as { aborted: boolean; reason?: unknown };
+          if (
+            aborted &&
+            (reason as { code?: string } | undefined)?.code === 'FST_ERR_HANDLER_TIMEOUT'
+          ) {
+            throw new UnavailableError();
+          }
         };
         const form = await readTemplateUpload(request);
         assertNotTimedOut();
