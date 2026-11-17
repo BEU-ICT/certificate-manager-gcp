@@ -284,7 +284,7 @@ describe('IssueCertificatePage', () => {
     await user.click(submit());
     await screen.findByRole('heading', { name: 'Certificate issued' });
     expect(seen.posts[1]?.key).not.toBe(key);
-    await user.click(screen.getByRole('button', { name: 'View certificate' }));
+    await user.click(screen.getByRole('link', { name: 'View certificate' }));
     expect(screen.getByTestId('loc')).toHaveTextContent(`/admin/certificates/${CERTIFICATE.id}`);
   });
 
@@ -314,7 +314,7 @@ describe('IssueCertificatePage', () => {
     expect(screen.getByLabelText(/^Email address/)).not.toHaveAttribute('aria-invalid');
   });
 
-  it.each(['TEMPLATE_MISMATCH', 'TEMPLATE_NOT_FOUND'])(
+  it.each(['TEMPLATE_MISMATCH', 'TEMPLATE_NOT_FOUND', 'EVENT_ORG_MISMATCH'])(
     'shows an inline alert on 422 %s',
     async (code) => {
       const seen = lookups();
@@ -326,7 +326,11 @@ describe('IssueCertificatePage', () => {
       await user.click(submit());
       const alert = await screen.findByRole('alert');
       expect(alert).toHaveTextContent(
-        code === 'TEMPLATE_MISMATCH' ? 'does not match' : 'Template not found',
+        {
+          TEMPLATE_MISMATCH: 'does not match',
+          TEMPLATE_NOT_FOUND: 'Template not found',
+          EVENT_ORG_MISMATCH: 'does not belong to the selected organization',
+        }[code]!,
       );
       expect(alert).toHaveTextContent('Choose another template');
     },

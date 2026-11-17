@@ -279,6 +279,7 @@
     },
     "uploadForm": {
       "title": "Upload template",
+      "guideLink": "Template authoring guide",
       "newVersionTitle": "Upload a new version",
       "lockedIntro": "New version of {{reference}}. Organization, event and type stay the same.",
       "typePlaceholder": "Choose a type",
