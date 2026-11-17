@@ -32,6 +32,17 @@ infra/test-dry-run.sh && infra/test-smoke.sh   # deployment scripts, offline
 
 Run the API with `LOG_LEVEL=debug`. Emulator data lives only in memory: stop and restart `npm run dev` to reset. The integration helpers expose `resetFirestore()` for tests.
 
+## Reading sent e-mail locally
+
+With `EMAIL_PROVIDER=file` (the default in `api/.env.example`) the API never contacts a mail provider. Every message the notifications module sends (certificate issued, resend) is written as an RFC 5322 file `<timestamp>-cm-<certificateId>-<sequence>.eml` to `EMAIL_FILE_DIR` (default `.local-data/mail`, relative to the directory the API runs in, i.e. `api/` for `npm run dev`; git-ignored). The log gets one line per file (no addresses).
+
+```bash
+ls api/.local-data/mail
+xdg-open api/.local-data/mail/<file>.eml   # opens in Thunderbird/Evolution; or: less <file>.eml
+```
+
+The text and HTML parts are base64-encoded; to read them without a mail client: `python3 -c "import email,sys,email.policy as p;m=email.message_from_binary_file(open(sys.argv[1],'rb'),policy=p.default);print(m.get_body(('html',)).get_content())" <file>.eml`. A resend writes a new file (sequence `-2`, ...). The adapter refuses to start when `NODE_ENV=production`, when `GCP_PROJECT` does not start with `demo-`, or when `SERVICE_URL` / `PUBLIC_BASE_URL` / `PDF_PUBLIC_BASE_URL` are not on localhost. Issued certificates reach it through the in-process queue (`QUEUE_ADAPTER=in-process`).
+
 ## Safety rules
 
 `api/.env` and `web/.env` are git-ignored. Never put real project ids or secrets into local env files.

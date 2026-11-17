@@ -59,6 +59,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
     r.email.register('brevo', async (ctx) =>
       (await import('./adapters/brevo/index.js')).createEmailSender(ctx),
     ),
+  (r) =>
+    r.email.register('file', async (ctx) =>
+      (await import('./adapters/file/index.js')).createEmailSender(ctx),
+    ),
 ];
 
 /** Registries with the names defined by the configuration plus the built-in registrations. */
