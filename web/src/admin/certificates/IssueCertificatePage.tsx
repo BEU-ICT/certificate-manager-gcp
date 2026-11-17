@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { isApiError, type ApiError } from '@/api';
 import { Button, DatePicker, Select, TextField, useToast } from '@/components';
 import { errorMessage } from '@/i18n/errors';
@@ -76,7 +76,6 @@ function SuccessPanel({
 }) {
   const { t } = useTranslation('admin');
   const toast = useToast();
-  const navigate = useNavigate();
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
 
@@ -121,11 +120,12 @@ function SuccessPanel({
         <Button variant="secondary" onClick={onAnother}>
           {t('certificates.issueForm.success.another')}
         </Button>
-        <Button
-          onClick={() => void navigate(`/admin/certificates/${encodeURIComponent(certificate.id)}`)}
+        <Link
+          to={`/admin/certificates/${encodeURIComponent(certificate.id)}`}
+          className="inline-flex min-h-11 items-center justify-center rounded-control border border-transparent bg-primary px-4 py-2 text-base font-medium text-white hover:bg-primary-hover"
         >
           {t('certificates.issueForm.success.view')}
-        </Button>
+        </Link>
       </div>
     </section>
   );
@@ -418,12 +418,7 @@ function FailureAlert({ failure }: { failure: Failure }) {
   if (failure.kind === 'template') {
     return (
       <div role="alert" className={box}>
-        <p>
-          {errorMessage(
-            t,
-            failure.code === 'EVENT_ORG_MISMATCH' ? 'TEMPLATE_MISMATCH' : failure.code,
-          )}
-        </p>
+        <p>{errorMessage(t, failure.code)}</p>
         <p className="font-normal">{t('certificates.issueForm.failure.template')}</p>
       </div>
     );

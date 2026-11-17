@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@/components';
 import { expectNoA11yViolations } from '@/test/axe';
 import { renderWithProviders } from '@/test/render';
@@ -192,7 +192,8 @@ describe('rename and delete', () => {
         return HttpResponse.json(ITEM('o1', 'Acme Corp', 'acme'));
       }),
     );
-    renderPage();
+    const { queryClient } = renderPage();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
     await userEvent.click(await screen.findByRole('button', { name: 'Rename Acme' }));
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByLabelText(/^Slug/)).toHaveAttribute('readonly');
@@ -204,6 +205,8 @@ describe('rename and delete', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('Organization renamed to "Acme Corp"')).toBeInTheDocument();
     expect(body).toEqual({ name: 'Acme Corp' });
+    // Events show the organization name, so their list must refetch too.
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['admin', 'events'] });
   });
 
   it('deletes after confirmation and refreshes the list', async () => {

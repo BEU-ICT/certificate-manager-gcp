@@ -7,6 +7,7 @@ import { ToastProvider } from '@/components';
 import { expectNoA11yViolations } from '@/test/axe';
 import { renderWithProviders } from '@/test/render';
 import { server, setupMswServer } from '@/test/server';
+import { TEMPLATE_AUTHORING_GUIDE_URL } from '@/lib/docs';
 import TemplateUploadPage from './TemplateUploadPage';
 
 setupMswServer();
@@ -132,6 +133,13 @@ describe('TemplateUploadPage', () => {
       expect(input).toHaveAttribute('type', 'file');
       expect(input).not.toHaveAttribute('tabindex', '-1');
     }
+  });
+
+  it('links to the template authoring guide', async () => {
+    renderPage();
+    const link = await screen.findByRole('link', { name: /Template authoring guide/ });
+    expect(link).toHaveAttribute('href', TEMPLATE_AUTHORING_GUIDE_URL.en);
+    expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('shows client-side pre-check errors and does not call the API', async () => {

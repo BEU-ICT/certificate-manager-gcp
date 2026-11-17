@@ -279,6 +279,7 @@
     },
     "uploadForm": {
       "title": "Şablon yüklə",
+      "guideLink": "Şablon hazırlama bələdçisi",
       "newVersionTitle": "Yeni versiya yüklə",
       "lockedIntro": "{{reference}} şablonunun yeni versiyası. Təşkilat, tədbir və növ dəyişmir.",
       "typePlaceholder": "Növü seçin",

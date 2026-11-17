@@ -8,6 +8,7 @@
   "PAYLOAD_TOO_LARGE": "The submitted data is too large.",
   "TEXT_DOES_NOT_FIT": "The text does not fit the template field.",
   "TEMPLATE_MISMATCH": "The template does not match the selected event or type.",
+  "EVENT_ORG_MISMATCH": "The selected event does not belong to the selected organization.",
   "TEMPLATE_NOT_FOUND": "Template not found.",
   "TEMPLATE_INVALID": "The template is invalid.",
   "RATE_LIMITED": "Too many requests. Try again shortly.",

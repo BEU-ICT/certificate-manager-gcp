@@ -6,6 +6,7 @@ import { Badge, Button, ErrorState, Select, Skeleton } from '@/components';
 import { errorMessage } from '@/i18n/errors';
 import { DEFAULT_LANGUAGE, isLanguage } from '@/i18n/language';
 import { CERTIFICATE_TYPES, certificateTypeLabel } from '@/lib/certificateTypes';
+import { TEMPLATE_AUTHORING_GUIDE_URL } from '@/lib/docs';
 import { formatNumber } from '@/lib/format';
 import { OrganizationSelect } from '../events/OrganizationSelect';
 import { useTemplate, useUploadTemplate, type TemplateUploadResult } from './api';
@@ -310,6 +311,17 @@ export default function TemplateUploadPage() {
           ? t('admin:templates.uploadForm.newVersionTitle')
           : t('admin:templates.uploadForm.title')}
       </h1>
+      <p>
+        <a
+          href={TEMPLATE_AUTHORING_GUIDE_URL[language]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline"
+        >
+          {t('admin:templates.uploadForm.guideLink')}
+          <span className="sr-only"> ({t('admin:certificates.detail.newTab')})</span>
+        </a>
+      </p>
       <form
         id={formId}
         noValidate

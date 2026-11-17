@@ -8,6 +8,7 @@
   "PAYLOAD_TOO_LARGE": "Göndərilən məlumat çox böyükdür.",
   "TEXT_DOES_NOT_FIT": "Mətn şablondakı sahəyə sığmır.",
   "TEMPLATE_MISMATCH": "Şablon seçilmiş tədbirə və ya növə uyğun gəlmir.",
+  "EVENT_ORG_MISMATCH": "Seçilmiş tədbir seçilmiş təşkilata aid deyil.",
   "TEMPLATE_NOT_FOUND": "Şablon tapılmadı.",
   "TEMPLATE_INVALID": "Şablon etibarsızdır.",
   "RATE_LIMITED": "Çox sayda sorğu göndərildi. Bir az sonra yenidən cəhd edin.",

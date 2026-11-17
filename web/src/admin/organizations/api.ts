@@ -35,8 +35,15 @@ export function useOrganizationList(limit: number, cursor: string | undefined) {
   });
 }
 
+// Events embed the organization name and block organization deletion, so they refetch too.
+// The key is spelled out (not imported from ../events/api) to avoid a circular import.
+const EVENTS_QUERY_KEY = ['admin', 'events'] as const;
+
 function invalidate(queryClient: QueryClient) {
-  return queryClient.invalidateQueries({ queryKey: ORGANIZATIONS_KEY });
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: ORGANIZATIONS_KEY }),
+    queryClient.invalidateQueries({ queryKey: EVENTS_QUERY_KEY }),
+  ]);
 }
 
 export function useCreateOrganization() {
