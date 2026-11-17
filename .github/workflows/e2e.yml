@@ -1,6 +1,6 @@
 name: e2e
 
-# Browser smoke tests are slower and costlier than the PR checks, so they run on merges to `dev`
+# Browser tests (smoke + full flow) are slower and costlier than the PR checks, so they run on merges to `dev`
 # and nightly, not on every pull request. They can also be started by hand.
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
   smoke:
     name: playwright smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -36,7 +36,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
         working-directory: web
-      # Auth emulator + seeded administrator (scripts/seed-dev.ts) enable the sign-in smoke tests.
+      # Auth + Firestore emulators, seeded administrator (scripts/seed-dev.ts), fs storage and the file
+      # e-mail sink in a temp dir: runs the smoke tests and the full-flow suite (web/e2e/full-flow.spec.ts).
       - run: npm run test:e2e:auth
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
