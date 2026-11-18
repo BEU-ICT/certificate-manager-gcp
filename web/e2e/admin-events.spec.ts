@@ -36,6 +36,6 @@ test.describe('events (signed in as administrator)', () => {
     await dialog.getByLabel(/^Ad/).fill(eventName);
     await dialog.getByRole('button', { name: 'Yarat' }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('cell', { name: eventName })).toBeVisible();
+    await expect(page.getByRole('cell', { name: eventName, exact: true })).toBeVisible();
   });
 });
