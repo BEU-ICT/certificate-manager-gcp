@@ -37,6 +37,8 @@
     "email": "E-poçt",
     "password": "Parol",
     "submit": "Daxil ol",
+    "sso": "Vahid giriş ilə davam et",
+    "ssoIntro": "Təşkilatınızın identifikasiya provayderi ilə daxil olursunuz.",
     "forgot": "Parolu unutmusunuz?",
     "show": "Göstər",
     "hide": "Gizlət",
@@ -53,6 +55,11 @@
       "disabled": "Bu hesab deaktiv edilib.",
       "noAccess": "Hesabınızın administrator icazəsi yoxdur"
     }
+  },
+  "callback": {
+    "working": "Daxil olunur…",
+    "failed": "Giriş tamamlanmadı. Yenidən cəhd edin.",
+    "back": "Girişə qayıt"
   },
   "forgot": {
     "title": "Parolun sıfırlanması",

@@ -2,12 +2,26 @@ import { fileURLToPath, URL } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, type PluginOption } from 'vite';
+import { defineConfig, loadEnv, type PluginOption } from 'vite';
 
 const analyze = process.env['ANALYZE'] === '1';
 
-export default defineConfig({
+/** Build-time auth provider (`VITE_AUTH_PROVIDER=firebase|oidc`); see src/auth/provider.ts. */
+function authProvider(mode: string): PluginOption {
+  const oidc = loadEnv(mode, process.cwd(), 'VITE_')['VITE_AUTH_PROVIDER'] === 'oidc';
+  return {
+    name: 'auth-provider',
+    enforce: 'pre',
+    async resolveId(source, importer, options) {
+      if (!oidc || !source.endsWith('/selected-backend')) return null;
+      return this.resolve(`${source}.oidc`, importer, { ...options, skipSelf: true });
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => ({
   plugins: [
+    authProvider(mode),
     react(),
     tailwindcss(),
     analyze
@@ -35,9 +49,10 @@ export default defineConfig({
           if (id.includes('node_modules/firebase/') || id.includes('node_modules/@firebase/')) {
             return 'firebase';
           }
+          if (id.includes('node_modules/oidc-client-ts/')) return 'oidc';
           return undefined;
         },
       },
     },
   },
-});
+}));

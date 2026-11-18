@@ -37,3 +37,23 @@ Browser local persistence (the SDK default: IndexedDB, falling back to localStor
 survives reloads and is shared between tabs. Trade-off: script injected into the page could read
 it; the CSP (BEU-ICT/certificate-manager#385) limits that. Our code never copies tokens elsewhere, logs credentials or puts
 them in URLs.
+
+## OIDC provider (on-prem)
+
+`VITE_AUTH_PROVIDER=firebase|oidc` is read at build time (default `firebase`). `vite.config.ts`
+swaps `selected-backend.ts` for `selected-backend.oidc.ts`, so an OIDC build contains no Firebase
+code and `check:bundle` (run with the same env var) fails if any leaks in. The public interface and
+`useAuth()` are identical; differences:
+
+- `signIn(email, password, returnTo)` redirects to the identity provider (authorization code +
+  PKCE, no implicit flow; `email` is only a `login_hint`). The login page shows one SSO button.
+- The IdP redirects back to `/auth/callback` (`admin/AuthCallbackPage`), which calls
+  `completeSignIn()` and continues to the validated return path; `RequireAdmin` then checks the
+  admin role through the API as usual.
+- `sendPasswordReset` is a no-op (the IdP owns passwords); `signOut` ends the IdP session too.
+- `getIdToken` returns the OIDC **ID token** (audience = client id), renewed silently by
+  `oidc-client-ts` (refresh token, else hidden iframe); `forceRefresh` renews it now.
+- Tokens are kept in `sessionStorage` (library default): per tab, gone when the tab closes, never in
+  localStorage or URLs.
+- Config: `VITE_OIDC_AUTHORITY`, `VITE_OIDC_CLIENT_ID`, optional `VITE_OIDC_SCOPE`. Register
+  `<origin>/auth/callback` as redirect URI and `<origin>/login` as post-logout URI.
