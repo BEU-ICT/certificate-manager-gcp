@@ -1,5 +1,6 @@
 /** Executes one task; throwing means "retry later". Must be idempotent (at-least-once). */
-export type TaskHandlerFn = (payload: unknown) => Promise<void>;
+/** `retryCount`: failed attempts so far (0 on the first), when the queue counts them itself. */
+export type TaskHandlerFn = (payload: unknown, info?: { retryCount: number }) => Promise<void>;
 
 /** Handler path (as in `TaskRequest.handler`) to function. */
 export type TaskHandlerRegistry = Map<string, TaskHandlerFn>;
