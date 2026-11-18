@@ -255,6 +255,20 @@ Code lives in `src/adapters/postgres/` (BEU-ICT/certificate-manager#429 schema, 
 - **Pagination:** `keyset.ts` builds `ORDER BY` and the "after cursor" condition with the same total order as Firestore (`issued_at desc, id desc`, ...).
 - **Tests:** `POSTGRES_TEST_URL=postgres://... npm run test:postgres -w api` (skipped when unset; CI runs it against a Postgres service). It checks idempotent migrations, unique constraints, and that all 63 certificate filter combinations avoid sequential scans on 100k rows with p95 < 50 ms.
 
+## NDJSON export and PostgreSQL import (BEU-ICT/certificate-manager#439)
+
+```bash
+# Export every collection of the configured database (any DB_ADAPTER; Firestore shown):
+DB_ADAPTER=firestore GCP_PROJECT=... npm run export:ndjson -w api -- --adapter firestore --out ./export [--with-files]
+# Import into PostgreSQL (schema must exist: npm run migrate:postgres):
+DATABASE_URL=postgres://... npm run import:ndjson -w api -- --adapter postgres --in ./export [--dry-run] [--with-files] [--rejects rejects.ndjson]
+```
+
+- The export writes `organizations|events|templates|certificates.ndjson` (canonical JSON: sorted keys, ISO timestamps, `schemaVersion` included) and `manifest.json` with count and SHA-256 per file. The directory is created with mode 0700 (files 0600) because it holds personal data. Set `EXPORT_MANIFEST_KEY` on both sides to write and verify an HMAC-SHA256 `manifest.sig`.
+- The import first verifies the manifest (counts, checksums, optional signature), validates each record with zod, then upserts by id in batches of 500 (running it twice changes nothing). Invalid records are listed as rejects (exit code 1) and the rest are still imported; `--dry-run` only validates. Adapters other than `postgres` create missing records and skip existing ones.
+- `--with-files` copies template package files and PDFs through the storage gateway (`STORAGE_ADAPTER`, source on export, target on import) via `files/` in the export directory, so it also moves objects between storage adapters.
+- Exporting the same data from Firestore and from PostgreSQL gives byte-identical files (same ordering and canonical form), which is how the round trip is checked (`test/postgres/ndjson.postgres.test.ts`, 50k documents; the Firestore leg runs when `FIRESTORE_EMULATOR_HOST` is set).
+
 ## Admin routes and authentication
 
 Every route under `/api/v1/admin` is registered through `adminRoutes(app, (scope) => …)` (`src/http/auth/admin-guard.ts`); paths inside are relative to the prefix. The helper installs an `onRequest` hook that throttles by IP, verifies the `Authorization: Bearer` token through the `TokenVerifier` port (401 + `WWW-Authenticate: Bearer`, identical body for every failure) and requires `role=admin` (403). Handlers read `request.admin` (`{ uid, email }`). A route under the prefix that bypasses the helper aborts startup. Tests use `forEachAdminRoute(app, fn)` (`src/testing/admin-routes.ts`) to run an authorisation matrix over the whole route table.

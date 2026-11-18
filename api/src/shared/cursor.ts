@@ -4,12 +4,15 @@ import { isCertificateId } from './ids.js';
 
 export const DEFAULT_PAGE_LIMIT = 25;
 export const MAX_PAGE_LIMIT = 50;
+/** Page size ceiling for trusted bulk readers (`PageRequest.bulk`, the NDJSON export). */
+export const MAX_BULK_PAGE_LIMIT = 1000;
 
 /** Validated page size (1..50, default 25). */
 export function pageLimit(request: PageRequest | undefined): number {
   const limit = request?.limit ?? DEFAULT_PAGE_LIMIT;
-  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PAGE_LIMIT) {
-    throw new ValidationError(`limit must be an integer between 1 and ${String(MAX_PAGE_LIMIT)}`);
+  const max = request?.bulk === true ? MAX_BULK_PAGE_LIMIT : MAX_PAGE_LIMIT;
+  if (!Number.isInteger(limit) || limit < 1 || limit > max) {
+    throw new ValidationError(`limit must be an integer between 1 and ${String(max)}`);
   }
   return limit;
 }

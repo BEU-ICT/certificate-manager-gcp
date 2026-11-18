@@ -12,6 +12,8 @@
     "start": "node dist/server.js",
     "migrate": "tsx src/migrate.ts",
     "migrate:postgres": "tsx src/adapters/postgres/migrate-cli.ts",
+    "export:ndjson": "tsx scripts/export-ndjson.ts",
+    "import:ndjson": "tsx scripts/import-ndjson.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

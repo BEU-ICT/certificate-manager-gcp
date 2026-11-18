@@ -10,6 +10,8 @@ export interface Page<T> {
 export interface PageRequest {
   /** 1..50, default 25. */
   limit?: number;
+  /** Trusted bulk readers only (export scripts): raises the ceiling of `limit` to 1000. Never set from HTTP input. */
+  bulk?: boolean;
   cursor?: Cursor;
 }
 
