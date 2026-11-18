@@ -1,7 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { link, mkdir, readdir, readFile, rename, rm, unlink, writeFile } from 'node:fs/promises';
+import {
+  link,
+  mkdir,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  stat,
+  unlink,
+  writeFile,
+} from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
-import type { BucketKind, PutOptions, StorageGateway } from '../../ports/index.js';
+import type { BucketKind, PutOptions, StorageGateway, StoredObject } from '../../ports/index.js';
 import { NotFoundError, UnavailableError } from '../../shared/errors.js';
 
 /** Default root of the local-profile object store; git-ignored. */
@@ -88,10 +98,10 @@ export class FsStorageGateway implements StorageGateway {
     await this.put(kind, toKey, body, meta ?? { contentType: 'application/octet-stream' });
   }
 
-  async list(kind: BucketKind, prefix: string): Promise<string[]> {
+  async list(kind: BucketKind, prefix: string): Promise<StoredObject[]> {
     if (prefix.includes('\0') || prefix.startsWith('/')) throw new TypeError('Invalid prefix');
     const base = join(this.root, kind);
-    const keys: string[] = [];
+    const found: StoredObject[] = [];
     const walk = async (dir: string, rel: string): Promise<void> => {
       let entries;
       try {
@@ -103,11 +113,18 @@ export class FsStorageGateway implements StorageGateway {
       for (const entry of entries) {
         const key = rel + entry.name;
         if (entry.isDirectory()) await walk(join(dir, entry.name), `${key}/`);
-        else if (key.startsWith(prefix)) keys.push(key);
+        else if (key.startsWith(prefix)) {
+          try {
+            found.push({ key, size: (await stat(join(dir, entry.name))).size });
+          } catch (error) {
+            // Deleted between readdir and stat: not listed.
+            if (code(error) !== 'ENOENT') throw error;
+          }
+        }
       }
     };
     await this.io(() => walk(base, ''));
-    return keys.sort();
+    return found.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
   }
 
   publicUrl(key: string): string {

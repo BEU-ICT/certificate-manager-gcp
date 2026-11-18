@@ -6,7 +6,7 @@ import type { FastifyInstance } from 'fastify';
 import jsQRModule from 'jsqr';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/app.js';
-import type { TemplateConfig } from '../../src/modules/templates/index.js';
+import { MIN_QR_SIZE, type TemplateConfig } from '../../src/modules/templates/index.js';
 import { buildServices } from '../../src/services.js';
 import { fakeToken, type Fakes } from '../../src/testing/fakes/index.js';
 import { extractText, rasterize } from './pdf-inspect.js';
@@ -162,13 +162,14 @@ export function describeTemplatePreviewApi(
       expect(await snapshot()).toEqual(before);
     });
 
-    it('answers 422 QR_TOO_SMALL when the template QR code is too small', async () => {
+    it('renders a template whose QR code has the minimum allowed size', async () => {
       const { publish, preview } = await setup();
-      const tiny = await publish({ ...GOOD_CONFIG, qr: { x: 700, y: 450, size: 40 } }, 'thanks');
-      const res = await preview({}, tiny.reference);
-      expect(res.statusCode).toBe(422);
-      expect(res.json().error.code).toBe('QR_TOO_SMALL');
-      expect(res.json().error.details[0].path).toBe('qr');
+      const minimal = await publish(
+        { ...GOOD_CONFIG, qr: { x: 700, y: 450, size: MIN_QR_SIZE } },
+        'thanks',
+      );
+      const res = await preview({}, minimal.reference);
+      expect(res.statusCode).toBe(200);
     });
 
     it('answers 404 for unknown and malformed references', async () => {

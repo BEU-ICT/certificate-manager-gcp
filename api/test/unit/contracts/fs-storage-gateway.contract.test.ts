@@ -36,7 +36,7 @@ describe('FsStorageGateway specifics', () => {
     const { root, s } = setup();
     await s.put('pdfs', 'a/b.pdf', Buffer.from('x'), { contentType: 'application/pdf' });
     await s.copy('pdfs', 'a/b.pdf', 'c.pdf');
-    expect(await s.list('pdfs', '')).toEqual(['a/b.pdf', 'c.pdf']);
+    expect((await s.list('pdfs', '')).map((o) => o.key)).toEqual(['a/b.pdf', 'c.pdf']);
     expect(await s.list('templates', '')).toEqual([]);
     rmSync(root, { recursive: true, force: true });
   });

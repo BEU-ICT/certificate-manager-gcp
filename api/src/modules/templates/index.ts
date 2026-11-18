@@ -5,6 +5,7 @@ export {
   FIELD_NAMES,
   assertTemplateConfig,
   PAGE_SIZES_PT,
+  MIN_QR_SIZE,
   pageDimensions,
   parseTemplateConfig,
   templateConfigInputSchema,

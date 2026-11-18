@@ -1,4 +1,9 @@
-import type { BucketKind, PutOptions, StorageGateway } from '../../ports/index.js';
+import type {
+  BucketKind,
+  PutOptions,
+  StorageGateway,
+  StoredObject as ListedObject,
+} from '../../ports/index.js';
 import { NotFoundError, UnavailableError } from '../../shared/errors.js';
 
 export interface StoredObject {
@@ -60,13 +65,13 @@ export class FakeStorageGateway implements StorageGateway {
     });
   }
 
-  list(kind: BucketKind, prefix: string): Promise<string[]> {
+  list(kind: BucketKind, prefix: string): Promise<ListedObject[]> {
     return this.run(() => {
       const start = `${kind}:`;
-      return [...this.objects.keys()]
-        .filter((id) => id.startsWith(start + prefix))
-        .map((id) => id.slice(start.length))
-        .sort();
+      return [...this.objects.entries()]
+        .filter(([id]) => id.startsWith(start + prefix))
+        .map(([id, found]) => ({ key: id.slice(start.length), size: found.body.length }))
+        .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
     });
   }
 

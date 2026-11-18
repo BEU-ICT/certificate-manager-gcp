@@ -97,7 +97,7 @@ Bitmap şəkilləri SVG yox, `config.json` yerləşdirir; beləliklə onlar ayd�
 3. `x`, `y`, `width` dəyərlərini düzbucaqlıdan götürün. `size` (mətnin nöqtə ölçüsü) və `maxLines` seçin. Qutunun hündürlüyü `maxLines × size × lineHeight`-dır (`lineHeight` susmaya görə 1,2): `size: 36`, `maxLines: 2` üçün 86,4 pt. Qutu səhifədə qalmalı və başqa qutu (QR daxil) ilə 2 pt-dən çox kəsişməməlidir; bilərəkdən kəsişmə lazımdırsa `allowOverlap: true` yazın.
 4. **Uzun mətn bölünür və kiçilir.** Mühərrik `size`-dan `minSize`-a qədər 0,5 pt addımla ən böyük ölçünü seçir ki, mətn ən çoxu `maxLines` sətrə sığsın (`minSize` susmaya görə `max(6, floor(size × 0.6))`). Qutudan enli tək söz yalnız `minSize`-da simvol üzrə bölünür. Heç nə sığmasa, buraxılış `TEXT_DOES_NOT_FIT` ilə dayanır. Gözlədiyiniz ən uzun adları yoxlayın (9-cu bölmə).
 5. `align` mətni qutunun içində düzləyir; ortalanmış mətn üçün qutunu səhifə mərkəzinə nəzərən simmetrik edin: `x = (səhifə eni − width) / 2`.
-6. QR kod üçün yer qoyun: sxemdə ən azı 40 pt, üstəlik hər modul ən azı 0,4 mm çap olunmalıdır. 90–110 pt rahatdır. Çox kiçik QR `QR_TOO_SMALL` xətası verir.
+6. QR kod üçün yer qoyun: sxemdə ən azı 47 pt, üstəlik hər modul ən azı 0,4 mm çap olunmalıdır. 90–110 pt rahatdır. Çox kiçik QR `QR_TOO_SMALL` xətası verir.
 
 ## 7. Konfiqurasiya məlumatı
 
@@ -126,7 +126,7 @@ Bitmap şəkilləri SVG yox, `config.json` yerləşdirir; beləliklə onlar ayd�
 | `qr`               | bəli    | object                                                                   |                                                               |
 | `qr.x`             | bəli    | number, ≥ 0, ≤ 10000                                                     |                                                               |
 | `qr.y`             | bəli    | number, ≥ 0, ≤ 10000                                                     |                                                               |
-| `qr.size`          | bəli    | number, ≥ 40, ≤ 10000                                                    |                                                               |
+| `qr.size`          | bəli    | number, ≥ 47, ≤ 10000                                                    |                                                               |
 
 <!-- END GENERATED: config-reference -->
 

@@ -97,7 +97,7 @@ Raster images are placed by `config.json`, not by the SVG, so they stay sharp an
 3. Set `x`, `y`, `width` from the rectangle. Choose `size` (point size of the text) and `maxLines`. The box height is `maxLines × size × lineHeight` (`lineHeight` defaults to 1.2): for `size: 36`, `maxLines: 2` it is 86.4 pt. Make sure the box stays on the page and does not overlap another box by more than 2 pt (QR code included), otherwise set `allowOverlap: true` on purpose.
 4. **Long text wraps and shrinks.** The renderer uses the largest size, from `size` down to `minSize` in 0.5 pt steps (default `minSize` is `max(6, floor(size × 0.6))`), at which the text wraps into at most `maxLines` lines. A single word wider than the box is split only at `minSize`. If nothing fits, issuing fails with `TEXT_DOES_NOT_FIT`. Test the longest names you expect (section 9).
 5. `align` aligns text inside the box; for centred text use a box that is symmetric around the page centre: `x = (pageWidth − width) / 2`.
-6. Leave room for the QR code: size at least 40 pt in the schema, and big enough that each QR module prints at least 0.4 mm. Around 90–110 pt is comfortable. A QR code that is too small fails with `QR_TOO_SMALL`.
+6. Leave room for the QR code: size at least 47 pt in the schema, and big enough that each QR module prints at least 0.4 mm. Around 90–110 pt is comfortable. A QR code that is too small fails with `QR_TOO_SMALL`.
 
 ## 7. Config reference
 
@@ -126,7 +126,7 @@ Raster images are placed by `config.json`, not by the SVG, so they stay sharp an
 | `qr`               | yes      | object                                                                   |                                                               |
 | `qr.x`             | yes      | number, ≥ 0, ≤ 10000                                                     |                                                               |
 | `qr.y`             | yes      | number, ≥ 0, ≤ 10000                                                     |                                                               |
-| `qr.size`          | yes      | number, ≥ 40, ≤ 10000                                                    |                                                               |
+| `qr.size`          | yes      | number, ≥ 47, ≤ 10000                                                    |                                                               |
 
 <!-- END GENERATED: config-reference -->
 

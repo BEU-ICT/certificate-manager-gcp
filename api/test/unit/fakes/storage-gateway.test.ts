@@ -54,8 +54,8 @@ export function storageGatewayBehaviour(make: () => StorageGateway): void {
     const s = make();
     for (const k of ['b/2', 'a/2', 'a/1', 'ab']) await s.put('pdfs', k, buf('x'), opts);
     await s.put('templates', 'a/3', buf('x'), opts);
-    expect(await s.list('pdfs', 'a/')).toEqual(['a/1', 'a/2']);
-    expect(await s.list('pdfs', '')).toEqual(['a/1', 'a/2', 'ab', 'b/2']);
+    expect((await s.list('pdfs', 'a/')).map((o) => o.key)).toEqual(['a/1', 'a/2']);
+    expect((await s.list('pdfs', '')).map((o) => o.key)).toEqual(['a/1', 'a/2', 'ab', 'b/2']);
   });
 
   it('builds public URLs without I/O', () => {

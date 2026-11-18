@@ -14,7 +14,8 @@ const RACE = 'putIfAbsent: Exactly one of concurrent callers gets created: true'
 const GET = 'get: null when the object does not exist';
 const DELETE = 'delete: A missing object counts as success';
 const COPY = 'copy: Fails with NotFoundError when fromKey is missing; overwrites toKey';
-const LIST = 'list: Keys starting with prefix, lexicographic order';
+const LIST =
+  'list: Objects (key and size in bytes) whose key starts with prefix, lexicographic key order';
 
 /** Executable form of the TSDoc on `StorageGateway` (src/ports/storage-gateway.ts). */
 export function describeStorageGatewayContract(
@@ -113,18 +114,33 @@ export function describeStorageGatewayContract(
         await s.put('pdfs', key, bytes(key), options);
       }
       await s.put('templates', 'a/other-bucket', bytes('x'), options);
+      const keys = async (prefix: string) => (await s.list('pdfs', prefix)).map((o) => o.key);
       clause(PORT, LIST, 'prefix "a/"')
-        .that(await s.list('pdfs', 'a/'))
+        .that(await keys('a/'))
         .toEqual(['a/1', 'a/2']);
       clause(PORT, LIST, 'prefix "a"')
-        .that(await s.list('pdfs', 'a'))
+        .that(await keys('a'))
         .toEqual(['a/1', 'a/2', 'ab']);
       clause(PORT, LIST, 'empty prefix lists the whole bucket only')
-        .that(await s.list('pdfs', ''))
+        .that(await keys(''))
         .toEqual(['a/1', 'a/2', 'ab', 'b/2', 'c/1']);
       clause(PORT, LIST, 'prefix without matches')
-        .that(await s.list('pdfs', 'zzz'))
+        .that(await keys('zzz'))
         .toEqual([]);
+    });
+
+    test('list reports the size of each object in bytes', async (s) => {
+      await s.put('pdfs', 'sizes/empty', Buffer.alloc(0), options);
+      await s.put('pdfs', 'sizes/small', bytes('hello'), options);
+      await s.put('pdfs', 'sizes/big', Buffer.alloc(70_000, 1), options);
+      await s.put('pdfs', 'sizes/small', bytes('hello world'), options);
+      clause(PORT, LIST, 'size is the body length in bytes, current after overwrite')
+        .that(await s.list('pdfs', 'sizes/'))
+        .toEqual([
+          { key: 'sizes/big', size: 70_000 },
+          { key: 'sizes/empty', size: 0 },
+          { key: 'sizes/small', size: 11 },
+        ]);
     });
 
     test('publicUrl is pure and mentions the key', (s) => {

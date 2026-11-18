@@ -38,7 +38,8 @@ export const PAGE_SIZES_PT = {
 export const MAX_IMAGES = 10;
 export const MAX_FONTS = 8;
 export const MIN_FONT_SIZE = 6;
-export const MIN_QR_SIZE = 40;
+/** Smaller QR codes do not scan reliably (about 0.4 mm per module for production URLs). */
+export const MIN_QR_SIZE = 47;
 export const DEFAULT_LINE_HEIGHT = 1.2;
 export const DEFAULT_LOCALE = 'az';
 /** Boxes may overlap by this much (points, both axes) before the overlap rule applies. */

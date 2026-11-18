@@ -87,14 +87,16 @@ describe('QR drawing', () => {
   });
 
   describe('QR_TOO_SMALL', () => {
-    const url = `${BASE}${ID_22}`;
+    // The upload minimum (47 pt) is enough for the production URL; a much longer URL still needs a
+    // denser matrix, and the engine keeps guarding against modules below 0.4 mm.
+    const url = `${BASE}${ID_22}/${'x'.repeat(120)}`;
     const input = { ...SAMPLE_INPUT, publicUrl: url };
-    const small = withQr({ x: 690, y: 440, size: 40 });
+    const small = withQr({ x: 690, y: 440, size: 47 });
     const config = assertTemplateConfig(small.template.config).config;
 
     it('threshold is 0.4 mm', () => {
       expect(MIN_MODULE_POINTS).toBeCloseTo(1.134, 3);
-      expect(modulePoints(qrMatrix(url), 40)).toBeLessThan(MIN_MODULE_POINTS);
+      expect(modulePoints(qrMatrix(url), 47)).toBeLessThan(MIN_MODULE_POINTS);
     });
 
     it('is reported as a fit issue', () => {
@@ -122,12 +124,12 @@ describe('checkFit merges the QR layout verdict', () => {
   it('reports QR_TOO_SMALL through SvgPdfRenderer.checkFit next to text misfits', () => {
     const { fieldsLayer, checkFit } = createFields();
     const renderer = new SvgPdfRenderer({ fieldsLayer, qrLayer: drawQr, fitChecker: checkFit });
-    const input = { ...SAMPLE_INPUT, publicUrl: `${BASE}${ID_22}` };
+    const input = { ...SAMPLE_INPUT, publicUrl: `${BASE}${ID_22}/${'x'.repeat(120)}` };
     expect(renderer.checkFit(input, withQr({ x: 690, y: 440, size: 140 }))).toEqual({
       fits: true,
       issues: [],
     });
-    const result = renderer.checkFit(input, withQr({ x: 690, y: 440, size: 40 }));
+    const result = renderer.checkFit(input, withQr({ x: 690, y: 440, size: 47 }));
     expect(result.fits).toBe(false);
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0]).toMatchObject({ field: 'qr', reason: QR_TOO_SMALL });
