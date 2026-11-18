@@ -72,6 +72,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
       (await import('./adapters/smtp/index.js')).createEmailSender(ctx),
     ),
   (r) =>
+    r.auth.register('oidc', async (ctx) =>
+      (await import('./adapters/oidc/index.js')).createAuthPorts(ctx),
+    ),
+  (r) =>
     r.email.register('file', async (ctx) =>
       (await import('./adapters/file/index.js')).createEmailSender(ctx),
     ),

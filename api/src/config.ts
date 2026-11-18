@@ -16,7 +16,7 @@ export const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', '
 export const DB_ADAPTERS = ['firestore', 'memory'] as const;
 export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
 export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process'] as const;
-export const AUTH_PROVIDERS = ['firebase'] as const;
+export const AUTH_PROVIDERS = ['firebase', 'oidc'] as const;
 export const EMAIL_PROVIDERS = ['gmail', 'brevo', 'smtp', 'file'] as const;
 
 export interface Config {
@@ -39,6 +39,16 @@ export interface Config {
   readonly bootstrapAdminEmail: string;
   /** Reject ID tokens of disabled or revoked users (one Auth API call per admin request). */
   readonly authCheckRevoked: boolean;
+  /** Present when AUTH_PROVIDER=oidc. */
+  readonly oidc:
+    | {
+        readonly issuer: string;
+        readonly audience: string;
+        readonly roleClaim: string;
+        readonly adminRole: string;
+        readonly jwksUri: string | undefined;
+      }
+    | undefined;
   readonly email: {
     readonly provider: (typeof EMAIL_PROVIDERS)[number];
     readonly fallbackProvider: (typeof EMAIL_PROVIDERS)[number] | undefined;
@@ -126,6 +136,8 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   PORT: '8080',
   LOG_LEVEL: 'info',
   AUTH_CHECK_REVOKED: 'false',
+  OIDC_ROLE_CLAIM: 'realm_access.roles',
+  OIDC_ADMIN_ROLE: 'admin',
   EMAIL_FROM_NAME: 'Certificate Manager',
   EMAIL_FILE_DIR: '.local-data/mail',
   EMAIL_DAILY_CAP: '300',
@@ -177,6 +189,11 @@ const schema = z.object({
   TASKS_INVOKER_SA: email.optional(),
   BOOTSTRAP_ADMIN_EMAIL: email,
   AUTH_CHECK_REVOKED: oneOf(['true', 'false'] as const),
+  OIDC_ISSUER: url.optional(),
+  OIDC_AUDIENCE: text(200).optional(),
+  OIDC_JWKS_URI: url.optional(),
+  OIDC_ROLE_CLAIM: text(200),
+  OIDC_ADMIN_ROLE: text(200),
   EMAIL_PROVIDER: oneOf(EMAIL_PROVIDERS),
   EMAIL_FALLBACK_PROVIDER: oneOf(EMAIL_PROVIDERS).optional(),
   EMAIL_API_KEY: z.string().max(1024).optional(),
@@ -241,6 +258,12 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
     for (const name of ['EMAIL_PROVIDER', 'EMAIL_FALLBACK_PROVIDER']) {
       if (env[name] === 'file')
         add(name, '"file" is a local-only provider, not allowed when NODE_ENV=production');
+    }
+  }
+
+  if (env['AUTH_PROVIDER'] === 'oidc') {
+    for (const name of ['OIDC_ISSUER', 'OIDC_AUDIENCE']) {
+      if (missing(name)) add(name, 'is required when AUTH_PROVIDER=oidc');
     }
   }
 
@@ -331,6 +354,16 @@ export function loadConfig(env: Env): Config {
     },
     bootstrapAdminEmail: e.BOOTSTRAP_ADMIN_EMAIL.toLowerCase(),
     authCheckRevoked: e.AUTH_CHECK_REVOKED === 'true',
+    oidc:
+      e.AUTH_PROVIDER === 'oidc' && e.OIDC_ISSUER !== undefined && e.OIDC_AUDIENCE !== undefined
+        ? {
+            issuer: e.OIDC_ISSUER,
+            audience: e.OIDC_AUDIENCE,
+            roleClaim: e.OIDC_ROLE_CLAIM,
+            adminRole: e.OIDC_ADMIN_ROLE,
+            jwksUri: e.OIDC_JWKS_URI,
+          }
+        : undefined,
     email: {
       provider: e.EMAIL_PROVIDER,
       fallbackProvider: e.EMAIL_FALLBACK_PROVIDER,
