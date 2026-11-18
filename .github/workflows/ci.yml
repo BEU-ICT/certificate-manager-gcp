@@ -114,7 +114,19 @@ jobs:
           key: firebase-emulators-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: firebase-emulators-${{ runner.os }}-
       - run: npm ci
+      # MinIO for the S3 StorageGateway contract (test/integration/s3-storage.integration.test.ts).
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            bitnamilegacy/minio:latest
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:9000/minio/health/ready && break
+            sleep 2
+          done
       - run: npm run test:integration -w api
+        env:
+          S3_TEST_ENDPOINT: http://localhost:9000
 
   test-postgres:
     name: test:postgres

@@ -15,7 +15,7 @@ export const NODE_ENVS = ['development', 'test', 'production'] as const;
 export const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 export const DB_ADAPTERS = ['firestore', 'postgres', 'memory'] as const;
 export const DATABASE_SSL_MODES = ['disable', 'require', 'verify-full'] as const;
-export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
+export const STORAGE_ADAPTERS = ['gcs', 's3', 'fs', 'memory'] as const;
 export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process', 'bullmq'] as const;
 export const RATE_LIMITERS = ['in-process', 'redis'] as const;
 export const AUTH_PROVIDERS = ['firebase', 'oidc'] as const;
@@ -32,6 +32,14 @@ export interface Config {
   readonly storage: {
     readonly templatesBucket: string | undefined;
     readonly pdfBucket: string | undefined;
+    /** `STORAGE_ADAPTER=s3` (AWS S3, MinIO, ...). Credentials fall back to the SDK default chain. */
+    readonly s3: {
+      readonly endpoint: string | undefined;
+      readonly region: string;
+      readonly forcePathStyle: boolean;
+      readonly accessKeyId: string | undefined;
+      readonly secretAccessKey: string | undefined;
+    };
   };
   readonly tasks: {
     readonly queue: string | undefined;
@@ -149,6 +157,8 @@ const DEV_DEFAULTS: Readonly<Record<string, string>> = {
 };
 
 const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
+  S3_REGION: 'us-east-1',
+  S3_FORCE_PATH_STYLE: 'false',
   NODE_ENV: 'development',
   PORT: '8080',
   LOG_LEVEL: 'info',
@@ -214,6 +224,11 @@ const schema = z.object({
     .optional(),
   WORKER_ENABLED: oneOf(['true', 'false'] as const),
   RATE_LIMITER: oneOf(RATE_LIMITERS),
+  S3_ENDPOINT: url.optional(),
+  S3_REGION: text(50),
+  S3_FORCE_PATH_STYLE: oneOf(['true', 'false'] as const),
+  S3_ACCESS_KEY_ID: text(256).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().max(1024).optional(),
   TASKS_QUEUE: text(100).optional(),
   TASKS_LOCATION: text(100).optional(),
   TASKS_INVOKER_SA: email.optional(),
@@ -307,13 +322,16 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
     }
   }
 
-  if (env['STORAGE_ADAPTER'] === 'gcs') {
+  if (env['STORAGE_ADAPTER'] === 'gcs' || env['STORAGE_ADAPTER'] === 's3') {
     for (const name of ['TEMPLATES_BUCKET', 'PDF_BUCKET']) {
-      if (missing(name)) add(name, 'is required when STORAGE_ADAPTER=gcs');
+      if (missing(name)) add(name, `is required when STORAGE_ADAPTER=${env['STORAGE_ADAPTER']}`);
     }
   }
   if (env['DB_ADAPTER'] === 'postgres' && missing('DATABASE_URL')) {
     add('DATABASE_URL', 'is required when DB_ADAPTER=postgres');
+  }
+  if (missing('S3_ACCESS_KEY_ID') !== missing('S3_SECRET_ACCESS_KEY')) {
+    add('S3_SECRET_ACCESS_KEY', 'must be set together with S3_ACCESS_KEY_ID');
   }
   if (env['QUEUE_ADAPTER'] === 'cloud-tasks') {
     for (const name of ['TASKS_QUEUE', 'TASKS_LOCATION', 'TASKS_INVOKER_SA']) {
@@ -393,7 +411,17 @@ export function loadConfig(env: Env): Config {
     serviceUrl: e.SERVICE_URL,
     publicBaseUrl: e.PUBLIC_BASE_URL,
     pdfPublicBaseUrl: e.PDF_PUBLIC_BASE_URL,
-    storage: { templatesBucket: e.TEMPLATES_BUCKET, pdfBucket: e.PDF_BUCKET },
+    storage: {
+      templatesBucket: e.TEMPLATES_BUCKET,
+      pdfBucket: e.PDF_BUCKET,
+      s3: {
+        endpoint: e.S3_ENDPOINT,
+        region: e.S3_REGION,
+        forcePathStyle: e.S3_FORCE_PATH_STYLE === 'true',
+        accessKeyId: e.S3_ACCESS_KEY_ID,
+        secretAccessKey: e.S3_SECRET_ACCESS_KEY,
+      },
+    },
     tasks: {
       queue: e.TASKS_QUEUE,
       location: e.TASKS_LOCATION,
