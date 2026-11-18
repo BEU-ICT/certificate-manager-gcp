@@ -6,6 +6,11 @@
  * e-mail). Safe to run twice: existing records are reused. It refuses to run unless the project id
  * is an emulator project (`demo-` prefix) and both emulator hosts are local, so it can never touch
  * production. Start the emulators first (`npm run dev:emulators`).
+ *
+ * `npm run seed:onprem` (SEED_TARGET=onprem) seeds the on-prem docker-compose stack instead
+ * (BEU-ICT/certificate-manager#440): it reads `.env.onprem`, talks to the PostgreSQL and MinIO ports
+ * the stack publishes on localhost (loopback only, otherwise it refuses) and creates no user: the
+ * administrator lives in Keycloak.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
@@ -35,33 +40,82 @@ const isLocal = (host: string | undefined): host is string =>
   host !== undefined && /^(127\.0\.0\.1|localhost|\[::1\]):\d+$/.test(host);
 
 // Emulator hosts default to the ones in firebase.json; anything else is refused.
-const env: Record<string, string | undefined> = {
-  ...process.env,
-  NODE_ENV: 'development',
-  GCP_PROJECT: process.env['GCP_PROJECT'] ?? 'demo-certificate-manager',
-  FIRESTORE_EMULATOR_HOST: process.env['FIRESTORE_EMULATOR_HOST'] ?? '127.0.0.1:8081',
-  FIREBASE_AUTH_EMULATOR_HOST: process.env['FIREBASE_AUTH_EMULATOR_HOST'] ?? '127.0.0.1:9099',
-  DB_ADAPTER: 'firestore',
-  // Persistent local storage by default; the API (cwd api/) reads the same directory.
-  STORAGE_ADAPTER: process.env['STORAGE_ADAPTER'] ?? 'fs',
-  STORAGE_FS_ROOT:
-    process.env['STORAGE_FS_ROOT'] ?? resolve(__dirname, '../api/.local-data/storage'),
-  LOG_LEVEL: process.env['LOG_LEVEL'] ?? 'warn',
-};
-if (!env['GCP_PROJECT']?.startsWith('demo-')) {
-  fail(
-    `GCP_PROJECT "${env['GCP_PROJECT'] ?? ''}" is not an emulator project (must start with "demo-"); refusing to run.`,
-  );
+const ONPREM = process.env['SEED_TARGET'] === 'onprem';
+const isLoopback = (host: string): boolean => /^(127\.0\.0\.1|localhost|\[::1\])$/.test(host);
+
+function emulatorEnv(): Record<string, string | undefined> {
+  const e: Record<string, string | undefined> = {
+    ...process.env,
+    NODE_ENV: 'development',
+    GCP_PROJECT: process.env['GCP_PROJECT'] ?? 'demo-certificate-manager',
+    FIRESTORE_EMULATOR_HOST: process.env['FIRESTORE_EMULATOR_HOST'] ?? '127.0.0.1:8081',
+    FIREBASE_AUTH_EMULATOR_HOST: process.env['FIREBASE_AUTH_EMULATOR_HOST'] ?? '127.0.0.1:9099',
+    DB_ADAPTER: 'firestore',
+    // Persistent local storage by default; the API (cwd api/) reads the same directory.
+    STORAGE_ADAPTER: process.env['STORAGE_ADAPTER'] ?? 'fs',
+    STORAGE_FS_ROOT:
+      process.env['STORAGE_FS_ROOT'] ?? resolve(__dirname, '../api/.local-data/storage'),
+    LOG_LEVEL: process.env['LOG_LEVEL'] ?? 'warn',
+  };
+  if (!e['GCP_PROJECT']?.startsWith('demo-')) {
+    fail(
+      `GCP_PROJECT "${e['GCP_PROJECT'] ?? ''}" is not an emulator project (must start with "demo-"); refusing to run.`,
+    );
+  }
+  if (!isLocal(e['FIRESTORE_EMULATOR_HOST']) || !isLocal(e['FIREBASE_AUTH_EMULATOR_HOST'])) {
+    fail(
+      'FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST must point to localhost; refusing to run.',
+    );
+  }
+  // The Admin SDK reads these from process.env.
+  process.env['FIRESTORE_EMULATOR_HOST'] = e['FIRESTORE_EMULATOR_HOST'];
+  process.env['FIREBASE_AUTH_EMULATOR_HOST'] = e['FIREBASE_AUTH_EMULATOR_HOST'];
+  process.env['STORAGE_FS_ROOT'] = e['STORAGE_FS_ROOT'];
+  return e;
 }
-if (!isLocal(env['FIRESTORE_EMULATOR_HOST']) || !isLocal(env['FIREBASE_AUTH_EMULATOR_HOST'])) {
-  fail(
-    'FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST must point to localhost; refusing to run.',
-  );
+
+/** Environment of the on-prem compose stack as seen from the host (`.env.onprem`, ports on loopback). */
+function onpremEnv(): Record<string, string | undefined> {
+  const p = process.env;
+  const need = (name: string): string => p[name] || fail(`${name} is not set (load .env.onprem)`);
+  const bind = p['BIND_ADDRESS'] || '127.0.0.1';
+  if (!isLoopback(bind)) fail(`BIND_ADDRESS "${bind}" is not loopback; refusing to seed.`);
+  const user = encodeURIComponent(need('POSTGRES_USER'));
+  const password = encodeURIComponent(need('POSTGRES_PASSWORD'));
+  return {
+    ...p,
+    NODE_ENV: 'development',
+    GCP_PROJECT: 'onprem',
+    LOG_LEVEL: p['LOG_LEVEL'] ?? 'warn',
+    SERVICE_URL: need('PUBLIC_ORIGIN'),
+    PUBLIC_BASE_URL: need('PUBLIC_ORIGIN'),
+    PDF_PUBLIC_BASE_URL: need('PUBLIC_ORIGIN'),
+    BOOTSTRAP_ADMIN_EMAIL: need('ADMIN_EMAIL'),
+    DB_ADAPTER: 'postgres',
+    DATABASE_URL: `postgres://${user}:${password}@${bind}:${p['POSTGRES_PORT'] || '5432'}/${need('POSTGRES_DB')}`,
+    STORAGE_ADAPTER: 's3',
+    S3_ENDPOINT: `http://${bind}:${p['MINIO_PORT'] || '9000'}`,
+    S3_FORCE_PATH_STYLE: 'true',
+    S3_ACCESS_KEY_ID: need('S3_APP_ACCESS_KEY'),
+    S3_SECRET_ACCESS_KEY: need('S3_APP_SECRET_KEY'),
+    TEMPLATES_BUCKET: 'cm-templates',
+    PDF_BUCKET: 'cm-pdfs',
+    QUEUE_ADAPTER: 'in-process',
+    RATE_LIMITER: 'in-process',
+    WORKER_ENABLED: 'false',
+    // Nothing is sent while seeding; the provider only has to be constructible.
+    EMAIL_PROVIDER: 'smtp',
+    SMTP_HOST: '127.0.0.1',
+    SMTP_PORT: '1025',
+    SMTP_TLS: 'none',
+    AUTH_PROVIDER: 'oidc',
+    OIDC_ISSUER: `${need('KEYCLOAK_PUBLIC_URL')}/realms/certificate-manager`,
+    OIDC_AUDIENCE: 'certificate-manager-web',
+    EMAIL_FROM_ADDRESS: p['EMAIL_FROM_ADDRESS'] ?? 'certificates@example.test',
+  };
 }
-// The Admin SDK reads these from process.env.
-process.env['FIRESTORE_EMULATOR_HOST'] = env['FIRESTORE_EMULATOR_HOST'];
-process.env['FIREBASE_AUTH_EMULATOR_HOST'] = env['FIREBASE_AUTH_EMULATOR_HOST'];
-process.env['STORAGE_FS_ROOT'] = env['STORAGE_FS_ROOT'];
+
+const env = ONPREM ? onpremEnv() : emulatorEnv();
 
 function readPackage(dir: string): Map<string, Buffer> {
   const files = new Map<string, Buffer>();
@@ -96,7 +150,8 @@ async function seedAdmin(projectId: string): Promise<string> {
 
 async function main(): Promise<void> {
   const config = loadConfig(env);
-  const adminUid = await seedAdmin(config.gcpProject);
+  // On-prem: the administrator lives in the identity provider; only the audit field needs a value.
+  const adminUid = ONPREM ? 'seed' : await seedAdmin(config.gcpProject);
   const { ports, services } = await compose(config, undefined, env);
 
   const organization =
@@ -183,8 +238,10 @@ async function main(): Promise<void> {
 
   const lines = [
     '',
-    'Seeded the local emulators (project ' + config.gcpProject + '):',
-    `  admin         ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}   (emulator only)`,
+    ONPREM
+      ? 'Seeded the on-prem stack (administrator: the Keycloak user from .env.onprem):'
+      : 'Seeded the local emulators (project ' + config.gcpProject + '):',
+    ...(ONPREM ? [] : [`  admin         ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}   (emulator only)`]),
     `  organization  ${organization.name} (${organization.id})`,
     `  event         ${event.name} (${event.id})`,
     `  template      ${template.reference}${templateCreated ? '' : ' (existing)'}`,

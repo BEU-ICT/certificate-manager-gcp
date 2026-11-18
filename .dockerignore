@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/coverage
+.git
+.claude
+.env
+.env.*
+!.env.onprem.example
+web/e2e
+api/test
+docs
