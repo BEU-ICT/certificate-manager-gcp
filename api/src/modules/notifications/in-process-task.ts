@@ -19,14 +19,14 @@ export class SendEmailRetryError extends Error {
  */
 export function createInProcessSendEmailTask(
   handle: (request: SendEmailRequest) => Promise<SendEmailOutcome>,
-): (payload: unknown) => Promise<void> {
+): (payload: unknown, info?: { retryCount: number }) => Promise<void> {
   const retries = new Map<string, number>();
-  return async (payload) => {
+  return async (payload, info) => {
     const parsed = sendEmailTaskSchema.safeParse(payload);
     if (!parsed.success) return;
     const { certificateId, sequence, reschedule } = parsed.data;
     const key = `${certificateId}:${sequence}:${reschedule ?? 0}`;
-    const retryCount = retries.get(key) ?? 0;
+    const retryCount = info?.retryCount ?? retries.get(key) ?? 0;
     const outcome = await handle({ certificateId, sequence, retryCount, reschedule });
     if (outcome === 'done') {
       retries.delete(key);

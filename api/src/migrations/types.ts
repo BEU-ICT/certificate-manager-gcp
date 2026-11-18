@@ -21,6 +21,8 @@ export interface MigrationSettings {
   readonly bootstrapAdminEmail: string;
   /** Base URL of the web app, used in links shown to the user. */
   readonly publicBaseUrl: string;
+  /** `AUTH_PROVIDER`; accounts are provisioned in the IdP when `oidc`. */
+  readonly authProvider?: string;
   readonly mail: { readonly from: string; readonly replyTo?: string | undefined };
 }
 

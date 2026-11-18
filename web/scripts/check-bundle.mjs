@@ -17,7 +17,12 @@ const ADMIN_SOURCES = /^src\/(admin|auth|lib\/bulk)\//;
  * @param {(file: string) => number} gzipSize gzipped byte size of a built file
  * @returns {string[]} problems, empty when the bundle is fine
  */
-export function checkBundle(manifest, gzipSize = () => 0) {
+export function checkBundle(
+  manifest,
+  gzipSize = () => 0,
+  { provider = 'firebase', readText } = {},
+) {
+  if (provider === 'oidc') return checkOidcBundle(manifest, readText);
   const problems = [];
   const isFirebase = (key) => /(^|\/)firebase[-.]/.test(manifest[key]?.file ?? '');
   const firebaseKeys = Object.keys(manifest).filter(isFirebase);
@@ -65,16 +70,37 @@ export function checkBundle(manifest, gzipSize = () => 0) {
   return problems;
 }
 
+/** An OIDC build (`VITE_AUTH_PROVIDER=oidc`) must contain no Firebase chunk and no Firebase code. */
+const FIREBASE_MARKERS = /@firebase\/|firebase\/auth|firebaseapp\.com|identitytoolkit\.googleapis/;
+
+function checkOidcBundle(manifest, readText = () => '') {
+  const problems = [];
+  for (const [key, chunk] of Object.entries(manifest)) {
+    const file = chunk.file ?? '';
+    if (/(^|\/)firebase[-.]/.test(file)) problems.push(`${key} is a Firebase chunk`);
+    else if (file.endsWith('.js') && FIREBASE_MARKERS.test(readText(file))) {
+      problems.push(`${file} contains Firebase code`);
+    }
+  }
+  return problems;
+}
+
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const dist = new URL('../dist/', import.meta.url);
   const manifest = JSON.parse(readFileSync(new URL('.vite/manifest.json', dist)));
+  const provider = process.env['VITE_AUTH_PROVIDER'] === 'oidc' ? 'oidc' : 'firebase';
   const problems = checkBundle(
     manifest,
     (file) => gzipSync(readFileSync(new URL(file, dist))).length,
+    { provider, readText: (file) => readFileSync(new URL(file, dist), 'utf8') },
   );
   if (problems.length > 0) {
     for (const problem of problems) console.error(`check:bundle: ${problem}`);
     process.exit(1);
   }
-  console.log('check:bundle: Firebase SDK is only in the admin bundle');
+  console.log(
+    provider === 'oidc'
+      ? 'check:bundle: OIDC build contains no Firebase code'
+      : 'check:bundle: Firebase SDK is only in the admin bundle',
+  );
 }

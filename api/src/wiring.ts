@@ -52,6 +52,10 @@ export interface RepositoryPorts {
 export interface QueuePorts {
   readonly taskQueue: TaskQueue;
   readonly scheduler: Scheduler;
+  /** Starts consuming (after the task handlers are registered); absent for queues that need no worker. */
+  readonly start?: () => void;
+  /** Drains in-flight work and releases connections. */
+  readonly close?: () => Promise<void>;
 }
 
 /** Result of the `AUTH_PROVIDER` selection. */

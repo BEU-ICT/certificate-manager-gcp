@@ -16,9 +16,10 @@ export const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', '
 export const DB_ADAPTERS = ['firestore', 'postgres', 'memory'] as const;
 export const DATABASE_SSL_MODES = ['disable', 'require', 'verify-full'] as const;
 export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
-export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process'] as const;
-export const AUTH_PROVIDERS = ['firebase'] as const;
-export const EMAIL_PROVIDERS = ['gmail', 'brevo', 'file'] as const;
+export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process', 'bullmq'] as const;
+export const RATE_LIMITERS = ['in-process', 'redis'] as const;
+export const AUTH_PROVIDERS = ['firebase', 'oidc'] as const;
+export const EMAIL_PROVIDERS = ['gmail', 'brevo', 'smtp', 'file'] as const;
 
 export interface Config {
   readonly env: (typeof NODE_ENVS)[number];
@@ -37,9 +38,23 @@ export interface Config {
     readonly location: string | undefined;
     readonly invokerServiceAccount: string | undefined;
   };
+  /** Redis for `QUEUE_ADAPTER=bullmq` and `RATE_LIMITER=redis`; auth and TLS come with the URL. Secret. */
+  readonly redis: { readonly url: string | undefined };
+  /** Run the queue worker in this process (`QUEUE_ADAPTER=bullmq`). */
+  readonly workerEnabled: boolean;
   readonly bootstrapAdminEmail: string;
   /** Reject ID tokens of disabled or revoked users (one Auth API call per admin request). */
   readonly authCheckRevoked: boolean;
+  /** Present when AUTH_PROVIDER=oidc. */
+  readonly oidc:
+    | {
+        readonly issuer: string;
+        readonly audience: string;
+        readonly roleClaim: string;
+        readonly adminRole: string;
+        readonly jwksUri: string | undefined;
+      }
+    | undefined;
   readonly email: {
     readonly provider: (typeof EMAIL_PROVIDERS)[number];
     readonly fallbackProvider: (typeof EMAIL_PROVIDERS)[number] | undefined;
@@ -50,6 +65,15 @@ export interface Config {
     readonly replyTo: string | undefined;
     /** Output directory of the local-only `file` provider (`EMAIL_FILE_DIR`). */
     readonly fileDir: string;
+    /** `smtp` provider (`SMTP_*`). `tls`: starttls (default, enforced), tls (implicit) or none (dev only). */
+    readonly smtp: {
+      readonly host: string | undefined;
+      readonly port: number;
+      readonly tls: 'starttls' | 'tls' | 'none';
+      readonly user: string | undefined;
+      /** Secret. Never log. */
+      readonly password: string | undefined;
+    };
     readonly dailyCap: number;
     /** Daily cap of the fallback provider (`EMAIL_FALLBACK_DAILY_CAP`). */
     readonly fallbackDailyCap: number;
@@ -82,6 +106,7 @@ export interface Config {
     readonly storage: (typeof STORAGE_ADAPTERS)[number];
     readonly queue: (typeof QUEUE_ADAPTERS)[number];
     readonly auth: (typeof AUTH_PROVIDERS)[number];
+    readonly rateLimiter: (typeof RATE_LIMITERS)[number];
   };
   readonly flags: Flags;
 }
@@ -128,10 +153,16 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   PORT: '8080',
   LOG_LEVEL: 'info',
   AUTH_CHECK_REVOKED: 'false',
+  OIDC_ROLE_CLAIM: 'realm_access.roles',
+  OIDC_ADMIN_ROLE: 'admin',
   EMAIL_FROM_NAME: 'Certificate Manager',
   EMAIL_FILE_DIR: '.local-data/mail',
   EMAIL_DAILY_CAP: '300',
+  SMTP_PORT: '587',
+  SMTP_TLS: 'starttls',
   EMAIL_FALLBACK_DAILY_CAP: '300',
+  RATE_LIMITER: 'in-process',
+  WORKER_ENABLED: 'true',
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
   RATE_LIMIT_ADMIN_PER_MIN: '60',
   TEMPLATE_CACHE_MB: '40',
@@ -176,11 +207,23 @@ const schema = z.object({
   PDF_PUBLIC_BASE_URL: url,
   TEMPLATES_BUCKET: text(222).optional(),
   PDF_BUCKET: text(222).optional(),
+  REDIS_URL: z
+    .string()
+    .regex(/^rediss?:\/\/\S+$/, 'must be a redis:// or rediss:// URL')
+    .max(2048)
+    .optional(),
+  WORKER_ENABLED: oneOf(['true', 'false'] as const),
+  RATE_LIMITER: oneOf(RATE_LIMITERS),
   TASKS_QUEUE: text(100).optional(),
   TASKS_LOCATION: text(100).optional(),
   TASKS_INVOKER_SA: email.optional(),
   BOOTSTRAP_ADMIN_EMAIL: email,
   AUTH_CHECK_REVOKED: oneOf(['true', 'false'] as const),
+  OIDC_ISSUER: url.optional(),
+  OIDC_AUDIENCE: text(200).optional(),
+  OIDC_JWKS_URI: url.optional(),
+  OIDC_ROLE_CLAIM: text(200),
+  OIDC_ADMIN_ROLE: text(200),
   EMAIL_PROVIDER: oneOf(EMAIL_PROVIDERS),
   EMAIL_FALLBACK_PROVIDER: oneOf(EMAIL_PROVIDERS).optional(),
   EMAIL_API_KEY: z.string().max(1024).optional(),
@@ -188,6 +231,11 @@ const schema = z.object({
   EMAIL_FROM_NAME: text(120),
   EMAIL_REPLY_TO: email.optional(),
   EMAIL_FILE_DIR: text(500),
+  SMTP_HOST: text(255).optional(),
+  SMTP_PORT: int(1, 65535),
+  SMTP_TLS: oneOf(['starttls', 'tls', 'none'] as const),
+  SMTP_USER: z.string().max(254).optional(),
+  SMTP_PASSWORD: z.string().max(1024).optional(),
   EMAIL_DAILY_CAP: int(1, 1_000_000),
   EMAIL_FALLBACK_DAILY_CAP: int(1, 1_000_000),
   RATE_LIMIT_PUBLIC_PER_MIN: int(1, 10_000),
@@ -238,10 +286,24 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
     );
   }
 
+  if ((provider === 'smtp' || fallback === 'smtp') && missing('SMTP_HOST')) {
+    add('SMTP_HOST', 'is required when smtp is used as EMAIL_PROVIDER or EMAIL_FALLBACK_PROVIDER');
+  }
+  if (!missing('SMTP_PASSWORD') && missing('SMTP_USER'))
+    add('SMTP_USER', 'is required with SMTP_PASSWORD');
+  if (isProd && env['SMTP_TLS'] === 'none')
+    add('SMTP_TLS', '"none" is for development, not allowed when NODE_ENV=production');
+
   if (isProd) {
     for (const name of ['EMAIL_PROVIDER', 'EMAIL_FALLBACK_PROVIDER']) {
       if (env[name] === 'file')
         add(name, '"file" is a local-only provider, not allowed when NODE_ENV=production');
+    }
+  }
+
+  if (env['AUTH_PROVIDER'] === 'oidc') {
+    for (const name of ['OIDC_ISSUER', 'OIDC_AUDIENCE']) {
+      if (missing(name)) add(name, 'is required when AUTH_PROVIDER=oidc');
     }
   }
 
@@ -258,6 +320,10 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
       if (missing(name)) add(name, 'is required when QUEUE_ADAPTER=cloud-tasks');
     }
   }
+  if (env['QUEUE_ADAPTER'] === 'bullmq' && missing('REDIS_URL'))
+    add('REDIS_URL', 'is required when QUEUE_ADAPTER=bullmq');
+  if (env['RATE_LIMITER'] === 'redis' && missing('REDIS_URL'))
+    add('REDIS_URL', 'is required when RATE_LIMITER=redis');
   if (isProd) {
     for (const [name, bad] of [
       ['DB_ADAPTER', 'memory'],
@@ -333,8 +399,20 @@ export function loadConfig(env: Env): Config {
       location: e.TASKS_LOCATION,
       invokerServiceAccount: e.TASKS_INVOKER_SA,
     },
+    redis: { url: e.REDIS_URL },
+    workerEnabled: e.WORKER_ENABLED === 'true',
     bootstrapAdminEmail: e.BOOTSTRAP_ADMIN_EMAIL.toLowerCase(),
     authCheckRevoked: e.AUTH_CHECK_REVOKED === 'true',
+    oidc:
+      e.AUTH_PROVIDER === 'oidc' && e.OIDC_ISSUER !== undefined && e.OIDC_AUDIENCE !== undefined
+        ? {
+            issuer: e.OIDC_ISSUER,
+            audience: e.OIDC_AUDIENCE,
+            roleClaim: e.OIDC_ROLE_CLAIM,
+            adminRole: e.OIDC_ADMIN_ROLE,
+            jwksUri: e.OIDC_JWKS_URI,
+          }
+        : undefined,
     email: {
       provider: e.EMAIL_PROVIDER,
       fallbackProvider: e.EMAIL_FALLBACK_PROVIDER,
@@ -343,6 +421,13 @@ export function loadConfig(env: Env): Config {
       fromName: e.EMAIL_FROM_NAME,
       replyTo: e.EMAIL_REPLY_TO,
       fileDir: e.EMAIL_FILE_DIR,
+      smtp: {
+        host: e.SMTP_HOST,
+        port: e.SMTP_PORT,
+        tls: e.SMTP_TLS,
+        user: e.SMTP_USER,
+        password: e.SMTP_PASSWORD,
+      },
       dailyCap: e.EMAIL_DAILY_CAP,
       fallbackDailyCap: e.EMAIL_FALLBACK_DAILY_CAP,
     },
@@ -369,6 +454,7 @@ export function loadConfig(env: Env): Config {
       storage: e.STORAGE_ADAPTER,
       queue: e.QUEUE_ADAPTER,
       auth: e.AUTH_PROVIDER,
+      rateLimiter: e.RATE_LIMITER,
     },
     flags,
   });

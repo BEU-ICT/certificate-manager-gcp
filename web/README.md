@@ -19,7 +19,7 @@ React + Vite + TypeScript SPA, deployed to Firebase Hosting. Tailwind CSS 4, Rea
 | `npm run api:types:check` | Regenerate and fail if `git diff` is not empty (CI, wired by BEU-ICT/certificate-manager#260) |
 | `npm run i18n:check`      | Fails on keys missing in a language, used-but-missing or unused keys                          |
 
-Copy `.env.example` to `.env.local` for the public Firebase web config.
+Copy `.env.example` to `.env.local` for the public Firebase web config. `VITE_AUTH_PROVIDER=oidc` builds the on-prem variant (see `src/auth/README.md`); run `check:bundle` with the same variable.
 
 ## Structure
 

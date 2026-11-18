@@ -63,7 +63,7 @@ installProcessSafety(process, app.log, { revision: process.env['K_REVISION'] ?? 
 
 for (const signal of ['SIGTERM', 'SIGINT'] as const) {
   process.once(signal, () => {
-    void shutdown(app).then(
+    void shutdown(app, composition.close).then(
       () => process.exit(0),
       (err: unknown) => {
         app.log.error(err, 'shutdown failed');

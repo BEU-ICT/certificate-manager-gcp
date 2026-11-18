@@ -370,3 +370,14 @@ describe('compose: certificate issuance wiring', () => {
     await app.close();
   });
 });
+
+describe('smtp adapter registration', () => {
+  it('registers the real smtp adapter in the default registries', async () => {
+    const { SmtpEmailSender } = await import('../../src/adapters/smtp/smtp-email-sender.js');
+    const sender = await defaultRegistries().email.resolve('smtp', {
+      config: loadConfig({ ...PROD_ENV, EMAIL_PROVIDER: 'smtp', SMTP_HOST: 'mail.internal' }),
+    });
+    expect(sender).toBeInstanceOf(SmtpEmailSender);
+    (sender as InstanceType<typeof SmtpEmailSender>).close();
+  });
+});

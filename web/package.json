@@ -29,6 +29,7 @@
     "fflate": "^0.8.3",
     "firebase": "^13.2.0",
     "i18next": "^27.0.1",
+    "oidc-client-ts": "^3.5.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

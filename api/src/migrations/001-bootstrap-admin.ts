@@ -65,6 +65,11 @@ function messageIdFor(email: string): string {
  * and every step is idempotent. The link is never logged or stored.
  */
 async function run(ctx: MigrationContext): Promise<void> {
+  if (ctx.settings.authProvider === 'oidc') {
+    throw new MigrationDeferred(
+      'bootstrap skipped, administrators are provisioned in the OIDC IdP',
+    );
+  }
   const email = ctx.settings.bootstrapAdminEmail.trim().toLowerCase();
   if (email === '') {
     throw new MigrationDeferred('bootstrap skipped, no admin configured');
