@@ -87,11 +87,36 @@ function toCertificate(r: Row): Certificate {
   };
 }
 
-const COLUMNS = 26;
-const INSERT_HEAD = `INSERT INTO certificates (id, organization_id, event_id, organization_name,
-  event_name, template_id, type, owner_name, email, subject, skills, status, issued_at, revoked_at,
-  revoke_reason, email_status, email_attempts, email_sent_at, email_last_error, pdf_path,
-  pdf_generated_at, legacy, created_by, created_at, updated_at, schema_version) VALUES `;
+const COLUMN_NAMES = [
+  'id',
+  'organization_id',
+  'event_id',
+  'organization_name',
+  'event_name',
+  'template_id',
+  'type',
+  'owner_name',
+  'email',
+  'subject',
+  'skills',
+  'status',
+  'issued_at',
+  'revoked_at',
+  'revoke_reason',
+  'email_status',
+  'email_attempts',
+  'email_sent_at',
+  'email_last_error',
+  'pdf_path',
+  'pdf_generated_at',
+  'legacy',
+  'created_by',
+  'created_at',
+  'updated_at',
+  'schema_version',
+] as const;
+const COLUMNS = COLUMN_NAMES.length;
+const INSERT_HEAD = `INSERT INTO certificates (${COLUMN_NAMES.join(', ')}) VALUES `;
 
 function values(c: Certificate): unknown[] {
   return [
@@ -124,6 +149,26 @@ function values(c: Certificate): unknown[] {
   ];
 }
 
+/**
+ * Multi-row `INSERT` of `certificates` (one statement, atomic). With `upsert`, existing ids are
+ * overwritten (used by the NDJSON import) instead of failing with a unique violation.
+ */
+export function certificateInsert(
+  certificates: readonly Certificate[],
+  options: { upsert?: boolean } = {},
+): { sql: string; params: unknown[] } {
+  const tuples = certificates.map(
+    (_, row) =>
+      `(${Array.from({ length: COLUMNS }, (_c, col) => `$${String(row * COLUMNS + col + 1)}`).join(', ')})`,
+  );
+  const upsert = options.upsert
+    ? ` ON CONFLICT (id) DO UPDATE SET ${COLUMN_NAMES.filter((c) => c !== 'id')
+        .map((c) => `${c} = EXCLUDED.${c}`)
+        .join(', ')}`
+    : '';
+  return { sql: INSERT_HEAD + tuples.join(', ') + upsert, params: certificates.flatMap(values) };
+}
+
 const conflict = () => new ConflictError('Certificate already exists');
 
 /**
@@ -148,13 +193,9 @@ export class PostgresCertificateRepository implements CertificateRepository {
     }
     if (new Set(certificates.map((c) => c.id)).size !== certificates.length) throw conflict();
     if (certificates.length === 0) return;
-    const params = certificates.flatMap(values);
-    const tuples = certificates.map(
-      (_, row) =>
-        `(${Array.from({ length: COLUMNS }, (_c, col) => `$${String(row * COLUMNS + col + 1)}`).join(', ')})`,
-    );
+    const { sql, params } = certificateInsert(certificates);
     await mapConflict(async () => {
-      await this.pool.query(INSERT_HEAD + tuples.join(', '), params);
+      await this.pool.query(sql, params);
     }, conflict);
   }
 
