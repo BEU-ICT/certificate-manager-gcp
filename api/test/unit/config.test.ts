@@ -187,7 +187,7 @@ describe('loadConfig', () => {
     );
 
     it.each([
-      ['DB_ADAPTER', 'postgres'],
+      ['DB_ADAPTER', 'mysql'],
       ['STORAGE_ADAPTER', 's3'],
       ['QUEUE_ADAPTER', 'pubsub'],
       ['AUTH_PROVIDER', 'auth0'],

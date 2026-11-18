@@ -11,6 +11,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "migrate": "tsx src/migrate.ts",
+    "migrate:postgres": "tsx src/adapters/postgres/migrate-cli.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -31,6 +32,7 @@
     "test:architecture": "vitest run test/architecture",
     "test:authz": "node scripts/run-authz.mjs",
     "test:unit": "vitest run test/unit",
+    "test:postgres": "vitest run --config vitest.postgres.config.ts",
     "test:integration": "firebase emulators:exec --only firestore,auth --project demo-certificate-manager \"vitest run --config vitest.integration.config.ts\""
   },
   "dependencies": {
@@ -48,6 +50,7 @@
     "jose": "^6.2.15",
     "nodemailer": "^10.6.0",
     "pdfkit": "^0.20.2",
+    "pg": "^8.23.1",
     "pino": "^10.4.0",
     "qrcode": "^1.5.4",
     "svg-to-pdfkit": "^0.1.8",
@@ -61,6 +64,7 @@
     "@types/node": "^26.6.6",
     "@types/nodemailer": "^8.0.2",
     "@types/pdfkit": "^0.17.7",
+    "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
     "@types/svg-to-pdfkit": "^0.1.5",
     "dependency-cruiser": "^18.7.2",
