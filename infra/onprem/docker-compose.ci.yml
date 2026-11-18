@@ -1,0 +1,5 @@
+# CI-only override (.github/workflows/onprem.yml): publishes Redis on localhost so that the adapter
+# contract suites running on the CI host can reach it. Never use outside CI.
+services:
+  redis:
+    ports: ['127.0.0.1:6379:6379']
