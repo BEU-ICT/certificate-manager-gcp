@@ -6,7 +6,15 @@ import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { api, getAdminMe, isApiError } from '@/api';
-import { isAuthError, preloadAuth, signIn, signOut, useAuth, type AuthErrorKind } from '@/auth';
+import {
+  AUTH_PROVIDER,
+  isAuthError,
+  preloadAuth,
+  signIn,
+  signOut,
+  useAuth,
+  type AuthErrorKind,
+} from '@/auth';
 import { Button, TextField } from '@/components';
 import { errorMessage } from '@/i18n/errors';
 import { PasswordField } from './PasswordField';
@@ -44,10 +52,10 @@ function signInMessage(t: TFunction, kind: AuthErrorKind): string {
 type Phase = 'idle' | 'working' | 'leaving';
 
 /**
- * Administrator sign-in. There is deliberately no registration entry point. After the SDK sign-in
+ * Administrator sign-in with email and password (Firebase). There is deliberately no registration entry point. After the SDK sign-in
  * the API confirms the admin role (`GET /api/v1/admin/me`); anything but a 200 signs out again.
  */
-export default function LoginPage() {
+function PasswordLoginPage() {
   const { t } = useTranslation(['admin', 'errors']);
   const { status } = useAuth();
   const location = useLocation();
@@ -170,4 +178,68 @@ export default function LoginPage() {
       </form>
     </div>
   );
+}
+
+/**
+ * Single sign-on (OIDC build): the identity provider owns the credentials, so the page is one
+ * button that redirects there. The API still confirms the administrator role afterwards.
+ */
+function SsoLoginPage() {
+  const { t } = useTranslation(['admin', 'errors']);
+  const { status } = useAuth();
+  const location = useLocation();
+  const [working, setWorking] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const target = loginTarget(location.state, location.search);
+  const reason = loginReason(location.state);
+
+  if (status === 'signedIn') return <Navigate to={target} replace />;
+
+  async function onClick() {
+    setFailure(null);
+    setWorking(true);
+    try {
+      await signIn('', '', target);
+    } catch (error) {
+      setFailure(
+        isAuthError(error) && error.kind === 'network'
+          ? t('admin:login.errors.network')
+          : errorMessage(t, undefined),
+      );
+      setWorking(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-md">
+      <h1 className="mb-4 text-2xl font-semibold">{t('admin:login.title')}</h1>
+      {reason === 'expired' ? (
+        <p role="status" className="mb-4 rounded-control bg-surface-muted p-3 text-ink">
+          {t('admin:login.sessionExpired')}
+        </p>
+      ) : null}
+      {reason === 'noAccess' && !failure ? (
+        <p role="alert" className="mb-4 rounded-control bg-danger-soft p-3 text-danger">
+          {t('admin:login.errors.noAccess')}
+        </p>
+      ) : null}
+      {failure ? (
+        <p role="alert" className="mb-4 rounded-control bg-danger-soft p-3 font-medium text-danger">
+          {failure}
+        </p>
+      ) : null}
+      <p className="mb-4 text-ink">{t('admin:login.ssoIntro')}</p>
+      <Button
+        type="button"
+        loading={working || status === 'loading'}
+        onClick={() => void onClick()}
+      >
+        {t('admin:login.sso')}
+      </Button>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return AUTH_PROVIDER === 'oidc' ? <SsoLoginPage /> : <PasswordLoginPage />;
 }

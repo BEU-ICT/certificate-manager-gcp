@@ -37,6 +37,8 @@
     "email": "Email",
     "password": "Password",
     "submit": "Sign in",
+    "sso": "Continue with single sign-on",
+    "ssoIntro": "You sign in with your organization's identity provider.",
     "forgot": "Forgot password?",
     "show": "Show",
     "hide": "Hide",
@@ -53,6 +55,11 @@
       "disabled": "This account has been disabled.",
       "noAccess": "Your account has no administrator access"
     }
+  },
+  "callback": {
+    "working": "Signing you in…",
+    "failed": "Sign-in could not be completed. Try again.",
+    "back": "Back to sign in"
   },
   "forgot": {
     "title": "Reset password",

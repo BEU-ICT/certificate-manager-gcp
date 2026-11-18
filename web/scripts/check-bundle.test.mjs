@@ -58,4 +58,15 @@ describe('check:bundle', () => {
     expect(checkBundle(manifest, () => MAX_FIREBASE_GZIP_BYTES + 1)[0]).toMatch(/over the 80 KB/);
     expect(checkBundle(manifest, () => MAX_FIREBASE_GZIP_BYTES)).toEqual([]);
   });
+
+  it('oidc: passes without Firebase and flags a Firebase chunk or code', () => {
+    const manifest = { 'index.html': entry() };
+    const read = () => 'console.log(1)';
+    expect(checkBundle(manifest, undefined, { provider: 'oidc', readText: read })).toEqual([]);
+    expect(checkBundle({ ...firebase, ...manifest }, undefined, { provider: 'oidc' })).toHaveLength(
+      1,
+    );
+    const leak = () => 'import "@firebase/app"';
+    expect(checkBundle(manifest, undefined, { provider: 'oidc', readText: leak })).toHaveLength(1);
+  });
 });

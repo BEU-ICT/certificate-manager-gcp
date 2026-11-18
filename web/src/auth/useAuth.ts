@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { onAuthStateChanged } from './service';
+import { onAuthStateChanged } from './facade';
 import type { AuthState, Unsubscribe } from './types';
 
 const SIGNED_OUT: AuthState = { status: 'signedOut', user: null };
