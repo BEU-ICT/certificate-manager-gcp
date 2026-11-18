@@ -1,6 +1,6 @@
 # docs
 
-ADRs (`adr/`), runbooks and guides.
+ADRs (`adr/`), runbooks and guides. Start with [development.md](development.md); before deploying, run the manual [local test plan](local-test.md).
 
 ## Continuous integration
 
