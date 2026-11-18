@@ -50,3 +50,7 @@ The adapter is covered by unit tests with a mock client; the checks below need t
 5. Enqueue `email-<testId>-2`: a second task is created (resend naming).
 6. A task with `scheduleAt` 2 minutes ahead shows the matching `scheduleTime` and is dispatched not earlier.
 7. Payload check: the task body contains only `certificateId` and `sequence` (no address or name).
+
+## BullMQ on Redis (on-prem, `QUEUE_ADAPTER=bullmq`)
+
+Same policy as Cloud Tasks: 5 attempts, exponential backoff 10 s to 1 h, one dispatch per second, de-duplication by task name (job ID, kept 24 h), delayed jobs for rescheduled e-mails. The worker runs inside the API process unless `WORKER_ENABLED=false` and calls the same transport-neutral handler as `/internal/tasks/send-email`, without HTTP. Needs `REDIS_URL` (auth and TLS via `rediss://user:pass@host`). Shutdown waits for the active job. `RATE_LIMITER=redis` shares the sliding-window counter across instances (Lua script) and falls back to per-instance in-memory limits, with a warning, while Redis is unreachable. Contract suites run against Redis in `test:integration` (CI service container; set `REDIS_URL` locally).

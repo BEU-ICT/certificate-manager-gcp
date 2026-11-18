@@ -15,7 +15,8 @@ export const NODE_ENVS = ['development', 'test', 'production'] as const;
 export const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 export const DB_ADAPTERS = ['firestore', 'memory'] as const;
 export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
-export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process'] as const;
+export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process', 'bullmq'] as const;
+export const RATE_LIMITERS = ['in-process', 'redis'] as const;
 export const AUTH_PROVIDERS = ['firebase', 'oidc'] as const;
 export const EMAIL_PROVIDERS = ['gmail', 'brevo', 'smtp', 'file'] as const;
 
@@ -36,6 +37,10 @@ export interface Config {
     readonly location: string | undefined;
     readonly invokerServiceAccount: string | undefined;
   };
+  /** Redis for `QUEUE_ADAPTER=bullmq` and `RATE_LIMITER=redis`; auth and TLS come with the URL. Secret. */
+  readonly redis: { readonly url: string | undefined };
+  /** Run the queue worker in this process (`QUEUE_ADAPTER=bullmq`). */
+  readonly workerEnabled: boolean;
   readonly bootstrapAdminEmail: string;
   /** Reject ID tokens of disabled or revoked users (one Auth API call per admin request). */
   readonly authCheckRevoked: boolean;
@@ -90,6 +95,7 @@ export interface Config {
     readonly storage: (typeof STORAGE_ADAPTERS)[number];
     readonly queue: (typeof QUEUE_ADAPTERS)[number];
     readonly auth: (typeof AUTH_PROVIDERS)[number];
+    readonly rateLimiter: (typeof RATE_LIMITERS)[number];
   };
   readonly flags: Flags;
 }
@@ -144,6 +150,8 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   SMTP_PORT: '587',
   SMTP_TLS: 'starttls',
   EMAIL_FALLBACK_DAILY_CAP: '300',
+  RATE_LIMITER: 'in-process',
+  WORKER_ENABLED: 'true',
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
   RATE_LIMIT_ADMIN_PER_MIN: '60',
   TEMPLATE_CACHE_MB: '40',
@@ -184,6 +192,13 @@ const schema = z.object({
   PDF_PUBLIC_BASE_URL: url,
   TEMPLATES_BUCKET: text(222).optional(),
   PDF_BUCKET: text(222).optional(),
+  REDIS_URL: z
+    .string()
+    .regex(/^rediss?:\/\/\S+$/, 'must be a redis:// or rediss:// URL')
+    .max(2048)
+    .optional(),
+  WORKER_ENABLED: oneOf(['true', 'false'] as const),
+  RATE_LIMITER: oneOf(RATE_LIMITERS),
   TASKS_QUEUE: text(100).optional(),
   TASKS_LOCATION: text(100).optional(),
   TASKS_INVOKER_SA: email.optional(),
@@ -277,6 +292,10 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
       if (missing(name)) add(name, 'is required when QUEUE_ADAPTER=cloud-tasks');
     }
   }
+  if (env['QUEUE_ADAPTER'] === 'bullmq' && missing('REDIS_URL'))
+    add('REDIS_URL', 'is required when QUEUE_ADAPTER=bullmq');
+  if (env['RATE_LIMITER'] === 'redis' && missing('REDIS_URL'))
+    add('REDIS_URL', 'is required when RATE_LIMITER=redis');
   if (isProd) {
     for (const [name, bad] of [
       ['DB_ADAPTER', 'memory'],
@@ -352,6 +371,8 @@ export function loadConfig(env: Env): Config {
       location: e.TASKS_LOCATION,
       invokerServiceAccount: e.TASKS_INVOKER_SA,
     },
+    redis: { url: e.REDIS_URL },
+    workerEnabled: e.WORKER_ENABLED === 'true',
     bootstrapAdminEmail: e.BOOTSTRAP_ADMIN_EMAIL.toLowerCase(),
     authCheckRevoked: e.AUTH_CHECK_REVOKED === 'true',
     oidc:
@@ -397,6 +418,7 @@ export function loadConfig(env: Env): Config {
       storage: e.STORAGE_ADAPTER,
       queue: e.QUEUE_ADAPTER,
       auth: e.AUTH_PROVIDER,
+      rateLimiter: e.RATE_LIMITER,
     },
     flags,
   });

@@ -60,6 +60,7 @@ describe('loadConfig', () => {
       storage: 'memory',
       queue: 'in-process',
       auth: 'firebase',
+      rateLimiter: 'in-process',
     });
     expect(c.flags.openApiEndpoint).toBe(true);
   });
@@ -266,5 +267,29 @@ describe('loadConfig', () => {
     }
     expect(Object.keys(env).length).toBeGreaterThan(20);
     expect(() => loadConfig(env)).not.toThrow();
+  });
+});
+
+describe('Redis adapters', () => {
+  it('requires REDIS_URL for bullmq and the redis rate limiter', () => {
+    const base = { ...prod, QUEUE_ADAPTER: 'bullmq', RATE_LIMITER: 'redis' };
+    expect(issuesOf(base).map((i) => i.variable)).toContain('REDIS_URL');
+    const cfg = loadConfig({
+      ...base,
+      REDIS_URL: 'rediss://u:p@redis:6379',
+      WORKER_ENABLED: 'false',
+    });
+    expect(cfg.adapters.queue).toBe('bullmq');
+    expect(cfg.adapters.rateLimiter).toBe('redis');
+    expect(cfg.workerEnabled).toBe(false);
+  });
+
+  it('defaults to in-process limiting with the worker enabled and rejects non-redis URLs', () => {
+    const cfg = loadConfig(prod);
+    expect(cfg.adapters.rateLimiter).toBe('in-process');
+    expect(cfg.workerEnabled).toBe(true);
+    expect(issuesOf({ ...prod, REDIS_URL: 'http://x' }).map((i) => i.variable)).toContain(
+      'REDIS_URL',
+    );
   });
 });

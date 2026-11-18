@@ -55,6 +55,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
       (await import('./adapters/gcs/index.js')).createStorageGateway(ctx),
     ),
   (r) =>
+    r.queue.register('bullmq', async (ctx) =>
+      (await import('./adapters/bullmq/index.js')).createQueuePorts(ctx),
+    ),
+  (r) =>
     r.queue.register('cloud-tasks', async (ctx) =>
       (await import('./adapters/cloud-tasks/index.js')).createQueuePorts(ctx),
     ),
@@ -135,6 +139,8 @@ export interface Composition {
   readonly services: Services;
   /** The send-email task handler; served by `/internal/tasks/send-email` and the in-process queue. */
   readonly sendEmail: ReturnType<typeof createSendEmailHandler>;
+  /** Drains the queue worker and closes adapter connections (graceful shutdown). */
+  readonly close: () => Promise<void>;
 }
 
 /**
@@ -162,6 +168,10 @@ export async function compose(
   // Subscribers are registered here, in the composition root, never in publisher modules.
   const logger = createLogger({ level: config.logLevel, gcpProject: config.gcpProject });
   const eventBus = new InProcessEventBus(logger);
+  const rateLimiter =
+    config.adapters.rateLimiter === 'redis'
+      ? (await import('./adapters/redis/index.js')).createRateLimiter(ctx, clock)
+      : new InProcessRateLimiter(clock);
   const ports: Ports = {
     clock,
     ids: new RandomIdGenerator(),
@@ -178,7 +188,7 @@ export async function compose(
         })
       : email,
     ...(emailFallback ? { emailFallback } : {}),
-    rateLimiter: new InProcessRateLimiter(clock),
+    rateLimiter,
     eventBus,
   };
   // Issuance (POST /api/v1/admin/certificates) is served only with a FitChecker. The real
@@ -224,7 +234,12 @@ export async function compose(
     },
   });
   inProcessTaskHandlers.set(SEND_EMAIL_HANDLER, createInProcessSendEmailTask(sendEmail));
-  return { config, ports, services, sendEmail };
+  // Handlers are registered: a queue with its own worker may start consuming now.
+  queue.start?.();
+  const close = async (): Promise<void> => {
+    await queue.close?.();
+  };
+  return { config, ports, services, sendEmail, close };
 }
 
 export { AdapterError, AdapterRegistry, buildServices };
