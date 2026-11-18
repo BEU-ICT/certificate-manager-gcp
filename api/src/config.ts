@@ -17,7 +17,7 @@ export const DB_ADAPTERS = ['firestore', 'memory'] as const;
 export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
 export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process'] as const;
 export const AUTH_PROVIDERS = ['firebase'] as const;
-export const EMAIL_PROVIDERS = ['gmail', 'brevo', 'file'] as const;
+export const EMAIL_PROVIDERS = ['gmail', 'brevo', 'smtp', 'file'] as const;
 
 export interface Config {
   readonly env: (typeof NODE_ENVS)[number];
@@ -49,6 +49,15 @@ export interface Config {
     readonly replyTo: string | undefined;
     /** Output directory of the local-only `file` provider (`EMAIL_FILE_DIR`). */
     readonly fileDir: string;
+    /** `smtp` provider (`SMTP_*`). `tls`: starttls (default, enforced), tls (implicit) or none (dev only). */
+    readonly smtp: {
+      readonly host: string | undefined;
+      readonly port: number;
+      readonly tls: 'starttls' | 'tls' | 'none';
+      readonly user: string | undefined;
+      /** Secret. Never log. */
+      readonly password: string | undefined;
+    };
     readonly dailyCap: number;
     /** Daily cap of the fallback provider (`EMAIL_FALLBACK_DAILY_CAP`). */
     readonly fallbackDailyCap: number;
@@ -120,6 +129,8 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   EMAIL_FROM_NAME: 'Certificate Manager',
   EMAIL_FILE_DIR: '.local-data/mail',
   EMAIL_DAILY_CAP: '300',
+  SMTP_PORT: '587',
+  SMTP_TLS: 'starttls',
   EMAIL_FALLBACK_DAILY_CAP: '300',
   RATE_LIMIT_PUBLIC_PER_MIN: '10',
   RATE_LIMIT_ADMIN_PER_MIN: '60',
@@ -173,6 +184,11 @@ const schema = z.object({
   EMAIL_FROM_NAME: text(120),
   EMAIL_REPLY_TO: email.optional(),
   EMAIL_FILE_DIR: text(500),
+  SMTP_HOST: text(255).optional(),
+  SMTP_PORT: int(1, 65535),
+  SMTP_TLS: oneOf(['starttls', 'tls', 'none'] as const),
+  SMTP_USER: z.string().max(254).optional(),
+  SMTP_PASSWORD: z.string().max(1024).optional(),
   EMAIL_DAILY_CAP: int(1, 1_000_000),
   EMAIL_FALLBACK_DAILY_CAP: int(1, 1_000_000),
   RATE_LIMIT_PUBLIC_PER_MIN: int(1, 10_000),
@@ -212,6 +228,14 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
       'is required when brevo is used as EMAIL_PROVIDER or EMAIL_FALLBACK_PROVIDER',
     );
   }
+
+  if ((provider === 'smtp' || fallback === 'smtp') && missing('SMTP_HOST')) {
+    add('SMTP_HOST', 'is required when smtp is used as EMAIL_PROVIDER or EMAIL_FALLBACK_PROVIDER');
+  }
+  if (!missing('SMTP_PASSWORD') && missing('SMTP_USER'))
+    add('SMTP_USER', 'is required with SMTP_PASSWORD');
+  if (isProd && env['SMTP_TLS'] === 'none')
+    add('SMTP_TLS', '"none" is for development, not allowed when NODE_ENV=production');
 
   if (isProd) {
     for (const name of ['EMAIL_PROVIDER', 'EMAIL_FALLBACK_PROVIDER']) {
@@ -315,6 +339,13 @@ export function loadConfig(env: Env): Config {
       fromName: e.EMAIL_FROM_NAME,
       replyTo: e.EMAIL_REPLY_TO,
       fileDir: e.EMAIL_FILE_DIR,
+      smtp: {
+        host: e.SMTP_HOST,
+        port: e.SMTP_PORT,
+        tls: e.SMTP_TLS,
+        user: e.SMTP_USER,
+        password: e.SMTP_PASSWORD,
+      },
       dailyCap: e.EMAIL_DAILY_CAP,
       fallbackDailyCap: e.EMAIL_FALLBACK_DAILY_CAP,
     },
