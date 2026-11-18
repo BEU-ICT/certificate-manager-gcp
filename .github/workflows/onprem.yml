@@ -106,7 +106,10 @@ jobs:
         run: ./scripts/onprem-init-env.sh
       - name: Start the stack
         run: ${COMPOSE} up --build -d --wait
-      - run: npx playwright test --config playwright.onprem.config.ts
+      - name: Playwright smoke (includes the Keycloak sign-in)
+        run: |
+          set -a; . ../.env.onprem; set +a
+          npx playwright test --config playwright.onprem.config.ts
         working-directory: web
       - name: Compose logs
         if: failure()
