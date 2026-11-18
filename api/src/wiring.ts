@@ -46,6 +46,8 @@ export interface RepositoryPorts {
   readonly migrationState: MigrationStateStore;
   readonly idempotency: IdempotencyStore;
   readonly emailQuota: EmailQuotaStore;
+  /** Releases connections (graceful shutdown); absent for adapters that hold none. */
+  readonly close?: () => Promise<void>;
 }
 
 /** Result of the `QUEUE_ADAPTER` selection. */
