@@ -1,0 +1,253 @@
+# Certificate Manager: on-prem reference stack (BEU-ICT/certificate-manager#440).
+#   ./scripts/onprem-init-env.sh                                   # creates .env.onprem with random secrets
+#   docker compose -f docker-compose.onprem.yml --env-file .env.onprem up --build
+# See infra/onprem/README.md. Reference/evaluation stack: Keycloak runs in start-dev mode and all
+# ports are bound to localhost. Put a real TLS terminator and a production Keycloak in front for real use.
+name: certificate-manager-onprem
+
+x-api-env:
+  &api-env # NODE_ENV=development only because the bundled Mailpit speaks plain SMTP (the API refuses SMTP_TLS=none in production).
+  NODE_ENV: development
+  PORT: '8080'
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  GCP_PROJECT: onprem
+  SERVICE_URL: ${PUBLIC_ORIGIN:?set PUBLIC_ORIGIN}
+  PUBLIC_BASE_URL: ${PUBLIC_ORIGIN}
+  # The API appends /pdfs/<key>; nginx maps /pdfs/ to the cm-pdfs bucket.
+  PDF_PUBLIC_BASE_URL: ${PUBLIC_ORIGIN}
+  BOOTSTRAP_ADMIN_EMAIL: ${ADMIN_EMAIL:?set ADMIN_EMAIL}
+  DB_ADAPTER: postgres
+  DATABASE_URL: postgres://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:?}
+  STORAGE_ADAPTER: s3
+  S3_ENDPOINT: http://minio:9000
+  S3_FORCE_PATH_STYLE: 'true'
+  S3_REGION: us-east-1
+  S3_ACCESS_KEY_ID: ${S3_APP_ACCESS_KEY:?set S3_APP_ACCESS_KEY}
+  S3_SECRET_ACCESS_KEY: ${S3_APP_SECRET_KEY:?set S3_APP_SECRET_KEY}
+  TEMPLATES_BUCKET: cm-templates
+  PDF_BUCKET: cm-pdfs
+  QUEUE_ADAPTER: bullmq
+  RATE_LIMITER: redis
+  WORKER_ENABLED: 'true'
+  REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD}@redis:6379
+  EMAIL_PROVIDER: smtp
+  SMTP_HOST: mailpit
+  SMTP_PORT: '1025'
+  SMTP_TLS: none
+  EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS:-certificates@example.test}
+  AUTH_PROVIDER: oidc
+  OIDC_ISSUER: ${KEYCLOAK_PUBLIC_URL:?set KEYCLOAK_PUBLIC_URL}/realms/certificate-manager
+  OIDC_JWKS_URI: http://keycloak:8080/realms/certificate-manager/protocol/openid-connect/certs
+  OIDC_AUDIENCE: certificate-manager-web
+
+services:
+  # --- data stores -----------------------------------------------------------------------------
+  postgres:
+    image: postgres@sha256:a77aa70e641402a21411b92b721c58d10f23b50ae5fdd2333efd22d166e1e5f7
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    ports: ['${BIND_ADDRESS:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
+    restart: unless-stopped
+    # noeviction: BullMQ requires that queue data is never evicted.
+    command:
+      [
+        'sh',
+        '-c',
+        'exec redis-server --requirepass "$$REDIS_PASSWORD" --maxmemory-policy noeviction --appendonly yes',
+      ]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set REDIS_PASSWORD}
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: bitnamilegacy/minio@sha256:451fe6858cb770cc9d0e77ba811ce287420f781c7c1b806a386f6896471a349c
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
+      MINIO_DEFAULT_BUCKETS: ''
+    volumes: [miniodata:/bitnami/minio/data]
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${MINIO_PORT:-9000}:9000'
+      - '${BIND_ADDRESS:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001'
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:9000/minio/health/ready']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # One-shot: buckets, public-read policy for PDFs (objects only, no listing), least-privilege app user.
+  minio-init:
+    image: bitnamilegacy/minio-client@sha256:00dcc4e58ada0df45bb7d9ee435af98295f96c27c3c68292ce78ec700a87b511
+    depends_on:
+      minio: { condition: service_healthy }
+    restart: 'no'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      S3_APP_ACCESS_KEY: ${S3_APP_ACCESS_KEY}
+      S3_APP_SECRET_KEY: ${S3_APP_SECRET_KEY}
+    volumes:
+      - ./infra/onprem/minio:/policies:ro
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - |
+        # The Bitnami image restarts MinIO once after its own setup: retry until the endpoint stays up.
+        n=0
+        until mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+          n=$$((n+1))
+          if [ "$$n" -gt 30 ]; then echo "minio not reachable" >&2; exit 1; fi
+          sleep 2
+        done
+        mc mb --ignore-existing local/cm-templates local/cm-pdfs
+        mc anonymous set-json /policies/public-pdfs-policy.json local/cm-pdfs
+        mc admin policy create local cm-app /policies/app-policy.json
+        mc admin user add local "$$S3_APP_ACCESS_KEY" "$$S3_APP_SECRET_KEY"
+        mc admin policy attach local cm-app --user "$$S3_APP_ACCESS_KEY" || true
+        echo "minio-init done"
+
+  mailpit:
+    image: axllent/mailpit@sha256:23a2ef85bc50853ab3093645d1d64679afd8887e89da5e48a88940c172591a4e
+    restart: unless-stopped
+    volumes: [mailpitdata:/data]
+    environment:
+      MP_DATABASE: /data/mailpit.db
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${MAILPIT_UI_PORT:-8025}:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # --- identity ---------------------------------------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak@sha256:09a381c715ab0b111835b70f2905955274843a219c6f27efb348e4d9f4086858
+    restart: unless-stopped
+    command: ['start-dev', '--import-realm']
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?set KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL}
+      KC_HTTP_ENABLED: 'true'
+      KC_HEALTH_ENABLED: 'true'
+      # Substituted into the realm import (infra/onprem/keycloak/realm-certificate-manager.json).
+      ONPREM_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ONPREM_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD}
+      ONPREM_PUBLIC_ORIGIN: ${PUBLIC_ORIGIN}
+    volumes:
+      - ./infra/onprem/keycloak/realm-certificate-manager.json:/opt/keycloak/data/import/realm-certificate-manager.json:ro
+      - keycloakdata:/opt/keycloak/data
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${KEYCLOAK_PORT:-8180}:8080'
+    healthcheck:
+      # No curl in the image: plain TCP + HTTP over bash on the management port.
+      test:
+        [
+          'CMD',
+          'bash',
+          '-c',
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  # --- application ------------------------------------------------------------------------------
+  migrate:
+    build:
+      context: ./api
+      args: { GIT_SHA: onprem }
+    image: certificate-manager-api:onprem
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    environment: *api-env
+    command: ['node', 'dist/adapters/postgres/migrate-cli.js']
+
+  api:
+    image: certificate-manager-api:onprem
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      minio-init: { condition: service_completed_successfully }
+      mailpit: { condition: service_healthy }
+      keycloak: { condition: service_healthy }
+    environment: *api-env
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8080/internal/healthz | grep -q ok']
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  certs:
+    image: alpine@sha256:2e0b81d60597f449baa56dc25d355367869d2dca4cd57e866f1e2b52af3eb55f
+    restart: 'no'
+    environment:
+      TLS_HOSTNAME: ${TLS_HOSTNAME:-localhost}
+    volumes: [certs:/certs]
+    command:
+      - sh
+      - -ec
+      - |
+        if [ ! -f /certs/tls.key ]; then
+          apk add --no-cache openssl >/dev/null
+          openssl req -x509 -newkey rsa:2048 -nodes -days 825 -subj "/CN=$$TLS_HOSTNAME" \
+            -addext "subjectAltName=DNS:$$TLS_HOSTNAME,DNS:localhost,IP:127.0.0.1" \
+            -keyout /certs/tls.key -out /certs/tls.crt
+        fi
+        chmod 644 /certs/tls.crt /certs/tls.key
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+      args:
+        VITE_AUTH_PROVIDER: oidc
+        VITE_OIDC_AUTHORITY: ${KEYCLOAK_PUBLIC_URL}/realms/certificate-manager
+        VITE_OIDC_CLIENT_ID: certificate-manager-web
+    image: certificate-manager-web:onprem
+    restart: unless-stopped
+    depends_on:
+      api: { condition: service_healthy }
+      certs: { condition: service_completed_successfully }
+    volumes: [certs:/certs:ro]
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8443}:8443'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget -qO- --no-check-certificate https://127.0.0.1:8443/ | grep -qi ''<div id="root"''',
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  mailpitdata:
+  keycloakdata:
+  certs:
