@@ -247,7 +247,7 @@ Every document a repository creates carries `schemaVersion: 1` (`SCHEMA_VERSION`
 
 ## PostgreSQL adapter (on-prem, `DB_ADAPTER=postgres`)
 
-Code lives in `src/adapters/postgres/` (BEU-ICT/certificate-manager#429; the repositories follow in later tasks).
+Code lives in `src/adapters/postgres/` (BEU-ICT/certificate-manager#429 schema, #430 repositories). All seven repository/store ports are implemented and registered in `compose.ts`; each passes its shared contract suite (`test/postgres/repositories.postgres.test.ts`). Conditional writes are single `UPDATE ... WHERE` statements or `INSERT ... ON CONFLICT`, so races have one winner and no method locks more than one row (no deadlocks). Sort-key columns use the `C` collation (migration 002) to keep Firestore's byte ordering.
 
 - **Config:** `DATABASE_URL` (required, `postgres://`), `DATABASE_SSL` (`disable` default, `require`, `verify-full` with optional `DATABASE_SSL_CA` PEM; a `sslmode` in the URL wins), `DATABASE_POOL_MAX` (default 10, lower it on small VMs), `DATABASE_STATEMENT_TIMEOUT_MS` (15000), `DATABASE_CONNECTION_TIMEOUT_MS` (5000).
 - **Schema:** numbered, append-only SQL migrations in `src/adapters/postgres/migrations/` (embedded as TS strings so `tsc` ships them). `npm run migrate:postgres -w api` applies the pending ones, each in a transaction under an advisory lock; applied ids are stored as `sql/<id>` in `system_migrations`. Every statement is `IF NOT EXISTS`, so re-runs and concurrent runs are safe.

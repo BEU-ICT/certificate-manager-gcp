@@ -29,9 +29,10 @@ d('postgres schema', () => {
 
   it('creates the schema on an empty database and is idempotent', async () => {
     const first = await runSqlMigrations(pool, 'test');
-    expect(first.applied).toEqual(['001-initial-schema']);
+    const all = ['001-initial-schema', '002-binary-collation'];
+    expect(first.applied).toEqual(all);
     const second = await runSqlMigrations(pool, 'test');
-    expect(second).toEqual({ applied: [], skipped: ['001-initial-schema'] });
+    expect(second).toEqual({ applied: [], skipped: all });
     const { rows } = await pool.query<{ table_name: string }>(
       "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
     );
@@ -56,7 +57,10 @@ d('postgres schema', () => {
     const reports = await Promise.all(
       [1, 2, 3].map((n) => runSqlMigrations(pool, `p${String(n)}`)),
     );
-    expect(reports.flatMap((r) => r.applied)).toEqual(['001-initial-schema']);
+    expect(reports.flatMap((r) => r.applied)).toEqual([
+      '001-initial-schema',
+      '002-binary-collation',
+    ]);
   });
 
   it('enforces the unique constraints that replace reservation documents', async () => {
