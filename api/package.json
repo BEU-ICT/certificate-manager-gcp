@@ -36,6 +36,7 @@
     "test:integration": "firebase emulators:exec --only firestore,auth --project demo-certificate-manager \"vitest run --config vitest.integration.config.ts\""
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1172.0",
     "@fastify/multipart": "^10.1.8",
     "@fastify/swagger": "^9.9.3",
     "@google-cloud/storage": "^8.4.0",

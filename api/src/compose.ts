@@ -63,6 +63,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
       (await import('./adapters/bullmq/index.js')).createQueuePorts(ctx),
     ),
   (r) =>
+    r.storage.register('s3', async (ctx) =>
+      (await import('./adapters/s3/index.js')).createStorageGateway(ctx),
+    ),
+  (r) =>
     r.queue.register('cloud-tasks', async (ctx) =>
       (await import('./adapters/cloud-tasks/index.js')).createQueuePorts(ctx),
     ),

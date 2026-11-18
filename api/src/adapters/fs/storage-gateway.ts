@@ -4,6 +4,7 @@ import {
   mkdir,
   readdir,
   readFile,
+  realpath,
   rename,
   rm,
   stat,
@@ -17,6 +18,9 @@ import { NotFoundError, UnavailableError } from '../../shared/errors.js';
 /** Default root of the local-profile object store; git-ignored. */
 export const DEFAULT_FS_ROOT = '.local-data/storage';
 
+/** Largest accepted object body in bytes (50 MiB) unless the constructor overrides it. */
+export const DEFAULT_FS_MAX_OBJECT_BYTES = 50 * 1024 * 1024;
+
 /**
  * Object storage on the local file system (`STORAGE_ADAPTER=fs`), for local runs and tests.
  * Layout under `root`: `templates/<key>` and `pdfs/<key>` mirror the two buckets; `.meta/<kind>/<key>.json`
@@ -29,16 +33,18 @@ export class FsStorageGateway implements StorageGateway {
   constructor(
     root: string,
     private readonly pdfPublicBaseUrl: string,
+    private readonly maxObjectBytes: number = DEFAULT_FS_MAX_OBJECT_BYTES,
   ) {
     this.root = resolve(root);
   }
 
   async put(kind: BucketKind, key: string, body: Buffer, options: PutOptions): Promise<void> {
     const target = this.objectPath(kind, key);
+    this.assertSize(body);
     await this.io(async () => {
       const tmp = await this.writeTemp(body);
       try {
-        await mkdir(dirname(target), { recursive: true });
+        await this.ensureDir(kind, target);
         await rename(tmp, target);
       } catch (error) {
         await rm(tmp, { force: true });
@@ -55,10 +61,11 @@ export class FsStorageGateway implements StorageGateway {
     options: PutOptions,
   ): Promise<{ created: boolean }> {
     const target = this.objectPath(kind, key);
+    this.assertSize(body);
     return this.io(async () => {
       const tmp = await this.writeTemp(body);
       try {
-        await mkdir(dirname(target), { recursive: true });
+        await this.ensureDir(kind, target);
         await link(tmp, target);
       } catch (error) {
         if (code(error) === 'EEXIST') return { created: false };
@@ -128,7 +135,8 @@ export class FsStorageGateway implements StorageGateway {
   }
 
   publicUrl(key: string): string {
-    return `${this.pdfPublicBaseUrl.replace(/\/+$/, '')}/pdfs/${key}`;
+    const encoded = key.split('/').map(encodeURIComponent).join('/');
+    return `${this.pdfPublicBaseUrl.replace(/\/+$/, '')}/pdfs/${encoded}`;
   }
 
   /** Filesystem path of a key (traversal-safe); used by the local public-PDF route. */
@@ -147,6 +155,21 @@ export class FsStorageGateway implements StorageGateway {
     return path;
   }
 
+  private assertSize(body: Buffer): void {
+    if (body.length > this.maxObjectBytes) throw new RangeError('Object too large');
+  }
+
+  /** Creates the parent directory and refuses to continue when it resolves outside the bucket (symlinks). */
+  private async ensureDir(kind: BucketKind, target: string): Promise<void> {
+    const dir = dirname(target);
+    await mkdir(dir, { recursive: true, mode: 0o755 });
+    const base = join(this.root, kind);
+    const [realDir, realBase] = await Promise.all([realpath(dir), realpath(base)]);
+    if (realDir !== realBase && !realDir.startsWith(realBase + sep)) {
+      throw new TypeError('Invalid storage key');
+    }
+  }
+
   private async writeTemp(body: Buffer): Promise<string> {
     const dir = join(this.root, '.tmp');
     await mkdir(dir, { recursive: true });
@@ -158,7 +181,13 @@ export class FsStorageGateway implements StorageGateway {
   private async writeMeta(kind: BucketKind, key: string, options: PutOptions): Promise<void> {
     const path = this.metaPath(kind, key);
     await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(options));
+    const tmp = await this.writeTemp(Buffer.from(JSON.stringify(options)));
+    try {
+      await rename(tmp, path);
+    } catch (error) {
+      await rm(tmp, { force: true });
+      throw error;
+    }
   }
 
   private async readMeta(kind: BucketKind, key: string): Promise<PutOptions | null> {
@@ -174,7 +203,12 @@ export class FsStorageGateway implements StorageGateway {
     try {
       return await operation();
     } catch (error) {
-      if (error instanceof NotFoundError || error instanceof TypeError) throw error;
+      if (
+        error instanceof NotFoundError ||
+        error instanceof TypeError ||
+        error instanceof RangeError
+      )
+        throw error;
       throw new UnavailableError();
     }
   }
