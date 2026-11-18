@@ -68,6 +68,10 @@ export const builtinRegistrations: AdapterRegistration[] = [
       (await import('./adapters/brevo/index.js')).createEmailSender(ctx),
     ),
   (r) =>
+    r.email.register('smtp', async (ctx) =>
+      (await import('./adapters/smtp/index.js')).createEmailSender(ctx),
+    ),
+  (r) =>
     r.email.register('file', async (ctx) =>
       (await import('./adapters/file/index.js')).createEmailSender(ctx),
     ),
