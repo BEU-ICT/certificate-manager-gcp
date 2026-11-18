@@ -107,6 +107,33 @@ jobs:
       - run: npm ci
       - run: npm run test:integration -w api
 
+  test-postgres:
+    name: test:postgres
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run test:postgres -w api
+        env:
+          POSTGRES_TEST_URL: postgres://postgres:ci-only-password@localhost:5432/postgres
+
   build:
     name: build
     runs-on: ubuntu-latest
@@ -245,6 +272,7 @@ jobs:
         depcruise,
         test-unit,
         test-integration,
+        test-postgres,
         build,
         docker-build,
         audit,

@@ -13,7 +13,8 @@ export type { Flags } from './flags.js';
 
 export const NODE_ENVS = ['development', 'test', 'production'] as const;
 export const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
-export const DB_ADAPTERS = ['firestore', 'memory'] as const;
+export const DB_ADAPTERS = ['firestore', 'postgres', 'memory'] as const;
+export const DATABASE_SSL_MODES = ['disable', 'require', 'verify-full'] as const;
 export const STORAGE_ADAPTERS = ['gcs', 'fs', 'memory'] as const;
 export const QUEUE_ADAPTERS = ['cloud-tasks', 'in-process'] as const;
 export const AUTH_PROVIDERS = ['firebase'] as const;
@@ -65,6 +66,16 @@ export interface Config {
   readonly pdf: {
     readonly maxConcurrentRenders: number;
     readonly renderTimeoutMs: number;
+  };
+  /** PostgreSQL connection (DB_ADAPTER=postgres, BEU-ICT/certificate-manager#429). */
+  readonly database: {
+    readonly url: string | undefined;
+    readonly poolMax: number;
+    readonly ssl: (typeof DATABASE_SSL_MODES)[number];
+    /** PEM of the CA that signed the server certificate (used with `verify-full`). */
+    readonly sslCa: string | undefined;
+    readonly statementTimeoutMs: number;
+    readonly connectionTimeoutMs: number;
   };
   readonly adapters: {
     readonly db: (typeof DB_ADAPTERS)[number];
@@ -127,6 +138,10 @@ const GENERAL_DEFAULTS: Readonly<Record<string, string>> = {
   STATS_CACHE_SECONDS: '60',
   PDF_MAX_CONCURRENT_RENDERS: '3',
   PDF_RENDER_TIMEOUT_MS: '30000',
+  DATABASE_SSL: 'disable',
+  DATABASE_POOL_MAX: '10',
+  DATABASE_STATEMENT_TIMEOUT_MS: '15000',
+  DATABASE_CONNECTION_TIMEOUT_MS: '5000',
 };
 
 const MAX_URL_LENGTH = 2048;
@@ -181,6 +196,16 @@ const schema = z.object({
   STATS_CACHE_SECONDS: int(0, 3600),
   PDF_MAX_CONCURRENT_RENDERS: int(1, 16),
   PDF_RENDER_TIMEOUT_MS: int(1000, 120_000),
+  DATABASE_URL: z
+    .string()
+    .max(MAX_URL_LENGTH)
+    .refine((v) => /^postgres(ql)?:\/\//.test(v), { message: 'must be a postgres:// URL' })
+    .optional(),
+  DATABASE_SSL: oneOf(DATABASE_SSL_MODES),
+  DATABASE_SSL_CA: z.string().max(20_000).optional(),
+  DATABASE_POOL_MAX: int(1, 200),
+  DATABASE_STATEMENT_TIMEOUT_MS: int(100, 600_000),
+  DATABASE_CONNECTION_TIMEOUT_MS: int(100, 120_000),
   DB_ADAPTER: oneOf(DB_ADAPTERS),
   STORAGE_ADAPTER: oneOf(STORAGE_ADAPTERS),
   QUEUE_ADAPTER: oneOf(QUEUE_ADAPTERS),
@@ -224,6 +249,9 @@ function crossFieldIssues(env: Env, isProd: boolean): ConfigIssue[] {
     for (const name of ['TEMPLATES_BUCKET', 'PDF_BUCKET']) {
       if (missing(name)) add(name, 'is required when STORAGE_ADAPTER=gcs');
     }
+  }
+  if (env['DB_ADAPTER'] === 'postgres' && missing('DATABASE_URL')) {
+    add('DATABASE_URL', 'is required when DB_ADAPTER=postgres');
   }
   if (env['QUEUE_ADAPTER'] === 'cloud-tasks') {
     for (const name of ['TASKS_QUEUE', 'TASKS_LOCATION', 'TASKS_INVOKER_SA']) {
@@ -327,6 +355,14 @@ export function loadConfig(env: Env): Config {
     pdf: {
       maxConcurrentRenders: e.PDF_MAX_CONCURRENT_RENDERS,
       renderTimeoutMs: e.PDF_RENDER_TIMEOUT_MS,
+    },
+    database: {
+      url: e.DATABASE_URL,
+      poolMax: e.DATABASE_POOL_MAX,
+      ssl: e.DATABASE_SSL,
+      sslCa: e.DATABASE_SSL_CA,
+      statementTimeoutMs: e.DATABASE_STATEMENT_TIMEOUT_MS,
+      connectionTimeoutMs: e.DATABASE_CONNECTION_TIMEOUT_MS,
     },
     adapters: {
       db: e.DB_ADAPTER,

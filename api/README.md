@@ -245,6 +245,16 @@ npm run migrate   # same environment variables as the server (DB_ADAPTER, GCP_PR
 
 Every document a repository creates carries `schemaVersion: 1` (`SCHEMA_VERSION` in `src/shared/schema-version.ts`). Readers ignore fields they do not know: the adapter parses with zod (unknown keys tolerated) and the DTOs returned over HTTP strip them, so a new revision can add fields while the old one still serves traffic. Raise the version only for a change old readers cannot tolerate, together with a migration.
 
+## PostgreSQL adapter (on-prem, `DB_ADAPTER=postgres`)
+
+Code lives in `src/adapters/postgres/` (BEU-ICT/certificate-manager#429; the repositories follow in later tasks).
+
+- **Config:** `DATABASE_URL` (required, `postgres://`), `DATABASE_SSL` (`disable` default, `require`, `verify-full` with optional `DATABASE_SSL_CA` PEM; a `sslmode` in the URL wins), `DATABASE_POOL_MAX` (default 10, lower it on small VMs), `DATABASE_STATEMENT_TIMEOUT_MS` (15000), `DATABASE_CONNECTION_TIMEOUT_MS` (5000).
+- **Schema:** numbered, append-only SQL migrations in `src/adapters/postgres/migrations/` (embedded as TS strings so `tsc` ships them). `npm run migrate:postgres -w api` applies the pending ones, each in a transaction under an advisory lock; applied ids are stored as `sql/<id>` in `system_migrations`. Every statement is `IF NOT EXISTS`, so re-runs and concurrent runs are safe.
+- **Least privilege:** run migrations with a DDL role via `MIGRATION_DATABASE_URL`; the server's `DATABASE_URL` role needs only `SELECT/INSERT/UPDATE/DELETE` on the tables. Queries are always parameterised.
+- **Pagination:** `keyset.ts` builds `ORDER BY` and the "after cursor" condition with the same total order as Firestore (`issued_at desc, id desc`, ...).
+- **Tests:** `POSTGRES_TEST_URL=postgres://... npm run test:postgres -w api` (skipped when unset; CI runs it against a Postgres service). It checks idempotent migrations, unique constraints, and that all 63 certificate filter combinations avoid sequential scans on 100k rows with p95 < 50 ms.
+
 ## Admin routes and authentication
 
 Every route under `/api/v1/admin` is registered through `adminRoutes(app, (scope) => …)` (`src/http/auth/admin-guard.ts`); paths inside are relative to the prefix. The helper installs an `onRequest` hook that throttles by IP, verifies the `Authorization: Bearer` token through the `TokenVerifier` port (401 + `WWW-Authenticate: Bearer`, identical body for every failure) and requires `role=admin` (403). Handlers read `request.admin` (`{ uid, email }`). A route under the prefix that bypasses the helper aborts startup. Tests use `forEachAdminRoute(app, fn)` (`src/testing/admin-routes.ts`) to run an authorisation matrix over the whole route table.
