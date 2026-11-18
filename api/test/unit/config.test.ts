@@ -188,12 +188,24 @@ describe('loadConfig', () => {
 
     it.each([
       ['DB_ADAPTER', 'mysql'],
-      ['STORAGE_ADAPTER', 's3'],
+      ['STORAGE_ADAPTER', 'minio'],
       ['QUEUE_ADAPTER', 'pubsub'],
       ['AUTH_PROVIDER', 'auth0'],
       ['EMAIL_PROVIDER', 'sendgrid'],
     ])('restricts %s to the implemented set', (name, value) => {
       expect(vars({ ...prod, [name]: value })).toEqual([name]);
+    });
+
+    it('requires buckets for s3 and paired S3 credentials', () => {
+      expect(
+        vars({
+          ...prod,
+          STORAGE_ADAPTER: 's3',
+          TEMPLATES_BUCKET: undefined,
+          PDF_BUCKET: undefined,
+        }),
+      ).toEqual(['TEMPLATES_BUCKET', 'PDF_BUCKET']);
+      expect(vars({ ...prod, S3_ACCESS_KEY_ID: 'k' })).toEqual(['S3_SECRET_ACCESS_KEY']);
     });
 
     it('requires buckets for gcs and queue settings for cloud-tasks', () => {
